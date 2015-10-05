@@ -27,7 +27,6 @@ import java.lang.annotation.Target;
  *
  * @see org.checkerframework.framework.type.QualifierHierarchy#getBottomAnnotations()
  */
-@TypeQualifier
 @SubtypeOf({})
 @Target({}) // empty target prevents programmers from writing this in a program
 public @interface Bottom { }

@@ -5,7 +5,6 @@ import java.lang.annotation.Target;
 import org.checkerframework.framework.qual.DefaultQualifierInHierarchy;
 import org.checkerframework.framework.qual.InvisibleQualifier;
 import org.checkerframework.framework.qual.SubtypeOf;
-import org.checkerframework.framework.qual.TypeQualifier;
 
 /**
  * Represents a {@link java.lang.reflect.Method Method} or
@@ -19,7 +18,6 @@ import org.checkerframework.framework.qual.TypeQualifier;
  *
  * @checker_framework.manual #methodval-and-classval-checkers MethodVal Checker
  */
-@TypeQualifier
 @InvisibleQualifier
 @SubtypeOf({})
 @Target({})

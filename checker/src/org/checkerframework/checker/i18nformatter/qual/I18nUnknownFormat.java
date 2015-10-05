@@ -5,7 +5,6 @@ import java.lang.annotation.Target;
 import org.checkerframework.framework.qual.DefaultQualifierInHierarchy;
 import org.checkerframework.framework.qual.InvisibleQualifier;
 import org.checkerframework.framework.qual.SubtypeOf;
-import org.checkerframework.framework.qual.TypeQualifier;
 
 /**
  * The top qualifier.
@@ -21,7 +20,6 @@ import org.checkerframework.framework.qual.TypeQualifier;
  *                           Format String Checker
  * @author Siwakorn Srisakaokul
  */
-@TypeQualifier
 @InvisibleQualifier
 @SubtypeOf({})
 @DefaultQualifierInHierarchy

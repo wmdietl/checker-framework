@@ -6,63 +6,92 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import javax.annotation.processing.SupportedAnnotationTypes;
-
 import org.checkerframework.framework.type.AnnotatedTypeFactory;
-import org.checkerframework.framework.type.AnnotatedTypeMirror;
 import org.checkerframework.qualframework.base.Checker;
 
 /**
- * An annotation that lists the type qualifiers supported by the annotated
- * {@code Checker}.
- *
+ * This meta-annotation is deprecated.
  * <p>
- * Example:
+ *
+ * Each type-checker should either place all qualifiers within a <tt>qual</tt>
+ * subfolder, with the subfolder located directly in the same folder as the
+ * {@code Checker}, or override
+ * {@link AnnotatedTypeFactory#createSupportedTypeQualifiers()}.
+ * <p>
+ *
+ * Qualifiers placed within the <tt>qual</tt> directory will be automatically
+ * loaded by the checker framework using reflective lookup of qualifier names.
+ * By default @PolyAll is not included, but can be added by overriding
+ * {@link AnnotatedTypeFactory#createSupportedTypeQualifiers()
+ * createSupportedTypeQualifiers}.
+ * <p>
+ *
+ * There's four recommended ways to write an override implementation of
+ * {@link AnnotatedTypeFactory#createSupportedTypeQualifiers()
+ * createSupportedTypeQualifiers}:
+ * <p>
+ *
+ * A) using reflective lookup to add all qualifiers, and add @PolyAll. Example:
  *
  * <pre>
- * &#064;TypeQualifiers( { Nullable.class, NonNull.class } )
- * public class NullnessChecker extends BaseTypeChecker { ... }
+ * &#64;Override
+ * protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers() {
+ *     return loadTypeQualifiersFromQualDir(true, null);
+ * }
  * </pre>
  *
- * The checker reflectively queries this annotation, and subsequently the
- * meta-annotations on the annotations in the list, to form the result of
- * {@link AnnotatedTypeFactory#createSupportedTypeQualifiers()} and
- * {@link AnnotatedTypeFactory#getSupportedTypeQualifiers()}.
- * The framework also uses this annotation to determine
- * which annotations may be added to an {@link AnnotatedTypeMirror}: an
- * annotation may be added if and only if it is a {@link TypeQualifier} and it
- * appears in in the list of supported annotations from {@link TypeQualifiers}.
+ * B) using reflective lookup to add qualifiers, add @PolyAll, and add a manual
+ * list of qualifiers. Example:
+ *
+ * <pre>
+ * &#64;Override
+ * protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers() {
+ *     return loadTypeQualifiersFromQualDir(true,
+ *             new HashSet<Class<? extends Annotation>>(
+ *                     Arrays.asList(H1Top.class, H1S1.class, H1S2.class,
+ *                             H1Bot.class, H2Top.class, H2S1.class, H2S2.class,
+ *                             H2Bot.class, H1Poly.class, H2Poly.class)));
+ * }
+ * </pre>
+ *
+ * The use of a manual list is necessary for any qualifiers that are not located in
+ * the <tt>qual</tt> folder, or for qualifiers which do not or cannot have the
+ * <tt>@Target({ElementType.TYPE_USE})</tt> meta-annotation (eg some Bottoms).
+ *
+ * See {@code PolyAllAnnotatedTypeFactory} for details.
  * <p>
  *
- * Each type-checker should either be annotated with
- * {@code @TypeQualifiers} or should override
- * {@link AnnotatedTypeFactory#createSupportedTypeQualifiers()
- * createSupportedTypeQualifiers} (which takes precedence over
- * {@code @TypeQualifiers}).
+ * C) using reflective lookup to add qualifiers and add a manual list of
+ * qualifiers, but without @PolyAll. Example:
+ *
+ * <pre>
+ * &#64;Override
+ * protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers() {
+ *     return loadTypeQualifiersFromQualDir(false,
+ *             new HashSet<Class<? extends Annotation>>(
+ *                     Arrays.asList(IGJBottom.class)));
+ * }
+ * </pre>
+ *
+ * See {@code IGJAnnotatedTypeFactory} for details.
  * <p>
  *
- * This annotation differs from the JDK's {@link SupportedAnnotationTypes}
- * in the following ways.
- * <ul>
- * <li>
- * <tt>{@link TypeQualifiers}</tt>
- * simply lists the annotations that a processor (checker) recognizes -- any
- * annotations not in the list should be ignored, but files lacking these
- * annotations should still be processed. {@link SupportedAnnotationTypes}
- * instructs the compiler to skip processing of any file that
- * does not contain any supported annotations.
- * </li>
- * <li>
- * {@link SupportedAnnotationTypes}'s argument is an array of strings, which
- * supports the use of "*" for specifying multiple annotations.
- * {@link TypeQualifiers}'s argument is an array of
- * classes, which is less error-prone.
- * </li>
- * </ul>
+ * D) only using a manual list of qualifiers. Example:
+ *
+ * <pre>
+ * &#64;Override
+ * protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers() {
+ *     return Collections.unmodifiableSet(
+ *             new HashSet<Class<? extends Annotation>>(Arrays.asList(A.class,
+ *                     B.class, C.class, D.class, E.class, F.class)));
+ * }
+ * </pre>
+ *
+ * See {@code LubGlbAnnotatedTypeFactory}
  *
  * @see AnnotatedTypeFactory#createSupportedTypeQualifiers()
  */
+@Deprecated
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target( { ElementType.TYPE } )

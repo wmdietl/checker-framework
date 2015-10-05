@@ -5,7 +5,6 @@ import java.lang.annotation.Target;
 import org.checkerframework.framework.qual.ImplicitFor;
 import org.checkerframework.framework.qual.InvisibleQualifier;
 import org.checkerframework.framework.qual.SubtypeOf;
-import org.checkerframework.framework.qual.TypeQualifier;
 
 import com.sun.source.tree.Tree;
 
@@ -19,7 +18,6 @@ import com.sun.source.tree.Tree;
  *
  * @checker_framework.manual #methodval-and-classval-checkers MethodVal Checker
  */
-@TypeQualifier
 @InvisibleQualifier
 @ImplicitFor(trees = { Tree.Kind.NULL_LITERAL }, typeNames = { java.lang.Void.class })
 @SubtypeOf({ MethodVal.class })
