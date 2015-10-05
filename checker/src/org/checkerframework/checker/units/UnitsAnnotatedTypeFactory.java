@@ -3,7 +3,6 @@ package org.checkerframework.checker.units;
 import org.checkerframework.checker.units.qual.*;
 import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
-import org.checkerframework.framework.qual.PolyAll;
 import org.checkerframework.framework.type.AnnotatedTypeFactory;
 import org.checkerframework.framework.type.AnnotatedTypeFormatter;
 import org.checkerframework.framework.type.AnnotatedTypeMirror;
@@ -93,9 +92,9 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
         for (AnnotationMirror metaAnno : anno.getAnnotationType().asElement().getAnnotationMirrors() ) {
             // see if the meta annotation is UnitsMultiple
             if (isUnitsMultiple(metaAnno)) {
-                @SuppressWarnings("unchecked")
                 // retrieve the Class of the base unit annotation
-                Class<? extends Annotation> baseUnitAnnoClass = (Class<? extends Annotation>) AnnotationUtils.getElementValueClass(metaAnno, "quantity", true);
+                Class<? extends Annotation> baseUnitAnnoClass =
+                        AnnotationUtils.getElementValueClass(metaAnno, "quantity", true).asSubclass(Annotation.class);
 
                 // retrieve the SI Prefix of the aliased annotation
                 Prefix prefix = AnnotationUtils.getElementValueEnum(metaAnno, "prefix", Prefix.class, true);
@@ -129,14 +128,17 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
     protected Map<String, UnitsRelations> getUnitsRel() {
         if (unitsRel == null) {
             unitsRel = new HashMap<String, UnitsRelations>();
+            // Always add the default units relations, for the standard units.
+            unitsRel.put(UnitsRelationsDefault.class.getCanonicalName(),
+                    new UnitsRelationsDefault().init(processingEnv));
         }
         return unitsRel;
     }
 
     @Override
     protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers() {
-        Set<Class<? extends Annotation>> qualSet =
-                new HashSet<Class<? extends Annotation>>();
+        // create a new qualifier set which also contains externally defined units 
+        Set<Class<? extends Annotation>> qualSet = new HashSet<Class<? extends Annotation>>();
 
         // Load all the external units
         loadAllExternalUnits();
@@ -144,66 +146,9 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
         // copy all loaded external Units to qual set
         qualSet.addAll(externalQualsMap.values());
 
-        // Always add the default units relations.
-        // TODO: we assume that all the standard units only use this. For absolute correctness,
-        // go through each and look for a UnitsRelations annotation.
-        getUnitsRel().put(UnitsRelationsDefault.class.getCanonicalName(),
-                new UnitsRelationsDefault().init(processingEnv));
-
-        // Explicitly add the top type.
-        qualSet.add(UnknownUnits.class);
-        qualSet.add(PolyUnit.class);
-        qualSet.add(PolyAll.class);
-
-        // Only add the directly supported units. Shorthands like kg are
-        // handled automatically by aliases.
-
-        qualSet.add(Length.class);
-        // qualSet.add(mm.class);
-        qualSet.add(m.class);
-        // qualSet.add(km.class);
-
-        qualSet.add(Time.class);
-        qualSet.add(s.class);
-        qualSet.add(min.class);
-        qualSet.add(h.class);
-
-        qualSet.add(Speed.class);
-        qualSet.add(mPERs.class);
-        qualSet.add(kmPERh.class);
-
-        qualSet.add(Area.class);
-        qualSet.add(mm2.class);
-        qualSet.add(m2.class);
-        qualSet.add(km2.class);
-
-        qualSet.add(Current.class);
-        qualSet.add(A.class);
-
-        qualSet.add(Mass.class);
-        qualSet.add(g.class);
-        // qualSet.add(kg.class);
-
-        qualSet.add(Substance.class);
-        qualSet.add(mol.class);
-
-        qualSet.add(Luminance.class);
-        qualSet.add(cd.class);
-
-        qualSet.add(Temperature.class);
-        qualSet.add(C.class);
-        qualSet.add(K.class);
-
-        qualSet.add(Acceleration.class);
-        qualSet.add(mPERs2.class);
-
-        qualSet.add(Angle.class);
-        qualSet.add(degrees.class);
-        qualSet.add(radians.class);
-
-        // Use the framework-provided bottom qualifier. It will automatically be
-        // at the bottom of the qualifier hierarchy.
-        qualSet.add(UnitsBottom.class);
+        // load qualifiers via reflection
+        UnitsAnnotatedTypeLoader loader = new UnitsAnnotatedTypeLoader(processingEnv, this);
+        qualSet.addAll(loader.getAnnotatedTypeQualifierSet(true));
 
         return Collections.unmodifiableSet(qualSet);
     }
@@ -281,8 +226,8 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             if (isUnitsMultiple(metaAnno)) {
                 // TODO: does every alias have to have Prefix?
                 // retrieve the Class of the base unit annotation
-                @SuppressWarnings("unchecked")
-                Class<? extends Annotation> baseUnitAnnoClass = (Class<? extends Annotation>) AnnotationUtils.getElementValueClass(metaAnno, "quantity", true);
+                Class<? extends Annotation> baseUnitAnnoClass =
+                        AnnotationUtils.getElementValueClass(metaAnno, "quantity", true).asSubclass(Annotation.class);
 
                 return baseUnitAnnoClass;
             }
@@ -309,9 +254,8 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
 
         for (AnnotationMirror ama : am.getAnnotationType().asElement().getAnnotationMirrors() ) {
             if (ama.getAnnotationType().toString().equals(unitsRelationsAnnoClass.getCanonicalName())) {
-                @SuppressWarnings("unchecked")
-                Class<? extends UnitsRelations> theclass = (Class<? extends UnitsRelations>)
-                AnnotationUtils.getElementValueClass(ama, "value", true);
+                Class<? extends UnitsRelations> theclass =
+                        AnnotationUtils.getElementValueClass(ama, "value", true).asSubclass(UnitsRelations.class);
                 String classname = theclass.getCanonicalName();
 
                 if (!getUnitsRel().containsKey(classname)) {

@@ -1405,6 +1405,7 @@ public class AnnotatedTypes {
         return result;
     }
 
+    @SuppressWarnings("deprecation")
     private static boolean isTypeAnnotationImpl(TypeElement type) {
         return type.getAnnotation(TypeQualifier.class) != null;
     }

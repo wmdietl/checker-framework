@@ -529,49 +529,112 @@ public class AnnotatedTypeFactory implements AnnotationProvider {
     }
 
     /**
-     * If the type factory or checker class is annotated with {@link
-     * TypeQualifiers}, return an immutable set with the same set
-     * of classes as the annotation.  If the class is not so annotated,
-     * return an empty set.
+     * Loads and returns the set of classes from the qual folder of a checker or
+     * type factory.
      * <p>
      *
-     * Subclasses may override this method to return an immutable set
-     * of their supported type qualifiers, in which case their checker
-     * class needs no <tt>@TypeQualifiers</tt> annotation.
+     * If the set is empty, and if the type factory or checker class is
+     * annotated with {@link TypeQualifiers}, return an immutable set with the
+     * same set of classes as the annotation. If the class is not so annotated,
+     * it will return an empty set.
+     * <p>
+     *
+     * Subclasses may override this method and either 1) return an immutable set
+     * of their supported type qualifiers, or 2) call
+     * {@link #loadTypeQualifiersFromQualDir loadTypeQualifiersFromQualDir} to load
+     * qualifiers in the subclass's qual directory with parameter options to
+     * load {@link @PolyRaw PolyRaw} and/or a list of supported type qualifiers.
      * <p>
      *
      * Subclasses should not call this method; they should call
-     * {@link #getSupportedTypeQualifiers getSupportedTypeQualifiers}
-     * instead.
+     * {@link #getSupportedTypeQualifiers getSupportedTypeQualifiers} instead.
      *
-     * @return the type qualifiers supported this processor, or an empty
-     * set if none
+     * @return the type qualifiers supported this processor, or an empty set if
+     *         none
      *
      * @see TypeQualifiers
      */
+    @SuppressWarnings("deprecation")
     protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers() {
-        Class<?> classType;
-        TypeQualifiers typeQualifiersAnnotation;
+        // By default, a checker will not use PolyAll (false param value below),
+        // this may change in the future for universal PolyAll support.
+        // Currently if a checker wants to use PolyAll, the suggested approach
+        // is to override createSupportedTypeQualifiers and call
+        // loadTypeQualifiersFromQualDir with true passed in.
+        Set<Class<? extends Annotation>> typeQualifiers = loadTypeQualifiersFromQualDir(false, null);
 
-        // First see if the AnnotatedTypeFactory has @TypeQualifiers
-        classType = this.getClass();
-        typeQualifiersAnnotation = classType.getAnnotation(TypeQualifiers.class);
+        if ( !typeQualifiers.isEmpty() ) {
+            return typeQualifiers;
+        } else {
+            // deprecated support for @TypeQualifiers() annotation
+            // TODO: This support will be removed in the next version of the checker framework
+            TypeQualifiers typeQualifiersAnnotation;
 
-        if (typeQualifiersAnnotation == null) {
-            // If not, try the Checker
-            classType = checker.getClass();
+            // First see if the AnnotatedTypeFactory has @TypeQualifiers
+            Class<?> classType = this.getClass();
             typeQualifiersAnnotation = classType.getAnnotation(TypeQualifiers.class);
-        }
 
-        if (typeQualifiersAnnotation != null) {
-            Set<Class<? extends Annotation>> typeQualifiers = new HashSet<Class<? extends Annotation>>();
-            for (Class<? extends Annotation> qualifier : typeQualifiersAnnotation.value()) {
-                typeQualifiers.add(qualifier);
+            if (typeQualifiersAnnotation == null) {
+                // If not, try the Checker
+                classType = checker.getClass();
+                typeQualifiersAnnotation = classType.getAnnotation(TypeQualifiers.class);
             }
-            return Collections.unmodifiableSet(typeQualifiers);
+
+            if (typeQualifiersAnnotation != null) {
+                for (Class<? extends Annotation> qualifier : typeQualifiersAnnotation.value()) {
+                    typeQualifiers.add(qualifier);
+                }
+                return Collections.unmodifiableSet(typeQualifiers);
+            } else {
+                return Collections.emptySet();
+            }
+        }
+    }
+
+    /**
+     * Loads all qualifiers contained in the qual directory of a checker via
+     * reflection, and has the option to include the PolyAll qualifier and a
+     * list of manually stated qualifiers (eg ones found in a different folder
+     * than the checker). The type qualifiers that are automatically loaded must
+     * have the @Target({ElementType.TYPE_USE}) meta-annotation, otherwise the
+     * loader skips the qualifier. The ones that do not have the TYPE_USE
+     * meta-annotation value must be manually stated even if they are in the
+     * same folder as the checker's qual folder.
+     * 
+     * This method can be called in the overridden versions of
+     * createSupportedTypeQualifiers() in each checker to load @PolyAll, and/or
+     * load a manually stated list of qualifiers.
+     * 
+     * @param includePolyAll
+     *            - true would add @PolyAll to the list of qualifiers
+     * @param manuallyListedQualifiers
+     *            - a set of manually listed qualifiers to be added to the
+     *            qualifier set, for example, it is used frequently to add
+     *            Bottom qualifiers
+     * @return
+     */
+    protected Set<Class<? extends Annotation>> loadTypeQualifiersFromQualDir(final boolean includePolyAll,
+            Set<Class<? extends Annotation>> manuallyListedQualifiers) {
+
+        Set<Class<? extends Annotation>> typeQualifiers = new HashSet<Class<? extends Annotation>>();
+
+        // try to load all the qualifiers from this Annotated Type Factory via reflection
+        AnnotatedTypeLoader loaderATF = new AnnotatedTypeLoader(checker.getProcessingEnvironment(), this);
+        typeQualifiers.addAll(loaderATF.getAnnotatedTypeQualifierSet(includePolyAll));
+
+        // add in all manually Listed qualifiers
+        if (manuallyListedQualifiers != null && !manuallyListedQualifiers.isEmpty()) {
+            typeQualifiers.addAll(manuallyListedQualifiers);
         }
 
-        return Collections.emptySet();
+        // see if there's any loaded qualifiers
+        if (typeQualifiers.size() > 0) {
+            // if qualifiers are successfully loaded then return the set
+            return Collections.unmodifiableSet(typeQualifiers);
+        } else {
+            // otherwise return empty set
+            return Collections.emptySet();
+        }
     }
 
     /**

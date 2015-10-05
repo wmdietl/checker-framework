@@ -1,5 +1,12 @@
 package org.checkerframework.checker.signature;
 
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.checkerframework.checker.signature.qual.SignatureBottom;
+import org.checkerframework.checker.signature.qual.UnannotatedString;
 import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 
@@ -17,6 +24,13 @@ public class SignatureAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
     public SignatureAnnotatedTypeFactory(BaseTypeChecker checker) {
         super(checker);
         this.postInit();
+    }
+
+    @Override
+    protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers() {
+        return loadTypeQualifiersFromQualDir(true,
+                new HashSet<Class<? extends Annotation>>(
+                        Arrays.asList(UnannotatedString.class, SignatureBottom.class)));
     }
 
     /*

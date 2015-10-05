@@ -46,6 +46,7 @@ public class FenumAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
         Set<Class<? extends Annotation>> qualSet =
               new HashSet<Class<? extends Annotation>>();
 
+        // Load externally defined quals given in the -Aquals option
         String qualNames = checker.getOption("quals");
         if (qualNames == null) {
             // maybe issue a warning?
@@ -60,13 +61,14 @@ public class FenumAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                 }
             }
         }
+
+        // Load top, bottom, unqualified, and fake enum
         qualSet.add(FenumTop.class);
         qualSet.add(Fenum.class);
         qualSet.add(FenumUnqualified.class);
         qualSet.add(FenumBottom.class);
 
-        // Also call super. This way a subclass can use the
-        // @TypeQualifiers annotation again.
+        // Also call super to load everything in qual directory
         qualSet.addAll(super.createSupportedTypeQualifiers());
 
         // TODO: warn if no qualifiers given?

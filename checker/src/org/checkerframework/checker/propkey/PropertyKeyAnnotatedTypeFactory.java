@@ -11,8 +11,10 @@ import javax.tools.Diagnostic.Kind;
 
 import org.checkerframework.checker.propkey.qual.PropertyKey;
 import org.checkerframework.checker.propkey.qual.PropertyKeyBottom;
+import org.checkerframework.checker.propkey.qual.UnknownPropertyKey;
 import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
+import org.checkerframework.framework.qual.Bottom;
 import org.checkerframework.framework.qual.DefaultLocation;
 import org.checkerframework.framework.type.*;
 import org.checkerframework.framework.type.treeannotator.ImplicitsTreeAnnotator;
@@ -49,6 +51,15 @@ public class PropertyKeyAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
 
         this.postInit();
         this.defaults.addAbsoluteDefault(PROPKEY_BOTTOM, DefaultLocation.LOWER_BOUNDS);
+    }
+
+    @Override
+    protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers() {
+        // TODO: it is possible to load @PropertyKey and @UnknownPropertyKey using reflection, but it would also load @PropertyKeyBottom
+        // for now, the 3 qualifiers are manually loaded here
+        return Collections.unmodifiableSet(
+                new HashSet<Class<? extends Annotation>>(
+                        Arrays.asList(PropertyKey.class, UnknownPropertyKey.class, Bottom.class)));
     }
 
     @Override
