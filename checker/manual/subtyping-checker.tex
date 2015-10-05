@@ -52,10 +52,6 @@ example,
         \textit{-Aquals=myproject.qual.MyQual,myproject.qual.OtherQual} MyFile.java ...
 \end{alltt}
 
-It serves the same purpose as the \refqualclass{framework/qual}{TypeQualifiers}
-annotation used by other checkers (see section
-\ref{writing-compiler-interface}).
-
 The annotations listed in \code{-Aquals} must be accessible to
 the compiler during compilation in the classpath.  In other words, they must
 already be compiled (and, typically, be on the javac bootclasspath)
@@ -91,12 +87,10 @@ package myqual;
 import java.lang.annotation.Target;
 import java.lang.annotation.ElementType;
 import org.checkerframework.framework.qual.SubtypeOf;
-import org.checkerframework.framework.qual.TypeQualifier;
 
 /**
  * Denotes that the representation of an object is encrypted.
  */
-@TypeQualifier
 @SubtypeOf(PossiblyUnencrypted.class)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
 public @interface Encrypted {}
@@ -109,12 +103,10 @@ import java.lang.annotation.Target;
 import java.lang.annotation.ElementType;
 import org.checkerframework.framework.qual.DefaultQualifierInHierarchy;
 import org.checkerframework.framework.qual.SubtypeOf;
-import org.checkerframework.framework.qual.TypeQualifier;
 
 /**
  * Denotes that the representation of an object might not be encrypted.
  */
-@TypeQualifier
 @DefaultQualifierInHierarchy
 @SubtypeOf({})
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
@@ -185,7 +177,7 @@ required: @myqual.Encrypted java.lang.String
 
 
 
-% LocalWords:  TODO ImplicitFor Aquals TypeQualifiers sourcepath java NonNull
+% LocalWords:  TODO ImplicitFor Aquals sourcepath java NonNull
 % LocalWords:  CharSequence classpath nullness quals SuppressWarnings classfile
 % LocalWords:  uncapitalized processorpath Warski MyFile YourProgram
 %%  LocalWords:  bootclasspath PossiblyUnencrypted
