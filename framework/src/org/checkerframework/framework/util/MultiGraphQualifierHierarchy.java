@@ -643,11 +643,12 @@ public class MultiGraphQualifierHierarchy extends QualifierHierarchy {
             return outset.iterator().next();
         }
         if (outset.size() > 1) {
-            // this line is needed by LubGlb checker... the LUB of D & E would otherwise resolve to A even thought it should be C
-            // it does not seem to affect other checkers
+            // outset is created by climbing the supertypes of the left type, which can go higher in the lattice than needed
+            // findSmallestTypes will remove the unnecessary supertypes of supertypes, retaining only the least upper bound(s)
             outset = findSmallestTypes(outset);
 
             // picks the first qualifier that isn't a polymorphic qualifier
+            // the outset should only have 1 qualifier that isn't polymorphic
             Iterator<AnnotationMirror> outsetIterator = outset.iterator();
 
             AnnotationMirror anno;
@@ -667,11 +668,7 @@ public class MultiGraphQualifierHierarchy extends QualifierHierarchy {
 
     // sees if a particular annotation mirror is a polymorphic qualifier
     private boolean isPolymorphicQualifier(AnnotationMirror qual) {
-        if (AnnotationUtils.containsSame(polyQualifiers.values(), qual)) {
-            return true;
-        } else {
-            return false;
-        }
+        return AnnotationUtils.containsSame(polyQualifiers.values(), qual);
     }
 
     // remove all supertypes of elements contained in the set
