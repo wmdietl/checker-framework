@@ -19,6 +19,9 @@ import org.checkerframework.javacutil.AnnotationUtils;
 import org.checkerframework.javacutil.ElementUtils;
 import org.checkerframework.javacutil.TreeUtils;
 
+import java.lang.annotation.Annotation;
+import java.util.Set;
+
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -71,6 +74,11 @@ public class InterningAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
 
         // The null literal is interned -> make Void interned also.
         addTypeNameImplicit(java.lang.Void.class, INTERNED);
+    }
+
+    @Override
+    protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers() {
+        return loadTypeQualifiersFromQualDir(true, null);
     }
 
     @Override

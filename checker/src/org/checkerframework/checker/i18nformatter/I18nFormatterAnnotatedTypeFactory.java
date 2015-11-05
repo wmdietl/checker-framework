@@ -3,12 +3,16 @@ package org.checkerframework.checker.i18nformatter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
 
@@ -17,6 +21,7 @@ import org.checkerframework.checker.i18nformatter.qual.I18nFormat;
 import org.checkerframework.checker.i18nformatter.qual.I18nFormatBottom;
 import org.checkerframework.checker.i18nformatter.qual.I18nFormatFor;
 import org.checkerframework.checker.i18nformatter.qual.I18nInvalidFormat;
+import org.checkerframework.checker.i18nformatter.qual.I18nUnknownFormat;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.framework.flow.CFStore;
 import org.checkerframework.framework.flow.CFValue;
@@ -71,6 +76,13 @@ public class I18nFormatterAnnotatedTypeFactory extends
 
         this.treeUtil = new I18nFormatterTreeUtil(checker);
         this.postInit();
+    }
+
+    @Override
+    protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers() {
+        return loadTypeQualifiersFromQualDir(false,
+                new HashSet<Class<? extends Annotation>>(
+                        Arrays.asList(I18nUnknownFormat.class, I18nFormatBottom.class)));
     }
 
     private Map<String, String> buildLookup() {

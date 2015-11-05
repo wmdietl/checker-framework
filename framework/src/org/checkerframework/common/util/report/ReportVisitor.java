@@ -10,7 +10,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 
-import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.common.basetype.BaseTypeValidator;
 import org.checkerframework.common.basetype.BaseTypeVisitor;
@@ -42,7 +41,7 @@ import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.TypeCastTree;
 
-public class ReportVisitor extends BaseTypeVisitor<BaseAnnotatedTypeFactory> {
+public class ReportVisitor extends BaseTypeVisitor<ReportAnnotatedTypeFactory> {
 
     /**
      * The tree kinds that should be reported.
@@ -70,6 +69,11 @@ public class ReportVisitor extends BaseTypeVisitor<BaseAnnotatedTypeFactory> {
         } else {
             modifiers = null;
         }
+    }
+
+    @Override
+    protected ReportAnnotatedTypeFactory createTypeFactory() {
+        return new ReportAnnotatedTypeFactory(checker);
     }
 
     @SuppressWarnings("CompilerMessages") // These warnings are not translated.

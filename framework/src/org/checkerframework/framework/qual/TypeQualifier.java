@@ -3,11 +3,14 @@ package org.checkerframework.framework.qual;
 import java.lang.annotation.*;
 
 /**
- * A meta-annotation indicating that the annotated annotation is a type
- * qualifier.
+ * This meta-annotation is deprecated.
+ * <p>
  *
- * Examples of such qualifiers: {@code @ReadOnly}, {@code @NonNull}
+ * An annotation will no longer use this meta-annotation. To indicate that an
+ * annotation is a type qualifier, it should now have the meta-annotation
+ * <tt>&#64;Target({ElementType.TYPE_USE})</tt>.
  */
+@Deprecated
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)

@@ -16,7 +16,6 @@ import com.sun.source.tree.Tree;
  * @checker_framework.manual #formatter-checker Format String Checker
  * @author Konstantin Weitz
  */
-@TypeQualifier
 @SubtypeOf({Format.class,InvalidFormat.class})
 @Target({}) // empty target prevents programmers from writing this in a program
 @ImplicitFor(trees = {Tree.Kind.NULL_LITERAL},

@@ -45,6 +45,10 @@ without specifying whether it will take meters or kilometers.
 The following kind annotations are defined:
 
 \begin{description}
+\item[\refqualclass{checker/units/qual}{Acceleration}]
+
+\item[\refqualclass{checker/units/qual}{Angle}]
+
 \item[\refqualclass{checker/units/qual}{Area}]
 
 \item[\refqualclass{checker/units/qual}{Current}]
@@ -71,6 +75,14 @@ For each kind of unit, the corresponding SI unit of
 measurement is defined:
 
 \begin{enumerate}
+\item For \code{@Acceleration}:
+  Meter Per Second Square \refqualclass{checker/units/qual}{mPERs2}
+
+\item For \code{@Angle}:
+  Radians \refqualclass{checker/units/qual}{radians},
+  and the derived unit
+  Degrees \refqualclass{checker/units/qual}{degrees}
+
 \item For \code{@Area}:
   the derived units
   square millimeters \refqualclass{checker/units/qual}{mm2},
@@ -156,7 +168,6 @@ Here is an example of a new unit annotation.
 \begin{alltt}
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@TypeQualifier
 @SubtypeOf( \ttlcb{} Time.class \ttrcb{} )
 @UnitsMultiple(quantity=s.class, prefix=Prefix.nano)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
@@ -270,6 +281,6 @@ For examples, see class \code{UnitsTools}.
 \end{itemize}
 
 % LocalWords:  UnitsTools toMeter toSecond mPERs Candela cd kmPERh mol nano ns
-% LocalWords:  milli RetentionPolicy TypeQualifier SubtypeOf UnitsMultiple hz
+% LocalWords:  milli RetentionPolicy SubtypeOf UnitsMultiple hz
 % LocalWords:  UnitsRelations Aunits MyFile mm2 m2 km2 enum ElementType
 %  LocalWords:  MixedUnits java

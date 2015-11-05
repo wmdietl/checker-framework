@@ -7,6 +7,9 @@ import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.javacutil.AnnotationUtils;
 
+import java.lang.annotation.Annotation;
+import java.util.Set;
+
 import javax.lang.model.element.AnnotationMirror;
 
 public class TaintingClassicAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
@@ -24,6 +27,11 @@ public class TaintingClassicAnnotatedTypeFactory extends BaseAnnotatedTypeFactor
         addAliasedAnnotation(org.checkerframework.checker.tainting.qual.PolyTainted.class, POLYTAINTED);
 
         postInit();
+    }
+
+    @Override
+    protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers() {
+        return loadTypeQualifiersFromQualDir(true, null);
     }
 }
 
