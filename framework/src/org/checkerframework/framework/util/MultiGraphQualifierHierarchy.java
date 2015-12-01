@@ -664,35 +664,47 @@ public class MultiGraphQualifierHierarchy extends QualifierHierarchy {
                 "], a2: " + a2 + " [top: " + getTopAnnotation(a2) + "]";
 
         Set<AnnotationMirror> outset = AnnotationUtils.createAnnotationSet();
-        for (AnnotationMirror a1Super : findSmallestTypes(supertypesMap.get(a1))) {
+        for (AnnotationMirror a1Super : supertypesGraph.get(a1)) {
             // TODO: we take the first of the smallest supertypes, maybe we would
             // get a different LUB if we used a different one?
             AnnotationMirror a1Lub = findLub(a1Super, a2);
             if (a1Lub != null) {
                 outset.add(a1Lub);
-            }
-            if (a1Lub == null && a1Super == null) {
-                // null is also used for Unqualified! If two qualifiers are separate
-                // subtypes of unqualifed, this might happen.
-                // I ran into this when KeyFor <: Unqualified and Covariant <: Unqualified.
-                // I think it would be much nicer if Unqualified would not be optimized away...
-                // TODO This never seems to happen...
-                outset.add(null);
+            } else {
+                ErrorReporter.errorAbort("GraphQualifierHierarchy could not determine LUB for " + a1 + " and " + a2 +
+                        ". Please ensure that the checker knows about all type qualifiers.");
             }
         }
         if (outset.size() == 1) {
             return outset.iterator().next();
         }
         if (outset.size() > 1) {
+            // outset is created by climbing the supertypes of the left type, which can go higher in the lattice than needed
+            // findSmallestTypes will remove the unnecessary supertypes of supertypes, retaining only the least upper bound(s)
             outset = findSmallestTypes(outset);
+
+            // picks the first qualifier that isn't a polymorphic qualifier
+            // the outset should only have 1 qualifier that isn't polymorphic
+            Iterator<AnnotationMirror> outsetIterator = outset.iterator();
+
+            AnnotationMirror anno;
+            do {
+                anno = outsetIterator.next();
+            } while (isPolymorphicQualifier(anno));
+
             // TODO: more than one, incomparable supertypes. Just pick the first one.
             // if (outset.size()>1) { System.out.println("Still more than one LUB!"); }
-            return outset.iterator().next();
+            return anno;
         }
 
         ErrorReporter.errorAbort("GraphQualifierHierarchy could not determine LUB for " + a1 + " and " + a2 +
                                  ". Please ensure that the checker knows about all type qualifiers.");
         return null;
+    }
+
+    // sees if a particular annotation mirror is a polymorphic qualifier
+    private boolean isPolymorphicQualifier(AnnotationMirror qual) {
+        return AnnotationUtils.containsSame(polyQualifiers.values(), qual);
     }
 
     // remove all supertypes of elements contained in the set
