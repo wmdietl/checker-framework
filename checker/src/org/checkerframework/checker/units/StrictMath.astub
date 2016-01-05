@@ -1,0 +1,146 @@
+// StrictMath requires that the underlying implementations of the 4 primitive data types (int, long, float, double) produce exactly the same result regardless of platform (eg x86 float vs SPARC float)
+// StrictMath implements the same methods as java.lang.Math except for incrementExact, decrementExact, and negateExact
+// In terms of Units, it returns exactly the same thing as java.lang.Math methods
+
+// Developer note: make modifications in Math.astub first and test it through JavaLangMath, if it is correct then synchronize this stub file to Math.astub, and JavaLangStrictMath tests to JavaLangMath tests
+
+import org.checkerframework.checker.units.qual.*;
+
+package java.lang;
+
+// https://docs.oracle.com/javase/8/docs/api/java/lang/StrictMath.html
+class StrictMath {
+    // Constants
+    static final @Scalar double E;
+    static final @Scalar double PI;
+
+    // Methods ========
+
+    // Absolute Val
+    static @PolyUnit double abs(@PolyUnit double a);    // Same ret
+    static @PolyUnit float abs(@PolyUnit float a);    // Same ret
+    static @PolyUnit int abs(@PolyUnit int a);    // Same ret
+    static @PolyUnit long abs(@PolyUnit long a);    // Same ret
+
+    // Trigonometry
+    static @Scalar double sin(@radians double a);
+    static @Scalar double cos(@radians double a);   // cos
+    static @Scalar double tan(@radians double a);
+    // both x & y must be same unit and if so returns that unit, else returns LUB of the units
+    static @PolyUnit double hypot(@PolyUnit double x, @PolyUnit double y);
+
+    // Inverse Trigonometry
+    static @radians double asin(@Scalar double a);   // arc-sin
+    static @radians double acos(@Scalar double a);   // arc-cos
+    static @radians double atan(@Scalar double a);   // arc-tangent
+    // x and y should be the same unit, returns the angle theta from the conversion of rectangular coordinates [x, y] to polar coordinates [r, theta]. returns radians
+    // atan2(y, x) == atan(y / x) except the sign of both arguments are used to determine the quadrant of the result
+    // Units ATF ensures that y and x have the same units
+    static @radians double atan2(@UnknownUnits double y, @UnknownUnits double x);
+    // Inverse Trigonometry identities in terms of units (value is subject to domain)
+    // sin(asin(x)) == x
+    // asin(sin(y)) == y
+    // cos(acos(x)) == x
+    // acos(cos(y)) == y
+    // tan(atan(x)) == x
+    // atan(tan(y)) == y
+    // let z = y / x
+    // z == tan(atan(z)) == tan(atan2(y, x))
+
+    // Hyperbolic Trigonometry
+    static @Scalar double sinh(@radians double x);
+    static @Scalar double cosh(@radians double x);   // hyperbolic cos, takes in a hyperbolic angle which is also in radians for Math lib implementation
+    static @Scalar double tanh(@radians double x);
+
+    // Angle Conversion
+    static @degrees double toDegrees(@radians double angrad);
+    static @radians double toRadians(@degrees double angdeg);
+
+    // Exact operations
+    // The following uses Units Relations
+    static int addExact(int x, int y);          // same as addition, throws exception if overflow
+    static long addExact(long x, long y);
+    static int subtractExact(int x, int y);     // returns x - y, or exception if overflow, same as subtraction
+    static long subtractExact(long x, long y);
+    static int multiplyExact(int x, int y);     // returns x * y, or exception if it overflows, use multiplication rules (inspection rule defined in UnitsVisitor)
+    static long multiplyExact(long x, long y);
+
+    // The following uses Units Relations as well
+    static int floorDiv(int x, int y);          // returns largest value Q such that Q <= [x / y] in integer division, unit = x / y
+    static long floorDiv(long x, long y);
+    static double IEEEremainder(double f1, double f2);  // returns the IEEE spec remainder of f1 / f2; ie the exact value of f1–[round[f1/f2]*f2]; same unit as f1
+
+    static @PolyUnit int floorMod(@PolyUnit int x, @UnknownUnits int y);  // similar to modulus, returns [x - [floorDiv[x, y] * y]], ie unit of x
+    static @PolyUnit long floorMod(@PolyUnit long x, @UnknownUnits long y);
+
+    // TODO: Logical rationale: for powers and roots, can we tell if they want to take the power of the magnitude or the unit?
+    // Future TODO: return the square root of any unit
+    // currently supports returning the square root of mm2, m2, and km2 in Units ATF
+    static @Scalar double sqrt(@UnknownUnits double a);   // square root
+    // Future TODO: return the cubic root of the unit
+    static @Scalar double cbrt(@UnknownUnits double a);   // cubic root
+
+    static @PolyUnit double ceil(@PolyUnit double a);    // Same as a
+    static @PolyUnit double floor(@PolyUnit double a);  // same as a
+
+    // TODO: force the sign to be a Scalar?
+    static @PolyUnit double copySign(@PolyUnit double magnitude, @UnknownUnits double sign);  // same as magnitude
+    static @PolyUnit float copySign(@PolyUnit float magnitude, @UnknownUnits float sign);
+
+    static @Scalar double signum(@UnknownUnits double d); // returns the sign of d, unitless scalar
+    static @Scalar float signum(@UnknownUnits float f);
+
+    // powers, exponents, and logarithms
+    // Rules are declared in Units ATF for pow()
+    // Future TODO: return the power of any unit
+    static double pow(double a, double b);  // returns a ^ b, for specific cases of m, mm, and km we return m2, mm2, and km2, for everything else we return scalar
+
+    static @Scalar double exp(@UnknownUnits double a);    // calculates e^a == e * e * e .... which is a unitless scalar
+    static @Scalar double expm1(@UnknownUnits double x);  // calculates e^x - 1 ... which is also a unitless scalar
+
+    static @Scalar int getExponent(@UnknownUnits double d); // returns unbiased exponent used in the representation of a double, ie the exponent in base 2 arithmetic => unitless constant
+    static @Scalar int getExponent(@UnknownUnits float f);
+
+    static @Scalar double log(@UnknownUnits double a);    // log[a] = y where e^y = a, unitless?, this is log with base e
+    static @Scalar double log10(@UnknownUnits double a);  // log with base 10, log10[x] = y where 10^y = x
+    static @Scalar double log1p(@UnknownUnits double x);  // returns log[1.0 + x]
+
+    // Future TODO: support retainment of units in these identifies
+    // identity: exp(log(a)) == a
+    // identity: log(exp(x)) == x
+
+    // min and max
+    static @PolyUnit double max(@PolyUnit double a, @PolyUnit double b);  // both x & y should be the same unit, if so returns that unit, otherwise returns the LUB of the 2 units
+    static @PolyUnit float max(@PolyUnit float a, @PolyUnit float b);
+    static @PolyUnit int max(@PolyUnit int a, @PolyUnit int b);
+    static @PolyUnit long max(@PolyUnit long a, @PolyUnit long b);
+
+    static @PolyUnit double min(@PolyUnit double a, @PolyUnit double b);  // both x & y should be the same unit, if so returns that unit, otherwise returns the LUB of the 2 units
+    static @PolyUnit float min(@PolyUnit float a, @PolyUnit float b);
+    static @PolyUnit int min(@PolyUnit int a, @PolyUnit int b);
+    static @PolyUnit long min(@PolyUnit long a, @PolyUnit long b);
+
+    // start and direction should have same units, return that unit
+    static @PolyUnit double nextAfter(@PolyUnit double start, @PolyUnit double direction);    // if start > direction, returns start - [smallest double increment: 0.000....04], conceptually a tiny i--
+    static @PolyUnit float nextAfter(@PolyUnit float start, @PolyUnit double direction);  // if start < direction, returns start + smallest increment, conceptually a tiny i++
+
+    static @PolyUnit double nextDown(@PolyUnit double d);   // same unit, its tiny i--
+    static @PolyUnit float nextDown(@PolyUnit float f);
+
+    static @PolyUnit double nextUp(@PolyUnit double d); // same unit, its tiny i++
+    static @PolyUnit float nextUp(@PolyUnit float f);
+
+    static @Scalar double random();     // scalar
+
+    static @PolyUnit double rint(@PolyUnit double a);   // rounding a to the closest int value, but still returns as a double, same unit as a
+    static @PolyUnit long round(@PolyUnit double a);    // same unit as a
+    static @PolyUnit int round(@PolyUnit float a);
+    static @PolyUnit int toIntExact(@PolyUnit long value);      // ret value of long, or exception if it overflows an int; long to int conversion, same unit as value
+
+    static @PolyUnit double scalb(@PolyUnit double d, @UnknownUnits int scaleFactor); // returns d x 2 ^ scaleFactor, same unit as d
+    static @PolyUnit float scalb(@PolyUnit float f, @UnknownUnits int scaleFactor);
+
+    // an ulp of a double is the positive distance between this value and the double value next larger in magnitude
+    static @PolyUnit double ulp(@PolyUnit double d);    // returns the size of an ulp of the argument
+    static @PolyUnit float ulp(@PolyUnit float f);      // same unit as f
+}

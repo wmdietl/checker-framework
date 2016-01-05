@@ -1,14 +1,15 @@
 package org.checkerframework.checker.units;
 
+import org.checkerframework.common.basetype.BaseTypeChecker;
+import org.checkerframework.common.basetype.BaseTypeVisitor;
+import org.checkerframework.framework.qual.StubFiles;
+
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.annotation.processing.SupportedOptions;
-
-import org.checkerframework.common.basetype.BaseTypeChecker;
-import org.checkerframework.common.basetype.BaseTypeVisitor;
 
 /**
  * Units Checker main class.
@@ -22,6 +23,7 @@ import org.checkerframework.common.basetype.BaseTypeVisitor;
  * @checker_framework.manual #units-checker Units Checker
  */
 @SupportedOptions({ "units", "unitsDirs" })
+@StubFiles({ "Math.astub", "StrictMath.astub" })
 public class UnitsChecker extends BaseTypeChecker {
 
     /*

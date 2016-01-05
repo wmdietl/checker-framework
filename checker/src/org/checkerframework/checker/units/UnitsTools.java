@@ -3,6 +3,8 @@ package org.checkerframework.checker.units;
 import org.checkerframework.checker.units.qual.A;
 import org.checkerframework.checker.units.qual.C;
 import org.checkerframework.checker.units.qual.K;
+import org.checkerframework.checker.units.qual.Scalar;
+import org.checkerframework.checker.units.qual.UnknownUnits;
 import org.checkerframework.checker.units.qual.cd;
 import org.checkerframework.checker.units.qual.degrees;
 import org.checkerframework.checker.units.qual.g;
@@ -25,9 +27,10 @@ import org.checkerframework.checker.units.qual.s;
 /**
  * Utility methods to generate annotated types and to convert between them.
  */
-@SuppressWarnings("units")
+// Developer notes: add fromTo methods for all useful unit combinations here.
 
-// TODO: add fromTo methods for all useful unit combinations.
+// Forcefully suppress all warnings here, since this tools class provides means to assign types to value literals and convert between types
+@SuppressWarnings("units")
 public class UnitsTools {
     // Acceleration
     public static final @mPERs2 int mPERs2 = 1;
@@ -93,4 +96,10 @@ public class UnitsTools {
     public static @s int fromMinuteToSecond(@min int min) { return min * 60; }
     public static @h int fromMinuteToHour(@min int min) { return min / 60; }
     public static @min int fromHourToMinute(@h int h) { return h * 60; }
+
+    // Scalar Conversion Method
+    public static final @Scalar Object toScalar(@UnknownUnits Object o) {
+    // public static final <T> @Scalar T toScalar(@UnknownUnits T o) {
+        return o;
+    }
 }
