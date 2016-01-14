@@ -101,88 +101,6 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
         return new UnitsAnnotatedTypeFormatter(checker);
     }
 
-    // Converts all metric-prefixed units' alias annotations (eg @kg) into base
-    // unit annotations with prefix values (eg @g(Prefix.kilo))
-    @Override
-    public AnnotationMirror aliasedAnnotation(AnnotationMirror anno) {
-        // Get the name of the aliased annotation
-        String aname = anno.getAnnotationType().toString();
-
-        // See if we already have a map from this aliased annotation to its
-        // corresponding base unit annotation
-        if (aliasMap.containsKey(aname)) {
-            // if so return it
-            return aliasMap.get(aname);
-        }
-
-        AnnotationMirror result = buildBaseUnitAnnotationForAlias(anno);
-
-        if (result != null) {
-            // Assert that this annotation is a prefix multiple of a
-            // Unit that's in the supported type qualifiers list
-            assert isSupportedQualifier(result);
-
-            return result;
-        } else {
-            return super.aliasedAnnotation(anno);
-        }
-    }
-
-    /**
-     * Given an alias annotation, this method builds a base unit annotation with
-     * the alias's prefix, adds the alias to the aliasMap, and then returns the
-     * base annotation.
-     * 
-     * Given any other annotation, this method returns null.
-     *
-     * e.g. given @kg this will build @g with prefix {@link Prefix#kilo}
-     *
-     * @param anno an alias annotation
-     * @return the base unit annotation with the alias's prefix, null otherwise
-     */
-    private /*@Nullable*/ AnnotationMirror buildBaseUnitAnnotationForAlias(AnnotationMirror anno) {
-        // Get the name of the aliased annotation
-        String aname = anno.getAnnotationType().toString();
-
-        // Obtain the base unit class and alias prefix
-        Pair<Class<? extends Annotation>, Prefix> baseUnit = getBaseUnitClassAndPrefix(anno);
-
-        AnnotationMirror result = null;
-
-        if (baseUnit != null) {
-            Class<? extends Annotation> baseUnitClass = baseUnit.first;
-            Prefix prefix = baseUnit.second;
-
-            // Try to build a base unit annotation with the prefix applied
-            result = UnitsRelationsTools.buildAnnoMirrorWithSpecificPrefix(processingEnv, baseUnitClass, prefix);
-
-            // see if we are able to build the base unit annotation with the
-            // alias's prefix
-            if (result != null) {
-                // aliases shouldn't have Prefix.one, but if it does then clean
-                // it
-                // up here
-                if (UnitsRelationsTools.getPrefix(result) == Prefix.one) {
-                    result = removePrefix(result);
-                }
-                // add this to the alias map
-                aliasMap.put(aname, result);
-            }
-        }
-
-        return result;
-    }
-
-    protected Map<String, UnitsRelations> getUnitsRel() {
-        if (unitsRel == null) {
-            unitsRel = new HashMap<String, UnitsRelations>();
-            // Always add the default units relations, for the standard units.
-            unitsRel.put(UnitsRelationsDefault.class.getCanonicalName(),
-                    new UnitsRelationsDefault().init(processingEnv));
-        }
-        return unitsRel;
-    }
-
     @Override
     protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers() {
         // Use the Units Annotated Type Loader instead of the default one
@@ -322,6 +240,88 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
     }
 
     /**
+     * Given an alias annotation, this method builds a base unit annotation with
+     * the alias's prefix, adds the alias to the aliasMap, and then returns the
+     * base annotation.
+     * 
+     * Given any other annotation, this method returns null.
+     *
+     * e.g. given @kg this will build @g with prefix {@link Prefix#kilo}
+     *
+     * @param anno an alias annotation
+     * @return the base unit annotation with the alias's prefix, null otherwise
+     */
+    private /*@Nullable*/ AnnotationMirror buildBaseUnitAnnotationForAlias(AnnotationMirror anno) {
+        // Get the name of the aliased annotation
+        String aname = anno.getAnnotationType().toString();
+
+        // Obtain the base unit class and alias prefix
+        Pair<Class<? extends Annotation>, Prefix> baseUnit = getBaseUnitClassAndPrefix(anno);
+
+        AnnotationMirror result = null;
+
+        if (baseUnit != null) {
+            Class<? extends Annotation> baseUnitClass = baseUnit.first;
+            Prefix prefix = baseUnit.second;
+
+            // Try to build a base unit annotation with the prefix applied
+            result = UnitsRelationsTools.buildAnnoMirrorWithSpecificPrefix(processingEnv, baseUnitClass, prefix);
+
+            // see if we are able to build the base unit annotation with the
+            // alias's prefix
+            if (result != null) {
+                // aliases shouldn't have Prefix.one, but if it does then clean
+                // it
+                // up here
+                if (UnitsRelationsTools.getPrefix(result) == Prefix.one) {
+                    result = removePrefix(result);
+                }
+                // add this to the alias map
+                aliasMap.put(aname, result);
+            }
+        }
+
+        return result;
+    }
+
+    // Converts all metric-prefixed units' alias annotations (eg @kg) into base
+    // unit annotations with prefix values (eg @g(Prefix.kilo))
+    @Override
+    public AnnotationMirror aliasedAnnotation(AnnotationMirror anno) {
+        // Get the name of the aliased annotation
+        String aname = anno.getAnnotationType().toString();
+
+        // See if we already have a map from this aliased annotation to its
+        // corresponding base unit annotation
+        if (aliasMap.containsKey(aname)) {
+            // if so return it
+            return aliasMap.get(aname);
+        }
+
+        AnnotationMirror result = buildBaseUnitAnnotationForAlias(anno);
+
+        if (result != null) {
+            // Assert that this annotation is a prefix multiple of a
+            // Unit that's in the supported type qualifiers list
+            assert isSupportedQualifier(result);
+
+            return result;
+        } else {
+            return super.aliasedAnnotation(anno);
+        }
+    }
+
+    protected Map<String, UnitsRelations> getUnitsRelationsMap() {
+        if (unitsRel == null) {
+            unitsRel = new HashMap<String, UnitsRelations>();
+            // Always add the default units relations, for the standard units.
+            unitsRel.put(UnitsRelationsDefault.class.getCanonicalName(),
+                    new UnitsRelationsDefault().init(processingEnv));
+        }
+        return unitsRel;
+    }
+
+    /**
      * Look for an @UnitsRelations annotation on the qualifier and add it to the
      * list of UnitsRelations.
      *
@@ -335,7 +335,7 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                 Class<? extends UnitsRelations> theclass = AnnotationUtils.getElementValueClass(ama, "value", true).asSubclass(UnitsRelations.class);
                 String classname = theclass.getCanonicalName();
 
-                if (!getUnitsRel().containsKey(classname)) {
+                if (!getUnitsRelationsMap().containsKey(classname)) {
                     try {
                         unitsRel.put(classname, ((UnitsRelations) theclass.newInstance()).init(processingEnv));
                     } catch (InstantiationException e) {
@@ -578,7 +578,7 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
 
             // First use units relations to resolve the operation
             AnnotationMirror bestResult = null;
-            for (UnitsRelations ur : getUnitsRel().values()) {
+            for (UnitsRelations ur : getUnitsRelationsMap().values()) {
                 AnnotationMirror res = useUnitsRelation(kind, ur, lht, rht);
 
                 if (bestResult != null && res != null && !bestResult.equals(res)) {
