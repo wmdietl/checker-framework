@@ -54,28 +54,28 @@ public class Scalars {
 
         // No Prefix ======================
         // super type of m and m is m
-        @m int m_m = (m == 10? m : m);
+        @m int m_m = (m == m? m : m);
 
         // Single Prefix ==================
         // super type of m & km is Length
-        @Length int m_km = (m == 10? m : km);
+        @Length int m_km = (m == m? m : km);
         // in reverse order
-        @Length int km_m = (m == 10? km : m);
+        @Length int km_m = (m == m? km : m);
 
         // Multiple Prefix ================
         // super type of mm and km is Length
-        @Length int mm_km = (m == 10? mm : km);
+        @Length int mm_km = (m == m? mm : km);
         // in reverse order
-        @Length int km_mm = (m == 10? km : mm);
+        @Length int km_mm = (m == m? km : mm);
 
         // Multiple Prefix with Single Prefix.one =============
         // testing @m(Prefix.one) which is the same as @m
-        @Length int m1_mk = (m1 == 10? m1 : mk);
+        @Length int m1_mk = (m1 == m1? m1 : mk);
         // in reverse order
-        @Length int mk_m1 = (m1 == 10? mk : m1);
+        @Length int mk_m1 = (m1 == m1? mk : m1);
 
         // Double Prefix.one ==============
-        @m int m1_m1 = (m1 == 10? m1 : m1);
+        @m int m1_m1 = (m1 == m1? m1 : m1);
     }
 
     void primitiveNumberTypeRefinement() {
@@ -289,28 +289,26 @@ public class Scalars {
     }
 
     void toScalarTest() {
+        // Test wrapper classes
         @m Double x = new @m Double(20.0d);
+        @Scalar Double y = UnitsTools.toScalar(x);
+        //:: error: (assignment.type.incompatible)
+        x = UnitsTools.toScalar(x);
 
-        @Scalar Double y = (Double) UnitsTools.toScalar(x);
+        @g Integer a = new @g Integer(4);
+        @Scalar Integer b = UnitsTools.toScalar(a);
         //:: error: (assignment.type.incompatible)
-        x = (Double) UnitsTools.toScalar(x);
-    }
+        a = UnitsTools.toScalar(a);
 
-    void scalarArray() {
-        // not quite working... these should be an array of @Scalar ints
-        int[] x1 = new int[4];
-        int[] x2 = {1, 2, 3, 4};
+        // Test primitive types
+        @kg double d = 20.5d * UnitsTools.kg;
+        @Scalar double e = UnitsTools.toScalar(d);
+        //:: error: (assignment.type.incompatible)
+        d = UnitsTools.toScalar(d);
 
-        // TODO: remove this error, as it isn't an error
+        @C int i = 50 * UnitsTools.C;
+        @Scalar int j = UnitsTools.toScalar(i);
         //:: error: (assignment.type.incompatible)
-        @Scalar int y1 = x1[0];
-        //:: error: (assignment.type.incompatible)
-        @m int z1 = x1[1];
-
-        // TODO: remove this error, as it isn't an error
-        //:: error: (assignment.type.incompatible)
-        @Scalar int y2 = x2[0];
-        //:: error: (assignment.type.incompatible)
-        @m int z2 = x2[1];
+        i = UnitsTools.toScalar(i);
     }
 }

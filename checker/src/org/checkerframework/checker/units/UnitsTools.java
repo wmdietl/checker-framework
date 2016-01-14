@@ -98,8 +98,16 @@ public class UnitsTools {
     public static @min int fromHourToMinute(@h int h) { return h * 60; }
 
     // Scalar Conversion Method
-    public static final @Scalar Object toScalar(@UnknownUnits Object o) {
-    // public static final <T> @Scalar T toScalar(@UnknownUnits T o) {
-        return o;
+    /**
+     * This method takes in any variable or reference and returns the same
+     * variable or reference with the Scalar unit instead of what it had.
+     *
+     * @param x a variable or reference with any unit
+     * @return x with the Scalar unit replacing the unit it had
+     */
+    public static final @Scalar <T> T toScalar(@UnknownUnits T x) {
+        // for version 8:
+        // public static final <T> @Scalar T toScalar(@UnknownUnits T x) {
+        return x;
     }
 }

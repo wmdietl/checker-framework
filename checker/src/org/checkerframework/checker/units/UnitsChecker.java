@@ -23,7 +23,7 @@ import javax.annotation.processing.SupportedOptions;
  * @checker_framework.manual #units-checker Units Checker
  */
 @SupportedOptions({ "units", "unitsDirs" })
-@StubFiles({ "Math.astub", "StrictMath.astub" })
+@StubFiles({ "Math.astub", "StrictMath.astub", "PrintStream.astub" })
 public class UnitsChecker extends BaseTypeChecker {
 
     /*

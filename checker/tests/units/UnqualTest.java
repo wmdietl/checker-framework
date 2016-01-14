@@ -2,34 +2,48 @@ import org.checkerframework.checker.units.qual.*;
 
 // Tests for unqualified assignments
 public class UnqualTest {
-    // Fields are by default @UnknownUnits, inference should transfer units for UnknownUnits, but not Scalars
+    // Fields are by default @Scalar, inference should transfer units for UnknownUnits, but not Scalar
+    int scalar = 5;
 
     //:: error: (assignment.type.incompatible)
-    @kg int kg = 5;
+    @kg int kg = scalar;
+
     // inferred to be kg
-    int inferredKg = kg;
+    @UnknownUnits int inferredKg = kg;
     // accepted due to inference of kg unit
     @kg int alsokg = inferredKg;
 
+    int alsoScalar = scalar;
+
     //:: error: (assignment.type.incompatible)
-    @kg int kg2 = 5;
+    @kg int kg2 = scalar;
     //:: error: (assignment.type.incompatible)
     @Scalar int notKg = kg2;
     //:: error: (assignment.type.incompatible)
     @kg int alsokg2 = notKg;
 
-    // Local Variables are by default @UnknownUnits, inference should transfer units for UnknownUnits
     void m(){
+        // Local Variables are by default @UnknownUnits, inference should transfer units for UnknownUnits
+
         // primitive number literals are by default @Scalar
-        int scalar = 5;
+        // this is inferred to be scalar
+        int inferredScalar = 5;
 
         //:: error: (assignment.type.incompatible)
-        @kg int kgLV = scalar;
+        @kg int kgLV = inferredScalar;
 
-        int nonkgLV = kgLV;
+        // inferred to be kg
+        int inferredKgLV = kgLV;
+        // accepted due to inference of kg unit
+        @kg int alsokgLV = inferredKgLV;
 
-        @kg int alsokgLV = nonkgLV;
+        @Scalar int scalar = inferredScalar;
 
-        int alsoScalar = scalar;
+        //:: error: (assignment.type.incompatible)
+        @kg int kg2 = inferredScalar;
+        //:: error: (assignment.type.incompatible)
+        @Scalar int notKg = kg2;
+        //:: error: (assignment.type.incompatible)
+        @kg int alsokg2 = notKg;
     }
 }

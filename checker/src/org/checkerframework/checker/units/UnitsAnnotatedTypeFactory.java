@@ -1,6 +1,5 @@
 package org.checkerframework.checker.units;
 
-import org.checkerframework.checker.units.qual.MixedUnits;
 import org.checkerframework.checker.units.qual.Prefix;
 import org.checkerframework.checker.units.qual.Scalar;
 import org.checkerframework.checker.units.qual.UnitsBottom;
@@ -24,6 +23,7 @@ import org.checkerframework.framework.type.treeannotator.TreeAnnotator;
 import org.checkerframework.framework.util.GraphQualifierHierarchy;
 import org.checkerframework.framework.util.MultiGraphQualifierHierarchy.MultiGraphFactory;
 import org.checkerframework.javacutil.AnnotationUtils;
+import org.checkerframework.javacutil.Pair;
 import org.checkerframework.javacutil.TreeUtils;
 
 import java.lang.annotation.Annotation;
@@ -42,6 +42,7 @@ import javax.tools.Diagnostic.Kind;
 import com.sun.source.tree.BinaryTree;
 import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.LiteralTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 
@@ -62,7 +63,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
     private static final Class<org.checkerframework.checker.units.qual.UnitsRelations> unitsRelationsAnnoClass = org.checkerframework.checker.units.qual.UnitsRelations.class;
 
-    protected final AnnotationMirror mixedUnits = AnnotationUtils.fromClass(elements, MixedUnits.class);
     protected final AnnotationMirror scalar = AnnotationUtils.fromClass(elements, Scalar.class);
     protected final AnnotationMirror TOP = AnnotationUtils.fromClass(elements, UnknownUnits.class);
     protected final AnnotationMirror BOTTOM = AnnotationUtils.fromClass(elements, UnitsBottom.class);
@@ -115,53 +115,70 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             return aliasMap.get(aname);
         }
 
-        boolean built = false;
-        AnnotationMirror result = null;
-        // if not, look for the UnitsMultiple meta annotations of this aliased
-        // annotation
-        for (AnnotationMirror metaAnno : anno.getAnnotationType().asElement().getAnnotationMirrors()) {
-            // see if the meta annotation is UnitsMultiple
-            if (isUnitsMultiple(metaAnno)) {
-                // retrieve the Class of the base unit annotation
-                Class<? extends Annotation> baseUnitAnnoClass = AnnotationUtils.getElementValueClass(metaAnno, "quantity", true).asSubclass(Annotation.class);
+        AnnotationMirror result = buildBaseUnitAnnotationForAlias(anno);
 
-                // retrieve the SI Prefix of the aliased annotation
-                Prefix prefix = AnnotationUtils.getElementValueEnum(metaAnno, "prefix", Prefix.class, true);
+        if (result != null) {
+            // Assert that this annotation is a prefix multiple of a
+            // Unit that's in the supported type qualifiers list
+            assert isSupportedQualifier(result);
 
-                // Build a base unit annotation with the prefix applied
-                result = UnitsRelationsTools.buildAnnoMirrorWithSpecificPrefix(processingEnv, baseUnitAnnoClass, prefix);
-
-                // TODO: assert that this annotation is a prefix multiple of a
-                // Unit that's in the supported type qualifiers list
-                // currently this breaks for externally loaded annotations if
-                // the order was an alias before a base annotation
-                // assert isSupportedQualifier(result);
-
-                built = true;
-                break;
-            }
-        }
-
-        if (built) {
-            // aliases shouldn't have Prefix.one, but if it does then clean it
-            // up here
-            if (UnitsRelationsTools.getPrefix(result) == Prefix.one) {
-                result = removePrefix(result);
-            }
-
-            // add this to the alias map
-            aliasMap.put(aname, result);
             return result;
+        } else {
+            return super.aliasedAnnotation(anno);
+        }
+    }
+
+    /**
+     * Given an alias annotation, this method builds a base unit annotation with
+     * the alias's prefix, adds the alias to the aliasMap, and then returns the
+     * base annotation.
+     * 
+     * Given any other annotation, this method returns null.
+     *
+     * e.g. given @kg this will build @g with prefix {@link Prefix#kilo}
+     *
+     * @param anno an alias annotation
+     * @return the base unit annotation with the alias's prefix, null otherwise
+     */
+    private /*@Nullable*/ AnnotationMirror buildBaseUnitAnnotationForAlias(AnnotationMirror anno) {
+        // Get the name of the aliased annotation
+        String aname = anno.getAnnotationType().toString();
+
+        // Obtain the base unit class and alias prefix
+        Pair<Class<? extends Annotation>, Prefix> baseUnit = getBaseUnitClassAndPrefix(anno);
+
+        AnnotationMirror result = null;
+
+        if (baseUnit != null) {
+            Class<? extends Annotation> baseUnitClass = baseUnit.first;
+            Prefix prefix = baseUnit.second;
+
+            // Try to build a base unit annotation with the prefix applied
+            result = UnitsRelationsTools.buildAnnoMirrorWithSpecificPrefix(processingEnv, baseUnitClass, prefix);
+
+            // see if we are able to build the base unit annotation with the
+            // alias's prefix
+            if (result != null) {
+                // aliases shouldn't have Prefix.one, but if it does then clean
+                // it
+                // up here
+                if (UnitsRelationsTools.getPrefix(result) == Prefix.one) {
+                    result = removePrefix(result);
+                }
+                // add this to the alias map
+                aliasMap.put(aname, result);
+            }
         }
 
-        return super.aliasedAnnotation(anno);
+        return result;
     }
 
     protected Map<String, UnitsRelations> getUnitsRel() {
         if (unitsRel == null) {
             unitsRel = new HashMap<String, UnitsRelations>();
             // Always add the default units relations, for the standard units.
-            unitsRel.put(UnitsRelationsDefault.class.getCanonicalName(), new UnitsRelationsDefault().init(processingEnv));
+            unitsRel.put(UnitsRelationsDefault.class.getCanonicalName(),
+                    new UnitsRelationsDefault().init(processingEnv));
         }
         return unitsRel;
     }
@@ -223,18 +240,19 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
     private void addUnitToExternalQualMap(final Class<? extends Annotation> annoClass) {
         AnnotationMirror mirror = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, annoClass);
 
-        // if it is not an aliased annotation, add to external quals map if it
-        // isn't already in map
         if (!isAliasedAnnotation(mirror)) {
+            // if it is not an aliased annotation, add to external quals map if
+            // it isn't already in map
             String unitClassName = annoClass.getCanonicalName();
             if (!externalQualsMap.containsKey(unitClassName)) {
                 externalQualsMap.put(unitClassName, annoClass);
             }
-        }
-        // if it is an aliased annotation
-        else {
+        } else {
+            // if it is an aliased annotation
+            Pair<Class<? extends Annotation>, Prefix> baseUnit = getBaseUnitClassAndPrefix(mirror);
+            Class<? extends Annotation> baseUnitClass = baseUnit.first;
+
             // ensure it has a base unit
-            Class<? extends Annotation> baseUnitClass = getBaseUnitAnnoClass(mirror);
             if (baseUnitClass != null) {
                 // if the base unit isn't already added, add that first
                 String baseUnitClassName = baseUnitClass.getCanonicalName();
@@ -242,10 +260,10 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                     loadExternalUnit(baseUnitClassName);
                 }
 
-                // then add the aliased annotation to the alias map
-                // TODO: refactor so we can directly add to alias map, skipping
-                // the assert check in aliasedAnnotation
-                aliasedAnnotation(mirror);
+                // Build and add the alias's standard annotation to the alias
+                // map
+                buildBaseUnitAnnotationForAlias(mirror);
+
             } else {
                 // error: somehow the aliased annotation has @UnitsMultiple meta
                 // annotation, but no base class defined in that meta annotation
@@ -259,34 +277,14 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
     }
 
     private boolean isAliasedAnnotation(AnnotationMirror anno) {
-        // loop through the meta annotations of the annotation, look for
-        // UnitsMultiple
-        @SuppressWarnings("unchecked")
-        List<? extends AnnotationMirror> metaAnnos = anno.getAnnotationType().asElement().getAnnotationMirrors();
-        for (AnnotationMirror metaAnno : metaAnnos) {
-            // see if the meta annotation is UnitsMultiple
-            if (isUnitsMultiple(metaAnno)) {
-                // TODO: does every alias have to have Prefix?
-                return true;
-            }
-        }
-
-        // if we are unable to find UnitsMultiple meta annotation, then this is
-        // not an Aliased Annotation
-        return false;
+        return getUnitsMultipleMetaAnnotation(anno) != null;
     }
 
-    private /*@Nullable*/ Class<? extends Annotation> getBaseUnitAnnoClass(AnnotationMirror anno) {
-        // loop through the meta annotations of the annotation, look for
-        // UnitsMultiple
+    private /*@Nullable*/ AnnotationMirror getUnitsMultipleMetaAnnotation(AnnotationMirror anno) {
         for (AnnotationMirror metaAnno : anno.getAnnotationType().asElement().getAnnotationMirrors()) {
             // see if the meta annotation is UnitsMultiple
             if (isUnitsMultiple(metaAnno)) {
-                // TODO: does every alias have to have Prefix?
-                // retrieve the Class of the base unit annotation
-                Class<? extends Annotation> baseUnitAnnoClass = AnnotationUtils.getElementValueClass(metaAnno, "quantity", true).asSubclass(Annotation.class);
-
-                return baseUnitAnnoClass;
+                return metaAnno;
             }
         }
         return null;
@@ -294,6 +292,33 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
 
     private boolean isUnitsMultiple(AnnotationMirror metaAnno) {
         return AnnotationUtils.areSameByClass(metaAnno, UnitsMultiple.class);
+    }
+
+    /**
+     * If given an alias annotation, this method will return a pair consisting
+     * of the alias's base unit annotation class and the alias's prefix. If
+     * given any other annotation, this method will return null.
+     *
+     * @param anno a units annotation
+     * @return the pair, or null
+     */
+    private /*@Nullable*/ Pair<Class<? extends Annotation>, Prefix> getBaseUnitClassAndPrefix(AnnotationMirror anno) {
+        // see if the annotation is an alias
+        if (isAliasedAnnotation(anno)) {
+            AnnotationMirror unitsMultipleAnno = getUnitsMultipleMetaAnnotation(anno);
+
+            // retrieve the Class of the base unit annotation
+            Class<? extends Annotation> baseUnitAnnoClass = AnnotationUtils.getElementValueClass(unitsMultipleAnno, "quantity", true).asSubclass(Annotation.class);
+
+            // TODO: does every alias have to have a Prefix?
+            // retrieve the Prefix of the alias unit
+            Prefix prefix = AnnotationUtils.getElementValueEnum(unitsMultipleAnno, "prefix", Prefix.class, true);
+
+            // return the Class and the Prefix as a pair
+            return Pair.of(baseUnitAnnoClass, prefix);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -397,88 +422,72 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             // stores the list of method call arguments
             List<? extends ExpressionTree> methodArguments = node.getArguments();
 
+            if (!isMathType) {
+                // if it isn't a math library method call, return super's result
+                return super.visitMethodInvocation(node, type);
+            }
+
             // process each math library method call
-            if (isMathType && isAddExact) {
+            if (isAddExact) {
                 // addExact is always called with 2 arguments
-                AnnotatedTypeMirror lht = getAnnotatedType(methodArguments.get(0));
-                AnnotatedTypeMirror rht = getAnnotatedType(methodArguments.get(1));
-                visitMathOperation(Tree.Kind.PLUS, type, lht, rht);
-                return null;
-            } else if (isMathType && isSubtractExact) {
+                return processMathLibraryArithmeticOperation(Tree.Kind.PLUS, type, methodArguments);
+
+            } else if (isSubtractExact) {
                 // subtractExact is always called with 2 arguments
-                AnnotatedTypeMirror lht = getAnnotatedType(methodArguments.get(0));
-                AnnotatedTypeMirror rht = getAnnotatedType(methodArguments.get(1));
-                visitMathOperation(Tree.Kind.MINUS, type, lht, rht);
-                return null;
+                return processMathLibraryArithmeticOperation(Tree.Kind.MINUS, type, methodArguments);
 
-            } else if (isMathType && isMultiplyExact) {
+            } else if (isMultiplyExact) {
                 // multiplyExact is always called with 2 arguments
-                AnnotatedTypeMirror lht = getAnnotatedType(methodArguments.get(0));
-                AnnotatedTypeMirror rht = getAnnotatedType(methodArguments.get(1));
-                visitMathOperation(Tree.Kind.MULTIPLY, type, lht, rht);
-                return null;
+                return processMathLibraryArithmeticOperation(Tree.Kind.MULTIPLY, type, methodArguments);
 
-            } else if (isMathType && isFloorDiv) {
+            } else if (isFloorDiv) {
                 // floorDiv is always called with 2 arguments
-                AnnotatedTypeMirror lht = getAnnotatedType(methodArguments.get(0));
-                AnnotatedTypeMirror rht = getAnnotatedType(methodArguments.get(1));
-                visitMathOperation(Tree.Kind.DIVIDE, type, lht, rht);
-                return null;
+                return processMathLibraryArithmeticOperation(Tree.Kind.DIVIDE, type, methodArguments);
 
-            } else if (isMathType && isIEEEremainder) {
+            } else if (isIEEEremainder) {
                 // IEEEremainder is always called with 2 arguments
-                AnnotatedTypeMirror lht = getAnnotatedType(methodArguments.get(0));
-                AnnotatedTypeMirror rht = getAnnotatedType(methodArguments.get(1));
-                visitMathOperation(Tree.Kind.REMAINDER, type, lht, rht);
-                return null;
+                return processMathLibraryArithmeticOperation(Tree.Kind.REMAINDER, type, methodArguments);
 
-            } else if (isMathType && isAtan2) {
+            } else if (isAtan2) {
                 // atan2 is always called with 2 arguments
                 AnnotatedTypeMirror lht = getAnnotatedType(methodArguments.get(0));
                 AnnotatedTypeMirror rht = getAnnotatedType(methodArguments.get(1));
                 // atan2 must be called with the same units for both of its
                 // arguments
                 if (!UnitsRelationsTools.hasSameUnits(lht, rht)) {
-                    checker.report(Result.failure("argument.units.mismatch", lht.toString(), rht.toString()), node);
+                    checker.report(Result.failure("two.parameter.method.arguments.unit.mismatch", lht.toString(), rht.toString()), node);
                 }
-                return null;
 
-            } else if (isMathType && isSqrt) {
+            } else if (isSqrt) {
                 // sqrt is always called with 1 argument
                 AnnotatedTypeMirror arg = getAnnotatedType(methodArguments.get(0));
-                if (UnitsRelationsTools.hasSpecificUnit(arg, m2)) {
-                    // if sqrt was called with a meter-squared unit, return
-                    // meter
-                    type.replaceAnnotation(m);
-                } else if (UnitsRelationsTools.hasSpecificUnit(arg, mm2)) {
-                    // if sqrt was called with a millimeter-squared unit, return
-                    // millimeter
-                    type.replaceAnnotation(mm);
-                } else if (UnitsRelationsTools.hasSpecificUnit(arg, km2)) {
-                    // if sqrt was called with a kilometer-squared unit, return
-                    // kilometer
-                    type.replaceAnnotation(km);
-                }
-                return null;
+                return processSquareRoot(arg, type);
 
-            } else if (isMathType && isCbrt) {
+            } else if (isCbrt) {
                 // Future TODO: return a partial unit representing the cubic
                 // root of a unit
-                return null;
 
-            } else if (isMathType && isPow) {
+            } else if (isPow) {
                 // pow is always called with 2 arguments
                 AnnotatedTypeMirror lht = getAnnotatedType(methodArguments.get(0));
-                String secondParameter = methodArguments.get(1).toString();
+                ExpressionTree rh = methodArguments.get(1);
 
-                // try to parse the second parameter into a double
+                if (!(rh instanceof LiteralTree)) {
+                    return null;
+                }
+
                 double exp = 0.0;
-                try {
-                    exp = Double.parseDouble(secondParameter);
-                } catch (NumberFormatException | NullPointerException e) {
-                    // if the second parameter is a variable, we do not process
-                    // further and simply return scalar
-                    // keeping exp as 0.0
+                Object val = ((LiteralTree) rh).getValue();
+
+                // convert the literal value from object type into a double
+                if (rh.getKind() == Tree.Kind.DOUBLE_LITERAL) {
+                    exp = (double) val;
+                } else if (rh.getKind() == Tree.Kind.FLOAT_LITERAL) {
+                    exp = (float) val;
+                } else if (rh.getKind() == Tree.Kind.LONG_LITERAL) {
+                    exp = (long) val;
+                } else if (rh.getKind() == Tree.Kind.INT_LITERAL) {
+                    exp = (int) val;
                 }
 
                 // see what is the exponent
@@ -496,19 +505,69 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                     } else {
                         type.replaceAnnotation(scalar);
                     }
+                } else if (exp == 0.5) {
+                    // taking the power of 0.5 is the same as taking the square
+                    // root
+                    return processSquareRoot(lht, type);
                 } else {
-                    // return scalar
-                    type.replaceAnnotation(scalar);
+                    // return UnknownUnits
+                    type.replaceAnnotation(TOP);
                 }
-                return null;
 
             } else {
-                // if it isn't a math library method call, return super's result
+                // for any other math library method call, return super's result
                 return super.visitMethodInvocation(node, type);
             }
+
+            return null;
         }
 
-        private Void visitMathOperation(Tree.Kind kind, AnnotatedTypeMirror resultType, AnnotatedTypeMirror lht, AnnotatedTypeMirror rht) {
+        /**
+         * Helper method which extracts the two arguments of a Math library
+         * method call, then calls processMathOperation to check and assign the
+         * resulting type
+         *
+         * @param kind kind of operation: PLUS, MINUS, MULTIPLY, DIVIDE,
+         *            REMAINDER
+         * @param type the resulting type
+         * @param methodArguments the arguments to the Math library method call
+         * @return the resulting type will be assigned according to math
+         *         operation rules
+         */
+        private Void processMathLibraryArithmeticOperation(Tree.Kind kind, AnnotatedTypeMirror type, List<? extends ExpressionTree> methodArguments) {
+            AnnotatedTypeMirror lht = getAnnotatedType(methodArguments.get(0));
+            AnnotatedTypeMirror rht = getAnnotatedType(methodArguments.get(1));
+            return processMathOperation(kind, type, lht, rht);
+        }
+
+        /**
+         * If arg is one of the supported area units, then it will return the
+         * corresponding length unit
+         *
+         * @param arg a unit which may or may not be one of the supported area
+         *            units
+         * @param type the result unit
+         * @return type will be replaced with the corresponding length unit if
+         *         arg is a supported area unit
+         */
+        private Void processSquareRoot(AnnotatedTypeMirror arg, AnnotatedTypeMirror type) {
+            if (UnitsRelationsTools.hasSpecificUnit(arg, m2)) {
+                // if sqrt was called with a meter-squared unit, return
+                // meter
+                type.replaceAnnotation(m);
+            } else if (UnitsRelationsTools.hasSpecificUnit(arg, mm2)) {
+                // if sqrt was called with a millimeter-squared unit, return
+                // millimeter
+                type.replaceAnnotation(mm);
+            } else if (UnitsRelationsTools.hasSpecificUnit(arg, km2)) {
+                // if sqrt was called with a kilometer-squared unit, return
+                // kilometer
+                type.replaceAnnotation(km);
+            }
+            return null;
+        }
+
+        private Void processMathOperation(Tree.Kind kind, AnnotatedTypeMirror resultType, AnnotatedTypeMirror lht, AnnotatedTypeMirror rht) {
             // Remove Prefix.one
             if (UnitsRelationsTools.getPrefix(lht) == Prefix.one) {
                 lht = UnitsRelationsTools.removePrefix(elements, lht);
@@ -547,15 +606,17 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                 }
 
                 switch (kind) {
-                case MINUS:
                 case PLUS:
+                    // plus is treated the same as minus
+                case MINUS:
                     if (UnitsRelationsTools.hasSameUnits(lht, rht)) {
-                        // The sum or difference has the same units as both
-                        // operands.
+                        // If both operands for sum or difference have the same
+                        // units, we return the unit
                         resultType.replaceAnnotations(lht.getAnnotations());
                     } else {
-                        // otherwise it results in the LUB of the left and right
+                        // otherwise we return in the LUB of the left and right
                         // types
+                        // this is more flexible: e.g. km + meter ==> length
                         resultType.replaceAnnotation(getLUB(lht, rht));
                     }
                     break;
@@ -574,11 +635,11 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                     } else {
                         // else it is a multiplication of two units that have no
                         // defined relations from a relations class, so we
-                        // return mixed
+                        // return unknown
                         // Future TODO: track partial units (unit ^ 2), so that
                         // equations like unit * unit / unit == unit work
-                        // also unit * unknown = mixed
-                        resultType.replaceAnnotation(mixedUnits);
+                        // also unit * unknown = unknown
+                        resultType.replaceAnnotation(TOP);
                     }
                     break;
                 case DIVIDE:
@@ -594,19 +655,19 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                         // also unknown / scalar = unknown
                         resultType.replaceAnnotations(lht.getAnnotations());
                     } else if (UnitsRelationsTools.hasNoUnits(lht)) {
-                        // scalar divided by any unit returns mixed
+                        // scalar divided by any unit returns unknown
                         // Future TODO: track partial units (scalar / unit), so
                         // that equations like scalar / unit * unit == scalar
                         // work
-                        // also scalar / unknown = mixed
-                        resultType.replaceAnnotation(mixedUnits);
+                        // also scalar / unknown = unknown
+                        resultType.replaceAnnotation(TOP);
                     } else {
                         // else it is a division of two units that have no
                         // defined relations from a relations class
-                        // return mixed
-                        // also unit / unknown = mixed, and unknown / unit =
-                        // mixed
-                        resultType.replaceAnnotation(mixedUnits);
+                        // return unknown
+                        // also unit / unknown = unknown, and unknown / unit =
+                        // unknown
+                        resultType.replaceAnnotation(TOP);
                     }
                     break;
                 case REMAINDER:
@@ -629,7 +690,35 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             AnnotatedTypeMirror rht = getAnnotatedType(node.getRightOperand());
             Tree.Kind kind = node.getKind();
 
-            visitMathOperation(kind, type, lht, rht);
+            // see if it is a comparison operation
+            switch (kind) {
+            case EQUAL_TO:
+            case NOT_EQUAL_TO:
+            case GREATER_THAN:
+            case GREATER_THAN_EQUAL:
+            case LESS_THAN:
+            case LESS_THAN_EQUAL:
+                // if it is a comparison operation, check to see if it has the
+                // same units for both operands
+                if (UnitsRelationsTools.hasSameUnits(lht, rht)) {
+                    // if both operands of a comparison have the same unit, then
+                    // the result boolean value has a unit of Scalar
+                    type.replaceAnnotation(scalar);
+                } else if (UnitsRelationsTools.hasSpecificUnit(lht, BOTTOM) || UnitsRelationsTools.hasSpecificUnit(rht, BOTTOM)) {
+                    // if either of the operand is the Bottom type (commonly for
+                    // null reference comparisons) then return Scalar as well
+                    type.replaceAnnotation(scalar);
+                } else {
+                    // if the operands have different units, then alert error
+                    checker.report(Result.failure("operands.unit.mismatch", lht.toString(), rht.toString()), node);
+                }
+                break;
+            default:
+                // if it isn't a comparison operation, then check and process
+                // arithmetic operations
+                processMathOperation(kind, type, lht, rht);
+            }
+
             return null;
         }
 
@@ -638,8 +727,6 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             ExpressionTree var = node.getVariable();
             AnnotatedTypeMirror varType = getAnnotatedType(var);
 
-            // checker.message(Kind.NOTE, "Units ATF visit Compound, variable: "
-            // + var.toString() + " replacement type: " + varType.toString());
             type.replaceAnnotations(varType.getAnnotations());
             return null;
         }
@@ -662,7 +749,6 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             AnnotationMirror res = null;
             if (ur != null) {
                 switch (kind) {
-                // TODO: addition, subtraction, remainder
                 case DIVIDE:
                     res = ur.division(lht, rht);
                     break;

@@ -104,7 +104,7 @@ public class UnitsRelationsTools {
 
         // go through each Annotation of an Annotated Type, find the prefix and
         // return it
-        for (AnnotationMirror mirror : annoType.getAnnotations()) {
+        for (AnnotationMirror mirror : annoType.getEffectiveAnnotations()) {
             // try to get a prefix
             result = getPrefix(mirror);
             // if it is not null, then return the retrieved prefix immediately
@@ -157,7 +157,7 @@ public class UnitsRelationsTools {
             return true;
         }
 
-        for (AnnotationMirror mirror : annoType.getAnnotations()) {
+        for (AnnotationMirror mirror : annoType.getEffectiveAnnotations()) {
             // if any Annotation has a prefix, return false
             if (!hasNoPrefix(mirror)) {
                 return false;
@@ -256,7 +256,7 @@ public class UnitsRelationsTools {
         AnnotatedTypeMirror result = annoType.deepCopy(false);
 
         // get all of the original Annotations in the Annotated Type
-        Set<AnnotationMirror> annos = annoType.getAnnotations();
+        Set<AnnotationMirror> annos = annoType.getEffectiveAnnotations();
 
         // loop through all the Annotations to see if they use Prefix.one,
         // remove Prefix.one if it does
@@ -310,7 +310,7 @@ public class UnitsRelationsTools {
             return false;
         }
 
-        return AnnotationUtils.containsSame(annoType.getAnnotations(), unitsAnnotation);
+        return AnnotationUtils.containsSame(annoType.getEffectiveAnnotations(), unitsAnnotation);
     }
 
     /**
@@ -328,7 +328,7 @@ public class UnitsRelationsTools {
             return false;
         }
 
-        return AnnotationUtils.containsSameIgnoringValues(annoType.getAnnotations(), unitsAnnotation);
+        return AnnotationUtils.containsSameIgnoringValues(annoType.getEffectiveAnnotations(), unitsAnnotation);
     }
 
     /**
@@ -344,7 +344,7 @@ public class UnitsRelationsTools {
             return false;
         }
 
-        return AnnotationUtils.areSame(t1.getAnnotations(), t2.getAnnotations());
+        return AnnotationUtils.areSame(t1.getEffectiveAnnotations(), t2.getEffectiveAnnotations());
     }
 
     /**
@@ -360,8 +360,8 @@ public class UnitsRelationsTools {
             return false;
         }
 
-        Collection<? extends AnnotationMirror> c1 = t1.getAnnotations();
-        Collection<? extends AnnotationMirror> c2 = t2.getAnnotations();
+        Collection<? extends AnnotationMirror> c1 = t1.getEffectiveAnnotations();
+        Collection<? extends AnnotationMirror> c2 = t2.getEffectiveAnnotations();
 
         if (c1.size() != c2.size())
             return false;
@@ -390,8 +390,8 @@ public class UnitsRelationsTools {
      * Checks to see if the two annotation mirrors passed in have the exact same
      * units
      *
-     * @param t1 first annotation mirror
-     * @param t2 second annotation mirror
+     * @param m1 first annotation mirror
+     * @param m2 second annotation mirror
      * @return true if they have the same unit, false otherwise
      */
     public static boolean hasSameUnits(/*@Nullable*/ final AnnotationMirror m1, /*@Nullable*/ final AnnotationMirror m2) {
@@ -406,8 +406,8 @@ public class UnitsRelationsTools {
      * Checks to see if the two annotation mirrors passed in have the exact same
      * base units
      *
-     * @param t1 first annotation mirror
-     * @param t2 second annotation mirror
+     * @param m1 first annotation mirror
+     * @param m2 second annotation mirror
      * @return true if they have the same unit, false otherwise
      */
     public static boolean hasSameUnitsIgnoringPrefix(/*@Nullable*/ final AnnotationMirror m1, /*@Nullable*/ final AnnotationMirror m2) {

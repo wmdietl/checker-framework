@@ -108,17 +108,19 @@ public class JavaLangMath {
         @degrees double atan2d = Math.atan2(constant, constant);
 
         // x and y have to have the same units
-        //:: error: (argument.units.mismatch)
+        //:: error: (two.parameter.method.arguments.unit.mismatch)
         @radians double atan22 = Math.atan2(meter, constant);
     }
 
     // Future TODO: keep and pass the unit through the trigonometric identities
     void inverseTrigIdentitiesTest() {
-        // full list of identities http://www.sosmath.com/trig/Trig5/trig5/trig5.html
+        // full list of identities
+        // http://www.sosmath.com/trig/Trig5/trig5/trig5.html
         @radians double r = 30 * UnitsTools.rad;
         @Scalar double s = 30;
 
-        // Inverse Trigonometry identities in terms of units (value is subject to domain)
+        // Inverse Trigonometry identities in terms of units (value is subject
+        // to domain)
         // sin(asin(x)) == x
         @Scalar double sas = Math.sin(Math.asin(s));
         //:: error: (assignment.type.incompatible)
@@ -149,7 +151,8 @@ public class JavaLangMath {
         //:: error: (assignment.type.incompatible)
         @m double attBad = Math.atan(Math.tan(r));
 
-        // atan2(y, x) == atan(y / x) except the sign of both arguments are used to determine the quadrant of the result
+        // atan2(y, x) == atan(y / x) except the sign of both arguments are used
+        // to determine the quadrant of the result
         // let z = y / x
         // z == tan(atan(z)) == tan(atan2(y, x))
         // result of z = s / s is a scalar
@@ -340,7 +343,8 @@ public class JavaLangMath {
 
         // sqrt (square root)
         // for m2, mm2, and km2, it will return m, mm, and km respectively
-        // Future TODO: should return the square root of any unit (tracked as a partial unit)
+        // Future TODO: should return the square root of any unit (tracked as a
+        // partial unit)
         @m double len1 = Math.sqrt(m2);
         @mm double len2 = Math.sqrt(mm2);
         @km double len3 = Math.sqrt(km2);
@@ -429,25 +433,27 @@ public class JavaLangMath {
         //:: error: (assignment.type.incompatible)
         s = Math.pow(g, 1.0);
 
-        // raised to the power of 2 for m, mm, and km returns m2, mm2, and km2, otherwise Scalar
+        // raised to the power of 2 for m, mm, and km returns m2, mm2, and km2,
+        // otherwise Scalar
         @m2 double m2 = Math.pow(m, 2);
-        @mm2 double mm2 = Math.pow(mm, 2);
+        @mm2 double mm2 = Math.pow(mm, 2l);
         @km2 double km2 = Math.pow(km, 2.0);
-        @Scalar double gRaised2 = Math.pow(g, 2.0);
+        @Scalar double gRaised2 = Math.pow(g, 2.0f);
         //:: error: (assignment.type.incompatible)
         s = Math.pow(m, 2);
         //:: error: (assignment.type.incompatible)
-        s = Math.pow(mm, 2);
+        s = Math.pow(mm, 2l);
         //:: error: (assignment.type.incompatible)
         s = Math.pow(km, 2.0);
         //:: error: (assignment.type.incompatible)
-        s = Math.pow(g, 2.0);
+        s = Math.pow(g, 2.0f);
 
-        // raised to any other power for m, mm, and km returns Scalar (Future TODO: support for m3, mm3, km3, etc)
-        @Scalar double m3 = Math.pow(m, 3);
-        @Scalar double mm3 = Math.pow(mm, 3);
-        @Scalar double km3 = Math.pow(km, 3.0);
-        @Scalar double gRaised3 = Math.pow(g, 3.0);
+        // raised to any other power for m, mm, and km returns UnknownUnits
+        // Future TODO: support for m3, mm3, km3, etc
+        double m3 = Math.pow(m, 3);
+        double mm3 = Math.pow(mm, 3);
+        double km3 = Math.pow(km, 3.0);
+        double gRaised3 = Math.pow(g, 3.0);
         //:: error: (assignment.type.incompatible)
         @m double m2b = Math.pow(m, 2);
         //:: error: (assignment.type.incompatible)
@@ -457,10 +463,11 @@ public class JavaLangMath {
         //:: error: (assignment.type.incompatible)
         @mPERs double gRaised4 = Math.pow(m, 4.0);
 
-        // passing in a variable as the second argument will default to Scalar as we do not analyze the value of the variable
-        @Scalar double m4 = Math.pow(m, g);
+        // passing in a variable as the second argument will default to
+        // UnknownUnits as we do not analyze the value of the variable
+        double m4 = Math.pow(m, g);
         //:: error: (assignment.type.incompatible)
-        @m2 double m4bad = Math.pow(m, g);
+        @m double m4bad = Math.pow(m, g);
     }
 
     void exponentsAndLogsTest() {
@@ -501,9 +508,10 @@ public class JavaLangMath {
         @m double log1pBad = Math.log1p(m);
 
         // log-exp identity
-        // identity: exp(log(a)) == a 
+        // identity: exp(log(a)) == a
         // Future TODO: support retainment of units in these identifies
-        // Future TODO: this should be a good case if the unit of meters is retained and transfered
+        // Future TODO: this should be a good case if the unit of meters is
+        // retained and transfered
         //:: error: (assignment.type.incompatible)
         @m double expLog = Math.exp(Math.log(m));
         // Future TODO: this should be an error case
@@ -511,7 +519,8 @@ public class JavaLangMath {
 
         // identity: log(exp(x)) == x
         // Future TODO: support retainment of units in these identifies
-        // Future TODO: this should be a good case if the unit of meters is retained and transfered
+        // Future TODO: this should be a good case if the unit of meters is
+        // retained and transfered
         //:: error: (assignment.type.incompatible)
         @m double logExp = Math.log(Math.exp(m));
         // Future TODO: this should be an error case
