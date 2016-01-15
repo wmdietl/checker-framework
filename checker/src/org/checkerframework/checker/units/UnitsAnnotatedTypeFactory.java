@@ -233,7 +233,7 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             Prefix prefix = AnnotationUtils.getElementValueEnum(unitsMultipleAnno, "prefix", Prefix.class, true);
 
             // return the Class and the Prefix as a pair
-            return Pair.of(baseUnitAnnoClass, prefix);
+            return Pair.<Class<? extends Annotation>, Prefix> of(baseUnitAnnoClass, prefix);
         } else {
             return null;
         }
