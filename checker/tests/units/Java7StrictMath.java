@@ -1,9 +1,9 @@
-import org.checkerframework.checker.units.UnitsTools;
 import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.UnitsTools;
 
 import java.lang.StrictMath;
 
-public class JavaLangStrictMath {
+public class Java7StrictMath {
     // Constants
     @Scalar double e = StrictMath.E;
     @UnknownUnits double eU = StrictMath.E;
@@ -211,63 +211,6 @@ public class JavaLangStrictMath {
         @Scalar double scalar2 = StrictMath.toDegrees(angRad);
     }
 
-    void exactTest() {
-        // setup
-        @m int m = 20 * UnitsTools.m;
-        @km int km = 30 * UnitsTools.km;
-        @g int g = 30 * UnitsTools.g;
-        @Length int len;
-
-        @m long mL = 20 * UnitsTools.m;
-        @km long kmL = 30 * UnitsTools.km;
-        @g long gL = 30 * UnitsTools.g;
-        @Length long lenL;
-
-        // The following tests must use units relations to resolve the unit
-        // addExact
-        m = StrictMath.addExact(m, m);
-        len = StrictMath.addExact(m, m);
-        len = StrictMath.addExact(m, km);
-        //:: error: (assignment.type.incompatible)
-        m = StrictMath.addExact(m, km);
-        //:: error: (assignment.type.incompatible)
-        len = StrictMath.addExact(m, g);
-
-        mL = StrictMath.addExact(mL, mL);
-        lenL = StrictMath.addExact(mL, mL);
-        lenL = StrictMath.addExact(mL, kmL);
-        //:: error: (assignment.type.incompatible)
-        mL = StrictMath.addExact(mL, kmL);
-        //:: error: (assignment.type.incompatible)
-        lenL = StrictMath.addExact(mL, gL);
-
-        // subtractExact
-        m = StrictMath.subtractExact(m, m);
-        len = StrictMath.subtractExact(m, m);
-        len = StrictMath.subtractExact(m, km);
-        //:: error: (assignment.type.incompatible)
-        m = StrictMath.subtractExact(m, km);
-        //:: error: (assignment.type.incompatible)
-        len = StrictMath.subtractExact(m, g);
-
-        mL = StrictMath.subtractExact(mL, mL);
-        lenL = StrictMath.subtractExact(mL, mL);
-        lenL = StrictMath.subtractExact(mL, kmL);
-        //:: error: (assignment.type.incompatible)
-        mL = StrictMath.subtractExact(mL, kmL);
-        //:: error: (assignment.type.incompatible)
-        lenL = StrictMath.subtractExact(mL, gL);
-
-        // multiplyExact
-        @m2 int area = StrictMath.multiplyExact(m, m);
-        //:: error: (assignment.type.incompatible)
-        @km2 int area2 = StrictMath.multiplyExact(m, m);
-
-        @m2 long areaL = StrictMath.multiplyExact(mL, mL);
-        //:: error: (assignment.type.incompatible)
-        @km2 long areaL2 = StrictMath.multiplyExact(mL, mL);
-    }
-
     // contains all other test cases that must use units relations to resolve
     // for Math methods
     void useUnitsRelationsTest() {
@@ -283,32 +226,11 @@ public class JavaLangStrictMath {
 
         @g double g = 30 * UnitsTools.g;
 
-        // floorDiv
-        @mPERs int mps = StrictMath.floorDiv(m, s);
-        @kmPERh long kmph = StrictMath.floorDiv(kmL, hL);
-        //:: error: (assignment.type.incompatible)
-        @km int mps2 = StrictMath.floorDiv(m, s);
-        //:: error: (assignment.type.incompatible)
-        @m long kmph2 = StrictMath.floorDiv(kmL, hL);
-
         // IEEEremainder
         @g double rem = StrictMath.IEEEremainder(g, m);
         @m double rem2 = StrictMath.IEEEremainder(m, g);
         //:: error: (assignment.type.incompatible)
         @km double rem3 = StrictMath.IEEEremainder(m, g);
-    }
-
-    void floorModTest() {
-        @m int m = 20 * UnitsTools.m;
-        @s int s = 30 * UnitsTools.s;
-
-        // floorMod returns the same unit as it's first argument
-        @m int m2 = StrictMath.floorMod(m, s);
-        @s int s2 = StrictMath.floorMod(s, m);
-        //:: error: (assignment.type.incompatible)
-        @s int m3 = StrictMath.floorMod(m, s);
-        //:: error: (assignment.type.incompatible)
-        @m int s3 = StrictMath.floorMod(s, m);
     }
 
     void rootTest() {
@@ -593,14 +515,6 @@ public class JavaLangStrictMath {
         //:: error: (assignment.type.incompatible)
         @Scalar float masBad = StrictMath.nextAfter(gF, kgF);
 
-        // nextDown
-        mD = StrictMath.nextDown(mD);
-        gF = StrictMath.nextDown(gF);
-        //:: error: (assignment.type.incompatible)
-        mmD = StrictMath.nextDown(mD);
-        //:: error: (assignment.type.incompatible)
-        kgF = StrictMath.nextDown(gF);
-
         // nextUp
         mD = StrictMath.nextUp(mD);
         gF = StrictMath.nextUp(gF);
@@ -633,11 +547,6 @@ public class JavaLangStrictMath {
         @mm long mmL = StrictMath.round(mD);
         //:: error: (assignment.type.incompatible)
         @km long kgI = StrictMath.round(gF);
-
-        // toIntExact
-        @m int mI = StrictMath.toIntExact(mL);
-        //:: error: (assignment.type.incompatible)
-        @mm int mmI = StrictMath.toIntExact(mL);
     }
 
     void scalbTest() {
