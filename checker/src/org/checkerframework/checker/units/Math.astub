@@ -3,6 +3,32 @@ import org.checkerframework.checker.units.qual.*;
 package java.lang;
 
 // https://docs.oracle.com/javase/8/docs/api/java/lang/Math.html
+
+/**
+ * This stub file provides units annotations for Java 7 and Java 8 Math class.
+ *
+ * New methods in Java 8:
+ *
+ * addExact(int x, int y)
+ * addExact(long x, long y)
+ * decrementExact(int a)
+ * decrementExact(long a)
+ * floorDiv(int x, int y)
+ * floorDiv(long x, long y)
+ * floorMod(int x, int y)
+ * floorMod(long x, long y)
+ * incrementExact(int a)
+ * incrementExact(long a)
+ * multiplyExact(int x, int y)
+ * multiplyExact(long x, long y)
+ * negateExact(int a)
+ * negateExact(long a)
+ * nextDown(double d)
+ * nextDown(float f)
+ * subtractExact(int x, int y)
+ * subtractExact(long x, long y)
+ * toIntExact(long value)
+ */
 class Math {
     // Constants
     static final @Scalar double E;

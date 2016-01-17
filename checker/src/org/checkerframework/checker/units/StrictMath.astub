@@ -14,6 +14,24 @@ package java.lang;
  * first and test it through JavaLangMath, if it is correct then synchronize
  * this stub file to Math.astub, and JavaLangStrictMath tests to JavaLangMath
  * tests.
+ * 
+ * This stub file provides units annotations for Java 7 and Java 8 StrictMath class.
+ *
+ * New methods in Java 8:
+ *
+ * addExact(int x, int y)
+ * addExact(long x, long y)
+ * floorDiv(int x, int y)
+ * floorDiv(long x, long y)
+ * floorMod(int x, int y)
+ * floorMod(long x, long y)
+ * multiplyExact(int x, int y)
+ * multiplyExact(long x, long y)
+ * nextDown(double d)
+ * nextDown(float f)
+ * subtractExact(int x, int y)
+ * subtractExact(long x, long y)
+ * toIntExact(long value)
  */
 class StrictMath {
     // Constants
