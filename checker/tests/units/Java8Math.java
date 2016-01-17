@@ -145,6 +145,7 @@ public class Java8Math {
     void roundingTest() {
         @m double mD = 20.0d * UnitsTools.m;
         @g float gF = 30.0f * UnitsTools.g;
+        @m long mL = Math.round(mD);
 
         // toIntExact
         @m int mI = Math.toIntExact(mL);

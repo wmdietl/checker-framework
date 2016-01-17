@@ -121,6 +121,7 @@ public class Java8StrictMath {
     void roundingTest() {
         @m double mD = 20.0d * UnitsTools.m;
         @g float gF = 30.0f * UnitsTools.g;
+        @m long mL = StrictMath.round(mD);
 
         // toIntExact
         @m int mI = StrictMath.toIntExact(mL);
