@@ -1,28 +1,6 @@
 package org.checkerframework.checker.units;
 
-import org.checkerframework.checker.units.qual.A;
-import org.checkerframework.checker.units.qual.C;
-import org.checkerframework.checker.units.qual.K;
-import org.checkerframework.checker.units.qual.Scalar;
-import org.checkerframework.checker.units.qual.UnknownUnits;
-import org.checkerframework.checker.units.qual.cd;
-import org.checkerframework.checker.units.qual.degrees;
-import org.checkerframework.checker.units.qual.g;
-import org.checkerframework.checker.units.qual.h;
-import org.checkerframework.checker.units.qual.kg;
-import org.checkerframework.checker.units.qual.km;
-import org.checkerframework.checker.units.qual.km2;
-import org.checkerframework.checker.units.qual.kmPERh;
-import org.checkerframework.checker.units.qual.m;
-import org.checkerframework.checker.units.qual.m2;
-import org.checkerframework.checker.units.qual.mPERs;
-import org.checkerframework.checker.units.qual.mPERs2;
-import org.checkerframework.checker.units.qual.min;
-import org.checkerframework.checker.units.qual.mm;
-import org.checkerframework.checker.units.qual.mm2;
-import org.checkerframework.checker.units.qual.mol;
-import org.checkerframework.checker.units.qual.radians;
-import org.checkerframework.checker.units.qual.s;
+import org.checkerframework.checker.units.qual.*;
 
 /**
  * Utility methods to generate annotated types and to convert between them.
@@ -96,6 +74,11 @@ public class UnitsTools {
     public static @s int fromMinuteToSecond(@min int min) { return min * 60; }
     public static @h int fromMinuteToHour(@min int min) { return min / 60; }
     public static @min int fromHourToMinute(@h int h) { return h * 60; }
+
+    // Volume
+    public static final @mm3 int mm3 = 1;
+    public static final @m3 int m3 = 1;
+    public static final @km3 int km3 = 1;
 
     // Scalar Conversion Method
     /**

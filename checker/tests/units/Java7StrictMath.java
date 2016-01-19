@@ -317,26 +317,35 @@ public class Java7StrictMath {
         @s float f = 60 * UnitsTools.s;
 
         // pow
+        // a complex math expression as the exponent is allowed as long as it can be evaluated down to a single double
+        // 1.0 + (5 * (2l - 1)) % (10.0f / 2 - 1) == 2.0
+        @m2 double complexMath = StrictMath.pow(m, 1.0 + (5 * (2l - 1)) % (10.0f / 2 - 1));
+        // if the expression has any variables, then we cannot evaluate it
+        //:: error: (assignment.type.incompatible)
+        @m2 double complexMathbad1 = StrictMath.pow(m, 1.0 + (5 * (g - 1)) % (10.0f / 2 - 1));
+        //:: error: (assignment.type.incompatible)
+        @m3 double complexMathbad2 = StrictMath.pow(m, 1.0 + (5 * (2l - 1)) % (10.0f / 2 - 1));
+
         // raised to the power of 1 returns the unit itself
         @m double mb = StrictMath.pow(m, 1);
-        @mm double mmb = StrictMath.pow(mm, 1.0);
-        @km double kmb = StrictMath.pow(km, 1);
-        @g double gb = StrictMath.pow(g, 1.0);
+        @mm double mmb = StrictMath.pow(mm, 1l);
+        @km double kmb = StrictMath.pow(km, 1.0);
+        @g double gb = StrictMath.pow(g, 1.0f);
         //:: error: (assignment.type.incompatible)
         s = StrictMath.pow(m, 1);
         //:: error: (assignment.type.incompatible)
-        s = StrictMath.pow(mm, 1.0);
+        s = StrictMath.pow(mm, 1l);
         //:: error: (assignment.type.incompatible)
-        s = StrictMath.pow(km, 1);
+        s = StrictMath.pow(km, 1.0);
         //:: error: (assignment.type.incompatible)
-        s = StrictMath.pow(g, 1.0);
+        s = StrictMath.pow(g, 1.0f);
 
         // raised to the power of 2 for m, mm, and km returns m2, mm2, and km2,
-        // otherwise Scalar
+        // otherwise UnknownUnits
         @m2 double m2 = StrictMath.pow(m, 2);
         @mm2 double mm2 = StrictMath.pow(mm, 2l);
         @km2 double km2 = StrictMath.pow(km, 2.0);
-        @Scalar double gRaised2 = StrictMath.pow(g, 2.0f);
+        double gRaised2 = StrictMath.pow(g, 2.0f);
         //:: error: (assignment.type.incompatible)
         s = StrictMath.pow(m, 2);
         //:: error: (assignment.type.incompatible)
@@ -346,20 +355,64 @@ public class Java7StrictMath {
         //:: error: (assignment.type.incompatible)
         s = StrictMath.pow(g, 2.0f);
 
+        // raised to the power of 3 for m, mm, and km returns m3, mm3, and km3,
+        // otherwise UnknownUnits
+        @m3 double m3 = StrictMath.pow(m, 3);
+        @mm3 double mm3 = StrictMath.pow(mm, 3l);
+        @km3 double km3 = StrictMath.pow(km, 3.0);
+        double gRaised3 = StrictMath.pow(g, 3.0f);
+        //:: error: (assignment.type.incompatible)
+        s = StrictMath.pow(m, 3);
+        //:: error: (assignment.type.incompatible)
+        s = StrictMath.pow(mm, 3l);
+        //:: error: (assignment.type.incompatible)
+        s = StrictMath.pow(km, 3.0);
+        //:: error: (assignment.type.incompatible)
+        s = StrictMath.pow(g, 3.0f);
+
+        // raised to the power of 0.5 for m2, mm2, and km2 returns m, mm, and
+        // km, otherwise UnknownUnits
+        m = StrictMath.pow(m2, 0.5);
+        mm = StrictMath.pow(mm2, 0.5f);
+        km = StrictMath.pow(km2, 1.0 / 2);
+        double gRaised05 = StrictMath.pow(g, 0.5);
+        //:: error: (assignment.type.incompatible)
+        s = StrictMath.pow(m2, 0.5);
+        //:: error: (assignment.type.incompatible)
+        s = StrictMath.pow(mm2, 0.5f);
+        //:: error: (assignment.type.incompatible)
+        s = StrictMath.pow(km2, 1.0 / 2);
+        //:: error: (assignment.type.incompatible)
+        s = StrictMath.pow(g, 0.5);
+
+        // raised to the power of 1.0/3 for m3, mm3, and km3 returns m, mm, and
+        // km, otherwise UnknownUnits
+        m = StrictMath.pow(m3, 1.0 / 3);
+        mm = StrictMath.pow(mm3, 1.0f / 3);
+        km = StrictMath.pow(km3, 1.0 / 3);
+        double gRaised03 = StrictMath.pow(g, 1.0 / 3);
+        //:: error: (assignment.type.incompatible)
+        s = StrictMath.pow(m3, 1.0 / 3);
+        //:: error: (assignment.type.incompatible)
+        s = StrictMath.pow(mm3, 1.0f / 3);
+        //:: error: (assignment.type.incompatible)
+        s = StrictMath.pow(km3, 1.0 / 3);
+        //:: error: (assignment.type.incompatible)
+        s = StrictMath.pow(g, 1.0 / 3);
+
         // raised to any other power for m, mm, and km returns UnknownUnits
-        // Future TODO: support for m3, mm3, km3, etc
-        double m3 = StrictMath.pow(m, 3);
-        double mm3 = StrictMath.pow(mm, 3);
-        double km3 = StrictMath.pow(km, 3.0);
-        double gRaised3 = StrictMath.pow(g, 3.0);
+        double u = StrictMath.pow(m, 4);
+        u = StrictMath.pow(mm, 4l);
+        u = StrictMath.pow(km, 4.0);
+        u = StrictMath.pow(m, 4.0f);
         //:: error: (assignment.type.incompatible)
-        @m double m2b = StrictMath.pow(m, 2);
+        s = StrictMath.pow(m, 4);
         //:: error: (assignment.type.incompatible)
-        @mm double mm2b = StrictMath.pow(mm, 2);
+        s = StrictMath.pow(mm, 4l);
         //:: error: (assignment.type.incompatible)
-        @km double km2b = StrictMath.pow(km, 2.0);
+        s = StrictMath.pow(km, 4.0);
         //:: error: (assignment.type.incompatible)
-        @mPERs double gRaised4 = StrictMath.pow(m, 4.0);
+        s = StrictMath.pow(m, 4.0f);
 
         // passing in a variable as the second argument will default to
         // UnknownUnits as we do not analyze the value of the variable

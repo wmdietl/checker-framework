@@ -35,8 +35,7 @@ import java.lang.annotation.Target;
     typeNames = { java.lang.Throwable.class }
 )
 @DefaultInUncheckedCodeFor({
-    DefaultLocation.UPPER_BOUNDS,
-    DefaultLocation.EXCEPTION_PARAMETER
+    DefaultLocation.UPPER_BOUNDS
 })
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

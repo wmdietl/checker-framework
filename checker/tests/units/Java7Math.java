@@ -317,26 +317,35 @@ public class Java7Math {
         @s float f = 60 * UnitsTools.s;
 
         // pow
+        // a complex math expression as the exponent is allowed as long as it can be evaluated down to a single double
+        // 1.0 + (5 * (2l - 1)) % (10.0f / 2 - 1) == 2.0
+        @m2 double complexMath = Math.pow(m, 1.0 + (5 * (2l - 1)) % (10.0f / 2 - 1));
+        // if the expression has any variables, then we cannot evaluate it
+        //:: error: (assignment.type.incompatible)
+        @m2 double complexMathbad1 = Math.pow(m, 1.0 + (5 * (g - 1)) % (10.0f / 2 - 1));
+        //:: error: (assignment.type.incompatible)
+        @m3 double complexMathbad2 = Math.pow(m, 1.0 + (5 * (2l - 1)) % (10.0f / 2 - 1));
+
         // raised to the power of 1 returns the unit itself
         @m double mb = Math.pow(m, 1);
-        @mm double mmb = Math.pow(mm, 1.0);
-        @km double kmb = Math.pow(km, 1);
-        @g double gb = Math.pow(g, 1.0);
+        @mm double mmb = Math.pow(mm, 1l);
+        @km double kmb = Math.pow(km, 1.0);
+        @g double gb = Math.pow(g, 1.0f);
         //:: error: (assignment.type.incompatible)
         s = Math.pow(m, 1);
         //:: error: (assignment.type.incompatible)
-        s = Math.pow(mm, 1.0);
+        s = Math.pow(mm, 1l);
         //:: error: (assignment.type.incompatible)
-        s = Math.pow(km, 1);
+        s = Math.pow(km, 1.0);
         //:: error: (assignment.type.incompatible)
-        s = Math.pow(g, 1.0);
+        s = Math.pow(g, 1.0f);
 
         // raised to the power of 2 for m, mm, and km returns m2, mm2, and km2,
-        // otherwise Scalar
+        // otherwise UnknownUnits
         @m2 double m2 = Math.pow(m, 2);
         @mm2 double mm2 = Math.pow(mm, 2l);
         @km2 double km2 = Math.pow(km, 2.0);
-        @Scalar double gRaised2 = Math.pow(g, 2.0f);
+        double gRaised2 = Math.pow(g, 2.0f);
         //:: error: (assignment.type.incompatible)
         s = Math.pow(m, 2);
         //:: error: (assignment.type.incompatible)
@@ -346,20 +355,64 @@ public class Java7Math {
         //:: error: (assignment.type.incompatible)
         s = Math.pow(g, 2.0f);
 
+        // raised to the power of 3 for m, mm, and km returns m3, mm3, and km3,
+        // otherwise UnknownUnits
+        @m3 double m3 = Math.pow(m, 3);
+        @mm3 double mm3 = Math.pow(mm, 3l);
+        @km3 double km3 = Math.pow(km, 3.0);
+        double gRaised3 = Math.pow(g, 3.0f);
+        //:: error: (assignment.type.incompatible)
+        s = Math.pow(m, 3);
+        //:: error: (assignment.type.incompatible)
+        s = Math.pow(mm, 3l);
+        //:: error: (assignment.type.incompatible)
+        s = Math.pow(km, 3.0);
+        //:: error: (assignment.type.incompatible)
+        s = Math.pow(g, 3.0f);
+
+        // raised to the power of 0.5 for m2, mm2, and km2 returns m, mm, and
+        // km, otherwise UnknownUnits
+        m = Math.pow(m2, 0.5);
+        mm = Math.pow(mm2, 0.5f);
+        km = Math.pow(km2, 1.0 / 2);
+        double gRaised05 = Math.pow(g, 0.5);
+        //:: error: (assignment.type.incompatible)
+        s = Math.pow(m2, 0.5);
+        //:: error: (assignment.type.incompatible)
+        s = Math.pow(mm2, 0.5f);
+        //:: error: (assignment.type.incompatible)
+        s = Math.pow(km2, 1.0 / 2);
+        //:: error: (assignment.type.incompatible)
+        s = Math.pow(g, 0.5);
+
+        // raised to the power of 1.0/3 for m3, mm3, and km3 returns m, mm, and
+        // km, otherwise UnknownUnits
+        m = Math.pow(m3, 1.0 / 3);
+        mm = Math.pow(mm3, 1.0f / 3);
+        km = Math.pow(km3, 1.0 / 3);
+        double gRaised03 = Math.pow(g, 1.0 / 3);
+        //:: error: (assignment.type.incompatible)
+        s = Math.pow(m3, 1.0 / 3);
+        //:: error: (assignment.type.incompatible)
+        s = Math.pow(mm3, 1.0f / 3);
+        //:: error: (assignment.type.incompatible)
+        s = Math.pow(km3, 1.0 / 3);
+        //:: error: (assignment.type.incompatible)
+        s = Math.pow(g, 1.0 / 3);
+
         // raised to any other power for m, mm, and km returns UnknownUnits
-        // Future TODO: support for m3, mm3, km3, etc
-        double m3 = Math.pow(m, 3);
-        double mm3 = Math.pow(mm, 3);
-        double km3 = Math.pow(km, 3.0);
-        double gRaised3 = Math.pow(g, 3.0);
+        double u = Math.pow(m, 4);
+        u = Math.pow(mm, 4l);
+        u = Math.pow(km, 4.0);
+        u = Math.pow(m, 4.0f);
         //:: error: (assignment.type.incompatible)
-        @m double m2b = Math.pow(m, 2);
+        s = Math.pow(m, 4);
         //:: error: (assignment.type.incompatible)
-        @mm double mm2b = Math.pow(mm, 2);
+        s = Math.pow(mm, 4l);
         //:: error: (assignment.type.incompatible)
-        @km double km2b = Math.pow(km, 2.0);
+        s = Math.pow(km, 4.0);
         //:: error: (assignment.type.incompatible)
-        @mPERs double gRaised4 = Math.pow(m, 4.0);
+        s = Math.pow(m, 4.0f);
 
         // passing in a variable as the second argument will default to
         // UnknownUnits as we do not analyze the value of the variable

@@ -6,9 +6,12 @@ import org.checkerframework.checker.units.qual.UnitsBottom;
 import org.checkerframework.checker.units.qual.UnitsMultiple;
 import org.checkerframework.checker.units.qual.UnknownUnits;
 import org.checkerframework.checker.units.qual.km2;
+import org.checkerframework.checker.units.qual.km3;
 import org.checkerframework.checker.units.qual.m;
 import org.checkerframework.checker.units.qual.m2;
+import org.checkerframework.checker.units.qual.m3;
 import org.checkerframework.checker.units.qual.mm2;
+import org.checkerframework.checker.units.qual.mm3;
 import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.framework.source.Result;
@@ -44,6 +47,7 @@ import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LiteralTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.ParenthesizedTree;
 import com.sun.source.tree.Tree;
 
 /*>>>
@@ -63,18 +67,23 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
     private static final Class<org.checkerframework.checker.units.qual.UnitsRelations> unitsRelationsAnnoClass = org.checkerframework.checker.units.qual.UnitsRelations.class;
 
-    protected final AnnotationMirror scalar = AnnotationUtils.fromClass(elements, Scalar.class);
-    protected final AnnotationMirror TOP = AnnotationUtils.fromClass(elements, UnknownUnits.class);
-    protected final AnnotationMirror BOTTOM = AnnotationUtils.fromClass(elements, UnitsBottom.class);
-
-    // used in square root unit resolution
-    private final AnnotationMirror m2 = AnnotationUtils.fromClass(elements, m2.class);
-    private final AnnotationMirror mm2 = AnnotationUtils.fromClass(elements, mm2.class);
-    private final AnnotationMirror km2 = AnnotationUtils.fromClass(elements, km2.class);
+    protected final AnnotationMirror scalar = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, Scalar.class);
+    protected final AnnotationMirror TOP = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, UnknownUnits.class);
+    protected final AnnotationMirror BOTTOM = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, UnitsBottom.class);
 
     private final AnnotationMirror m = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, m.class);
     private final AnnotationMirror mm = UnitsRelationsTools.buildAnnoMirrorWithSpecificPrefix(processingEnv, m.class, Prefix.milli);
     private final AnnotationMirror km = UnitsRelationsTools.buildAnnoMirrorWithSpecificPrefix(processingEnv, m.class, Prefix.kilo);
+
+    // used in square root unit resolution
+    private final AnnotationMirror m2 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, m2.class);
+    private final AnnotationMirror mm2 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, mm2.class);
+    private final AnnotationMirror km2 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, km2.class);
+
+    // used in cube root unit resolution
+    private final AnnotationMirror m3 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, m3.class);
+    private final AnnotationMirror km3 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, km3.class);
+    private final AnnotationMirror mm3 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, mm3.class);
 
     // Map from canonical class name to the corresponding UnitsRelations
     // instance.
@@ -381,9 +390,13 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
      * A class for adding annotations based on tree
      */
     private class UnitsTreeAnnotator extends TreeAnnotator {
+        // cache expressions evaluated in evalMathExpression
+        private final Map<String, Pair<Double, Boolean>> mathExpressions;
 
         UnitsTreeAnnotator(UnitsAnnotatedTypeFactory atypeFactory) {
             super(atypeFactory);
+
+            mathExpressions = new HashMap<String, Pair<Double, Boolean>>();
         }
 
         @Override
@@ -464,30 +477,34 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                 return processSquareRoot(arg, type);
 
             } else if (isCbrt) {
-                // Future TODO: return a partial unit representing the cubic
-                // root of a unit
+                // cbrt is always called with 1 argument
+                AnnotatedTypeMirror arg = getAnnotatedType(methodArguments.get(0));
+                return processCubeRoot(arg, type);
 
             } else if (isPow) {
                 // pow is always called with 2 arguments
                 AnnotatedTypeMirror lht = getAnnotatedType(methodArguments.get(0));
                 ExpressionTree rh = methodArguments.get(1);
 
-                if (!(rh instanceof LiteralTree)) {
-                    return null;
-                }
-
                 double exp = 0.0;
-                Object val = ((LiteralTree) rh).getValue();
+                if (rh instanceof BinaryTree || rh instanceof ParenthesizedTree || rh instanceof LiteralTree) {
+                    // if the second argument is a mathematical expression
+                    // consisting of only parentheses and literals (eg (1.0 + 3) / 8)
+                    // then evaluate it to a single value.
+                    // if the second argument is a numerical literal, then
+                    // extract the value.
+                    Pair<Double, Boolean> evalValue = evalMathExpression(rh);
 
-                // convert the literal value from object type into a double
-                if (rh.getKind() == Tree.Kind.DOUBLE_LITERAL) {
-                    exp = (double) val;
-                } else if (rh.getKind() == Tree.Kind.FLOAT_LITERAL) {
-                    exp = (float) val;
-                } else if (rh.getKind() == Tree.Kind.LONG_LITERAL) {
-                    exp = (long) val;
-                } else if (rh.getKind() == Tree.Kind.INT_LITERAL) {
-                    exp = (int) val;
+                    // the Boolean returned is false if the expression contains
+                    // any operator or argument for which it cannot evaluate
+
+                    // if successfully, set exponent to the evaluated value,
+                    // otherwise set to 0.0
+                    exp = evalValue.second ? evalValue.first : 0.0;
+                } else {
+                    // if the second argument is not a mathematical expression
+                    // nor a numerical literal, then do nothing
+                    return null;
                 }
 
                 // see what is the exponent
@@ -503,12 +520,29 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                     } else if (UnitsRelationsTools.hasSpecificUnit(lht, km)) {
                         type.replaceAnnotation(km2);
                     } else {
-                        type.replaceAnnotation(scalar);
+                        // if the base unit is something other than m, mm, or km, then return unknown
+                        type.replaceAnnotation(TOP);
+                    }
+                } else if (exp == 3.0) {
+                    // detect the unit of the first parameter
+                    if (UnitsRelationsTools.hasSpecificUnit(lht, m)) {
+                        type.replaceAnnotation(m3);
+                    } else if (UnitsRelationsTools.hasSpecificUnit(lht, mm)) {
+                        type.replaceAnnotation(mm3);
+                    } else if (UnitsRelationsTools.hasSpecificUnit(lht, km)) {
+                        type.replaceAnnotation(km3);
+                    } else {
+                        // if the base unit is something other than m, mm, or km, then return unknown
+                        type.replaceAnnotation(TOP);
                     }
                 } else if (exp == 0.5) {
                     // taking the power of 0.5 is the same as taking the square
                     // root
                     return processSquareRoot(lht, type);
+                } else if (exp == (1.0d / 3)) {
+                    // taking the power of 1/3 is the same as taking the cube
+                    // root
+                    return processCubeRoot(lht, type);
                 } else {
                     // return UnknownUnits
                     type.replaceAnnotation(TOP);
@@ -520,6 +554,101 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             }
 
             return null;
+        }
+
+        /**
+         * Attempts to evaluate a mathematical expression (passed in as root)
+         * into a double value. The method returns the double value and true as
+         * a pair if the evaluation was successful, otherwise it returns 0.0 and
+         * false as a pair.
+         *
+         * Expressions with any non number literals will not be successfully
+         * evaluated.
+         *
+         * @param root the root node in the expression tree of a mathematical
+         *            expression
+         * @return a pair of a Double and a Boolean
+         */
+        private final Pair<Double, Boolean> evalMathExpression(ExpressionTree root) {
+            String mathExpression = root.toString();
+            // check against the cache to see if this expression has been
+            // evaluated before
+            if (mathExpressions.containsKey(mathExpression)) {
+                // if so return prior results
+                return mathExpressions.get(mathExpression);
+            } else {
+                // otherwise evaluate the expression, cache the results, and
+                // return the results
+                Pair<Double, Boolean> evaluation = evalMathExpression(root, true);
+                mathExpressions.put(mathExpression, evaluation);
+                return evaluation;
+            }
+        }
+
+        // evaluate the expression and sub-expressions via recursion
+        private final Pair<Double, Boolean> evalMathExpression(ExpressionTree node, Boolean success) {
+            // if a previous step resulted in failure then terminate the
+            // recursion chain by returning 0 as the double value
+            if (success == false) {
+                return Pair.of(0.0, false);
+            }
+
+            if (node instanceof LiteralTree) {
+                // if the expression is a numerical literal, then extract the
+                // value
+                double literalVal = 0.0;
+                Object val = ((LiteralTree) node).getValue();
+                // convert the literal value from object type into a Double and
+                // then return it
+                if (node.getKind() == Tree.Kind.DOUBLE_LITERAL) {
+                    literalVal = (double) val;
+                } else if (node.getKind() == Tree.Kind.FLOAT_LITERAL) {
+                    literalVal = (float) val;
+                } else if (node.getKind() == Tree.Kind.LONG_LITERAL) {
+                    literalVal = (long) val;
+                } else if (node.getKind() == Tree.Kind.INT_LITERAL) {
+                    literalVal = (int) val;
+                }
+                return Pair.of(literalVal, true);
+
+            } else if (node instanceof ParenthesizedTree) {
+                // if there's a parenthesis, evaluate and return the value of
+                // the parenthesized expression
+                ExpressionTree innerExpression = ((ParenthesizedTree) node).getExpression();
+                return evalMathExpression(innerExpression, success);
+
+            } else if (node instanceof BinaryTree) {
+                // if it is a binary math operation, evaluate each operand and
+                // then return the result
+                BinaryTree expression = (BinaryTree) node;
+                Pair<Double, Boolean> left = evalMathExpression(expression.getLeftOperand(), success);
+                Pair<Double, Boolean> right = evalMathExpression(expression.getRightOperand(), left.second);
+
+                // if either of the evaluations resulted in failure then
+                // terminate the recursion chain
+                if (left.second == false || right.second == false) {
+                    return Pair.of(0.0, false);
+                }
+
+                // TODO: bitshift support?
+                switch (node.getKind()) {
+                case PLUS:
+                    return Pair.of(left.first + right.first, true);
+                case MINUS:
+                    return Pair.of(left.first - right.first, true);
+                case MULTIPLY:
+                    return Pair.of(left.first * right.first, true);
+                case DIVIDE:
+                    return Pair.of(left.first / right.first, true);
+                case REMAINDER:
+                    return Pair.of(left.first % right.first, true);
+                default:
+                    break;
+                }
+            }
+
+            // otherwise return 0 and false
+            return Pair.of(0.0, false);
         }
 
         /**
@@ -561,6 +690,33 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                 type.replaceAnnotation(mm);
             } else if (UnitsRelationsTools.hasSpecificUnit(arg, km2)) {
                 // if sqrt was called with a kilometer-squared unit, return
+                // kilometer
+                type.replaceAnnotation(km);
+            }
+            return null;
+        }
+
+        /**
+         * If arg is one of the supported volume units, then it will return the
+         * corresponding length unit
+         *
+         * @param arg a unit which may or may not be one of the supported volume
+         *            units
+         * @param type the result unit
+         * @return type will be replaced with the corresponding length unit if
+         *         arg is a supported volume unit
+         */
+        private Void processCubeRoot(AnnotatedTypeMirror arg, AnnotatedTypeMirror type) {
+            if (UnitsRelationsTools.hasSpecificUnit(arg, m3)) {
+                // if cbrt was called with a meter-cubed unit, return
+                // meter
+                type.replaceAnnotation(m);
+            } else if (UnitsRelationsTools.hasSpecificUnit(arg, mm3)) {
+                // if cbrt was called with a millimeter-cubed unit, return
+                // millimeter
+                type.replaceAnnotation(mm);
+            } else if (UnitsRelationsTools.hasSpecificUnit(arg, km3)) {
+                // if cbrt was called with a kilometer-cubed unit, return
                 // kilometer
                 type.replaceAnnotation(km);
             }
