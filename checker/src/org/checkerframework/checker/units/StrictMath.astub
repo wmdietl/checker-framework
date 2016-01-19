@@ -14,7 +14,7 @@ package java.lang;
  * first and test it through JavaLangMath, if it is correct then synchronize
  * this stub file to Math.astub, and JavaLangStrictMath tests to JavaLangMath
  * tests.
- * 
+ *
  * This stub file provides units annotations for Java 7 and Java 8 StrictMath class.
  *
  * New methods in Java 8:

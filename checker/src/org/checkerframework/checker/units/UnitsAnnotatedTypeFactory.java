@@ -252,7 +252,7 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
      * Given an alias annotation, this method builds a base unit annotation with
      * the alias's prefix, adds the alias to the aliasMap, and then returns the
      * base annotation.
-     * 
+     *
      * Given any other annotation, this method returns null.
      *
      * e.g. given @kg this will build @g with prefix {@link Prefix#kilo}
