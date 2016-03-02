@@ -1,11 +1,13 @@
-import org.checkerframework.checker.units.*;
 import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.instant.*;
+import org.checkerframework.checker.units.UnitsTools;
 import org.checkerframework.framework.qual.PolyAll;
 
 public class PolyUnitTest {
 
     @PolyUnit int triplePolyUnit(@PolyUnit int amount) {
-        return 3*amount;
+        return 3 * amount;
     }
 
     void testPolyUnit() {

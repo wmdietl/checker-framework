@@ -12,6 +12,9 @@ import org.checkerframework.checker.units.qual.m2;
 import org.checkerframework.checker.units.qual.m3;
 import org.checkerframework.checker.units.qual.mm2;
 import org.checkerframework.checker.units.qual.mm3;
+import org.checkerframework.checker.units.qual.time.duration.TimeDuration;
+import org.checkerframework.checker.units.qual.time.instant.DurationUnit;
+import org.checkerframework.checker.units.qual.time.instant.TimeInstant;
 import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.framework.source.Result;
@@ -84,6 +87,10 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
     private final AnnotationMirror m3 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, m3.class);
     private final AnnotationMirror km3 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, km3.class);
     private final AnnotationMirror mm3 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, mm3.class);
+
+    // used in time units resolution
+    private final AnnotationMirror timeDuration = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, TimeDuration.class);
+    private final AnnotationMirror timeInstant = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, TimeInstant.class);
 
     // Map from canonical class name to the corresponding UnitsRelations
     // instance.
@@ -359,6 +366,76 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
         }
     }
 
+    private boolean annotatedTypeIsSubtype(/*@Nullable*/ final AnnotatedTypeMirror t, /*@Nullable*/ final AnnotationMirror superType) {
+        if (t == null || superType == null) {
+            return false;
+        }
+
+        Set<AnnotationMirror> annos = t.getEffectiveAnnotations();
+
+        // if one of the annotations of the ATM t is a subtype of superType then
+        // return true
+        for (AnnotationMirror anno : annos) {
+            if (this.getQualifierHierarchy().isSubtype(anno, superType)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Helper methods for processing time units
+    private boolean isTimeDuration(/*@Nullable*/ final AnnotatedTypeMirror t) {
+        return annotatedTypeIsSubtype(t, timeDuration);
+    }
+
+    private boolean isTimeInstant(/*@Nullable*/ final AnnotatedTypeMirror t) {
+        return annotatedTypeIsSubtype(t, timeInstant);
+    }
+
+
+    private /*@Nullable*/ AnnotationMirror getTimeDurationUnit(/*@Nullable*/ final AnnotatedTypeMirror t) {
+        if (t == null || !isTimeInstant(t)) {
+            return null;
+        }
+
+        // get the time unit annotation
+        AnnotationMirror timeUnit = UnitsRelationsTools.getUnit(t);
+        // get the durationUnit meta annotation
+        AnnotationMirror durationUnit = getDurationUnitMetaAnnotation(timeUnit);
+
+        if (durationUnit != null) {
+            // retrieve the Class of the duration unit
+            Class<? extends Annotation> durationUnitAnnoClass = AnnotationUtils.getElementValueClass(durationUnit, "unit", true).asSubclass(Annotation.class);
+
+            return UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, durationUnitAnnoClass);
+        }
+
+        return null;
+    }
+
+    private /*@Nullable*/ AnnotationMirror getDurationUnitMetaAnnotation(AnnotationMirror anno) {
+        for (AnnotationMirror metaAnno : anno.getAnnotationType().asElement().getAnnotationMirrors()) {
+            // see if the meta annotation is UnitsMultiple
+            if (isDurationUnitAnno(metaAnno)) {
+                return metaAnno;
+            }
+        }
+        return null;
+    }
+
+    private boolean isDurationUnitAnno(AnnotationMirror metaAnno) {
+        return AnnotationUtils.areSameByClass(metaAnno, DurationUnit.class);
+    }
+
+    private AnnotationMirror removePrefix(AnnotationMirror anno) {
+        return UnitsRelationsTools.removePrefix(elements, anno);
+    }
+
+    // =========================================================
+    // Tree Annotators
+    // =========================================================
+
     @Override
     public TreeAnnotator createTreeAnnotator() {
         ImplicitsTreeAnnotator implicitsTreeAnnotator = new ImplicitsTreeAnnotator(this);
@@ -393,10 +470,25 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
         // cache expressions evaluated in evalMathExpression
         private final Map<String, Pair<Double, Boolean>> mathExpressions;
 
+        private final TypeMirror stringType;
+        private final TypeMirror mathType;
+        private final TypeMirror strictMathType;
+
         UnitsTreeAnnotator(UnitsAnnotatedTypeFactory atypeFactory) {
             super(atypeFactory);
 
             mathExpressions = new HashMap<String, Pair<Double, Boolean>>();
+
+            stringType = getElementUtils().getTypeElement(java.lang.String.class.getCanonicalName()).asType();
+            mathType = getElementUtils().getTypeElement(java.lang.Math.class.getCanonicalName()).asType();
+            strictMathType = getElementUtils().getTypeElement(java.lang.StrictMath.class.getCanonicalName()).asType();
+        }
+
+        private boolean isSameUnderlyingType(TypeMirror lht, TypeMirror rht) {
+            // use typeUtils.isSameType instead of TypeMirror.equals as this
+            // will check only the underlying type and ignores declarations on
+            // the type mirror
+            return checker.getTypeUtils().isSameType(lht, rht);
         }
 
         @Override
@@ -412,15 +504,13 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             // check to see if the class is java.lang.Math or
             // java.lang.StrictMath
             TypeMirror underlyingType = receiverType.getUnderlyingType();
-            TypeMirror mathType = getElementUtils().getTypeElement(java.lang.Math.class.getCanonicalName()).asType();
-            TypeMirror strictMathType = getElementUtils().getTypeElement(java.lang.StrictMath.class.getCanonicalName()).asType();
 
             // java.lang.StrictMath implements the same methods as
             // java.lang.Math except for incrementExact, decrementExact, and
             // negateExact
             // The common methods have the same signature and same expected
             // units
-            boolean isMathType = underlyingType.equals(mathType) || underlyingType.equals(strictMathType);
+            boolean isMathType = isSameUnderlyingType(underlyingType, mathType) || isSameUnderlyingType(underlyingType, strictMathType);
             // see which method in the Math library was called
             boolean isAddExact = methodName.contentEquals("addExact");
             boolean isSubtractExact = methodName.contentEquals("subtractExact");
@@ -443,23 +533,23 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             // process each math library method call
             if (isAddExact) {
                 // addExact is always called with 2 arguments
-                return processMathLibraryArithmeticOperation(Tree.Kind.PLUS, type, methodArguments);
+                return processMathLibraryArithmeticOperation(node, Tree.Kind.PLUS, type, methodArguments);
 
             } else if (isSubtractExact) {
                 // subtractExact is always called with 2 arguments
-                return processMathLibraryArithmeticOperation(Tree.Kind.MINUS, type, methodArguments);
+                return processMathLibraryArithmeticOperation(node, Tree.Kind.MINUS, type, methodArguments);
 
             } else if (isMultiplyExact) {
                 // multiplyExact is always called with 2 arguments
-                return processMathLibraryArithmeticOperation(Tree.Kind.MULTIPLY, type, methodArguments);
+                return processMathLibraryArithmeticOperation(node, Tree.Kind.MULTIPLY, type, methodArguments);
 
             } else if (isFloorDiv) {
                 // floorDiv is always called with 2 arguments
-                return processMathLibraryArithmeticOperation(Tree.Kind.DIVIDE, type, methodArguments);
+                return processMathLibraryArithmeticOperation(node, Tree.Kind.DIVIDE, type, methodArguments);
 
             } else if (isIEEEremainder) {
                 // IEEEremainder is always called with 2 arguments
-                return processMathLibraryArithmeticOperation(Tree.Kind.REMAINDER, type, methodArguments);
+                return processMathLibraryArithmeticOperation(node, Tree.Kind.REMAINDER, type, methodArguments);
 
             } else if (isAtan2) {
                 // atan2 is always called with 2 arguments
@@ -663,10 +753,10 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
          * @return the resulting type will be assigned according to math
          *         operation rules
          */
-        private Void processMathLibraryArithmeticOperation(Tree.Kind kind, AnnotatedTypeMirror type, List<? extends ExpressionTree> methodArguments) {
+        private Void processMathLibraryArithmeticOperation(ExpressionTree node, Tree.Kind kind, AnnotatedTypeMirror type, List<? extends ExpressionTree> methodArguments) {
             AnnotatedTypeMirror lht = getAnnotatedType(methodArguments.get(0));
             AnnotatedTypeMirror rht = getAnnotatedType(methodArguments.get(1));
-            return processMathOperation(kind, type, lht, rht);
+            return processMathOperation(node, kind, type, lht, rht);
         }
 
         /**
@@ -723,7 +813,30 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             return null;
         }
 
-        private Void processMathOperation(Tree.Kind kind, AnnotatedTypeMirror resultType, AnnotatedTypeMirror lht, AnnotatedTypeMirror rht) {
+        /**
+         * If the time instant is based on the same unit as the duration, then
+         * it will return the time instant unit
+         *
+         * @param type the result unit
+         * @param instant the time instant unit
+         * @param duration the time duration unit
+         * @return type will be replaced with the time instant unit, or
+         *         {@link TimeInstant} if the above criterion is not satisfied.
+         */
+        private Void processInstantAndDurationMathOperation(AnnotatedTypeMirror type, AnnotatedTypeMirror instant, AnnotatedTypeMirror duration) {
+            if (UnitsRelationsTools.hasSameUnits(getTimeDurationUnit(instant), UnitsRelationsTools.getUnit(duration))) {
+                // If the instant is based upon the same unit as the duration,
+                // then Time instant + or - time duration => time instant
+                type.replaceAnnotations(instant.getAnnotations());
+            } else {
+                // if the instant isn't based upon the same unit however, then
+                // return @TimeInstant
+                type.replaceAnnotation(timeInstant);
+            }
+            return null;
+        }
+
+        private Void processMathOperation(ExpressionTree node, Tree.Kind kind, AnnotatedTypeMirror resultType, AnnotatedTypeMirror lht, AnnotatedTypeMirror rht) {
             // Remove Prefix.one
             if (UnitsRelationsTools.getPrefix(lht) == Prefix.one) {
                 lht = UnitsRelationsTools.removePrefix(elements, lht);
@@ -765,9 +878,21 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                 case PLUS:
                     // plus is treated the same as minus
                 case MINUS:
-                    if (UnitsRelationsTools.hasSameUnits(lht, rht)) {
+                    // Process time units first
+                    if (isTimeInstant(lht) && isTimeInstant(rht)) {
+                        // Time instant + time instant ==> error
+                        // One cannot add the 4th month of a year to the 7th month of some other year
+                        checker.report(Result.failure("time.instant.addition.disallowed", lht.toString(), rht.toString()), node);
+                    } else if(isTimeInstant(lht) && isTimeDuration(rht)) {
+                        // instant +/- duration => instant
+                        processInstantAndDurationMathOperation(resultType, lht, rht);
+                    } else if(isTimeDuration(lht) && isTimeInstant(rht)) {
+                        // duration +/- instant => instant
+                        processInstantAndDurationMathOperation(resultType, rht, lht);
+                    } else if (UnitsRelationsTools.hasSameUnits(lht, rht)) {
                         // If both operands for sum or difference have the same
                         // units, we return the unit
+                        // this includes duration +/- duration => duration
                         resultType.replaceAnnotations(lht.getAnnotations());
                     } else {
                         // otherwise we return in the LUB of the left and right
@@ -846,6 +971,24 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             AnnotatedTypeMirror rht = getAnnotatedType(node.getRightOperand());
             Tree.Kind kind = node.getKind();
 
+            // skip checking addition on Strings
+            if (kind == Tree.Kind.PLUS) {
+                // replace with the types of the string
+                if (isSameUnderlyingType(lht.getUnderlyingType(), stringType)) {
+                    type.replaceAnnotations(lht.getAnnotations());
+                    return null;
+                } else if (isSameUnderlyingType(rht.getUnderlyingType(), stringType)) {
+                    type.replaceAnnotations(rht.getAnnotations());
+                    return null;
+                } else if (isSameUnderlyingType(lht.getUnderlyingType(), stringType) && isSameUnderlyingType(rht.getUnderlyingType(), stringType)){
+                    // strings are always scalar by union
+                    // TODO check variable declaration??
+                    type.replaceAnnotation(scalar);
+                    return null;
+                }
+                // if neither operands are strings, continue the checks
+            }
+
             // see if it is a comparison operation
             switch (kind) {
             case EQUAL_TO:
@@ -860,6 +1003,9 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                     // if both operands of a comparison have the same unit, then
                     // the result boolean value has a unit of Scalar
                     type.replaceAnnotation(scalar);
+                } else if (UnitsRelationsTools.hasSpecificUnit(lht, scalar) || UnitsRelationsTools.hasSpecificUnit(rht, scalar)) {
+                    // also allow comparison of any unit to a Scalar
+                    type.replaceAnnotation(scalar);
                 } else if (UnitsRelationsTools.hasSpecificUnit(lht, BOTTOM) || UnitsRelationsTools.hasSpecificUnit(rht, BOTTOM)) {
                     // if either of the operand is the Bottom type (commonly for
                     // null reference comparisons) then return Scalar as well
@@ -872,7 +1018,7 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             default:
                 // if it isn't a comparison operation, then check and process
                 // arithmetic operations
-                processMathOperation(kind, type, lht, rht);
+                processMathOperation(node, kind, type, lht, rht);
             }
 
             return null;
@@ -881,9 +1027,12 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
         @Override
         public Void visitCompoundAssignment(CompoundAssignmentTree node, AnnotatedTypeMirror type) {
             ExpressionTree var = node.getVariable();
-            AnnotatedTypeMirror varType = getAnnotatedType(var);
+            AnnotatedTypeMirror varType = atypeFactory.getAnnotatedType(var);
 
+            // by default the type of the compound assign expression is the same as the variable being modified
             type.replaceAnnotations(varType.getAnnotations());
+
+            // checks are done in UnitsVisitor, as only non-primitive types are checked in ATF
             return null;
         }
 
@@ -933,12 +1082,16 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
         }
     }
 
+    // =========================================================
+    // Qualifier Hierarchy
+    // =========================================================
+
     /**
      * Set the Bottom qualifier as the bottom of the hierarchy.
      */
     @Override
     public QualifierHierarchy createQualifierHierarchy(MultiGraphFactory factory) {
-        return new UnitsQualifierHierarchy(factory, AnnotationUtils.fromClass(elements, UnitsBottom.class));
+        return new UnitsQualifierHierarchy(factory, BOTTOM);
     }
 
     protected class UnitsQualifierHierarchy extends GraphQualifierHierarchy {
@@ -1014,9 +1167,5 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
 
             return result;
         }
-    }
-
-    private AnnotationMirror removePrefix(AnnotationMirror anno) {
-        return UnitsRelationsTools.removePrefix(elements, anno);
     }
 }

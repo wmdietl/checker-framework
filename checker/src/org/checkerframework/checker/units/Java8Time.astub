@@ -1,0 +1,1186 @@
+import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.instant.*;
+
+import java.io.Serializable;
+import java.time.chrono.*;
+import java.time.format.*;
+import java.time.temporal.*;
+import java.util.Comparator;
+import java.util.Map;
+
+package java.time;
+
+class Clock {
+    static Clock systemUTC();
+    static Clock systemDefaultZone();
+    static Clock system(ZoneId arg0);
+    // Obtains a clock that returns the current instant ticking in whole seconds using best available system clock.
+    static Clock tickSeconds(ZoneId arg0);
+    // Obtains a clock that returns the current instant ticking in whole minutes using best available system clock.
+    static Clock tickMinutes(ZoneId arg0);
+    static Clock tick(Clock arg0, Duration arg1);
+    static Clock fixed(Instant arg0, ZoneId arg1);
+    static Clock offset(Clock arg0, Duration arg1);
+    protected Clock();
+    ZoneId getZone();
+    Clock withZone(ZoneId arg0);
+    // gets the current millisecond time instant of the clock.
+    // Equivalent to java 7 System.currentTimeMillis(), and returns num of milliseconds since Java Epoch time. Java 8 API suggest to seldomly use this method and instead use instant()
+    @CALms long millis();
+    // TODO: also annotated Instant??
+    Instant instant();
+    boolean equals(Object arg0);
+    int hashCode();
+}
+
+class DateTimeException extends RuntimeException {
+    DateTimeException(String arg0);
+    DateTimeException(String arg0, Throwable arg1);
+}
+
+// Java states enum declaration defines a class
+// enum
+class DayOfWeek extends Enum<DayOfWeek> implements TemporalAccessor, TemporalAdjuster {
+    // TODO does this need to be annotated?
+    static final DayOfWeek MONDAY;
+    static final DayOfWeek TUESDAY;
+    static final DayOfWeek WEDNESDAY;
+    static final DayOfWeek THURSDAY;
+    static final DayOfWeek FRIDAY;
+    static final DayOfWeek SATURDAY;
+    static final DayOfWeek SUNDAY;
+
+    static DayOfWeek[] values();
+    static DayOfWeek valueOf(String arg0);
+
+    // accepts 1-7 representing monday to sunday respectively (ISO-8601 standard)
+    static DayOfWeek of(@WeekDay int arg0);
+
+    static DayOfWeek from(TemporalAccessor arg0);
+    // gets the day-of-week int value
+    @WeekDay(WeekDaysEnum.unknown) int getValue();
+
+    String getDisplayName(TextStyle arg0, Locale arg1);
+    boolean isSupported(@TimeInstant TemporalField arg0);
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+
+    // if passed ChronoField.DAY_OF_WEEK then it returns 1-7 for the day of week, otherwise throws exception
+    @WeekDay(WeekDaysEnum.unknown) @PolyUnit int get(@PolyUnit TemporalField arg0);
+
+    // if passed ChronoField.DAY_OF_WEEK then it returns 1-7 for the day of week, otherwise throws exception
+    @WeekDay(WeekDaysEnum.unknown) @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+
+    DayOfWeek plus(@day long days);
+    DayOfWeek minus(@day long days);
+
+    <R> R query(TemporalQuery<R> arg0);
+    Temporal adjustInto(Temporal arg0);
+}
+
+class Duration implements TemporalAmount, Comparable<Duration>, Serializable {
+    static final Duration ZERO;
+    // converts long integer duration value into a Duration object, of each time duration unit
+    static Duration ofDays(@Day long days);
+    static Duration ofHours(@h long hours);
+    static Duration ofMinutes(@min long minutes);
+    static Duration ofSeconds(@s long seconds);
+    // Obtains a Duration representing a number of seconds and an adjustment in nanoseconds.
+    // Equivalent to seconds + nanoAdjustment in time duration value, nanoAdjustment can be negative.
+    static Duration ofSeconds(@s long seconds, @ns long nanoAdjustment);
+    static Duration ofMillis(@ms long millis);
+    static Duration ofNanos(@ns long nanos);
+    // Obtains a Duration representing an amount in the specified unit.
+    // The parameters represent the two parts of a phrase like '6 Hours'. For example:
+    // Duration.of(3, SECONDS);
+    // Duration.of(6, HOURS);
+    // Only a specific set of units are accepted by this method, the Unit must implement the TemporalUnit interface. ChronoUnit provides a set of ENUM values for use here. Other units throw an exception.
+
+    // (value, @TimeDuration TemporalUnit.unit) // TODO: needs ATF processing to ensure value has same unit
+    // can implement by force annotating each ChronoUnit enum
+    static Duration of(@TimeDuration long duration, @TimeDuration TemporalUnit unit);
+
+    static Duration from(TemporalAmount arg0);
+    static Duration parse(CharSequence arg0);
+    static Duration between(Temporal arg0, Temporal arg1);
+
+    // Gets the value of the requested unit.
+    // This returns a value for each of the two supported units, SECONDS and NANOS. All other units throw an exception.
+    // // would be nice to have @PolyDuration, but currently limited to 1 poly qualifier per checker
+    // TODO: ensure operand is a @TimeDuration
+    @PolyUnit long get(@PolyUnit TemporalUnit arg0);
+
+    // Gets the set of units supported by this duration.
+    // The supported units are SECONDS, and NANOS. They are returned in the order seconds, nanos.
+    List<@TimeDuration TemporalUnit> getUnits();
+
+    boolean isZero();
+    boolean isNegative();
+
+    @s long getSeconds();
+    @ns int getNano();
+
+    // returns a new copy of the current Duration with the new specified seconds, but retaining the current nano-of-second.
+    Duration withSeconds(@s long arg0);
+
+    // returns a new copy of the current Duration with the new specified nano-of-second, but retaining the current second.
+    Duration withNanos(@ns int arg0);
+
+    // http://grepcode.com/file/repository.grepcode.com/java/root/jdk/openjdk/8-b132/java/time/temporal/ChronoUnit.java?av=f
+
+    Duration plus(Duration arg0);
+    // TODO: ensure is same unit
+    Duration plus(@TimeDuration long duration, @TimeDuration TemporalUnit unit);
+    Duration plusDays(@day long arg0);
+    Duration plusHours(@h long arg0);
+    Duration plusMinutes(@min long arg0);
+    Duration plusSeconds(@s long arg0);
+    Duration plusMillis(@ms long arg0);
+    Duration plusNanos(@ns long arg0);
+
+    Duration minus(Duration arg0);
+    // TODO: ensure is same unit
+    Duration minus(@TimeDuration long duration, @TimeDuration TemporalUnit unit);
+    Duration minusDays(@day long arg0);
+    Duration minusHours(@h long arg0);
+    Duration minusMinutes(@min long arg0);
+    Duration minusSeconds(@s long arg0);
+    Duration minusMillis(@ms long arg0);
+    Duration minusNanos(@ns long arg0);
+
+    Duration multipliedBy(@Scalar long arg0);
+    Duration dividedBy(@Scalar long arg0);
+
+    Duration negated();
+    Duration abs();
+
+    Temporal addTo(Temporal arg0);
+    Temporal subtractFrom(Temporal arg0);
+
+    @day long toDays();
+    @h long toHours();
+    @min long toMinutes();
+    @ms long toMillis();
+    @ns long toNanos();
+
+    int compareTo(Duration arg0);
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+class Instant implements Temporal, TemporalAdjuster, Comparable<Instant>, Serializable {
+    static final Instant EPOCH;
+    static final Instant MIN;
+    static final Instant MAX;
+
+    static Instant now();
+    static Instant now(Clock arg0);
+
+    // Obtains an instance of Instant using seconds from Java Epoch.
+    static Instant ofEpochSecond(@CALs long epochSecond);
+
+    // Obtains an instance of Instant using seconds from Java Epoch and nanosecond fraction of second.
+    static Instant ofEpochSecond(@CALs long epochSecond, @CALns long nanoAdjustment);
+
+    // Obtains an instance of Instant using milliseconds from Java Epoch.
+    static Instant ofEpochMilli(@CALms long epochMilli);
+
+    static Instant from(TemporalAccessor arg0);
+    static Instant parse(CharSequence arg0);
+
+    boolean isSupported(@TimeInstant TemporalField arg0);
+    boolean isSupported(@TimeDuration TemporalUnit arg0);
+
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+
+    // TODO: ensure parameter is a @TimeInstant in ATF
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+
+    // Gets the number of seconds from Java Epoch
+    @CALs long getEpochSecond();
+
+    // Gets the number of nanoseconds, later along the time-line, from the start of the second.
+    // The nanosecond-of-second value measures the total number of nanoseconds from the second returned by getEpochSecond.
+    @CALns int getNano();
+
+    Instant with(TemporalAdjuster arg0);
+
+    // Returns an Instant, based on this one, with the value for the specified field changed. If it is not possible to set the value, because the field is not supported or for some other reason, an exception is thrown.
+    // TODO: ensure field and value are same units
+    Instant with(@TimeInstant TemporalField field, @TimeInstant long newValue); // TODO: ensure is same unit
+
+    // Truncating the instant returns a copy of the original with fields smaller than the specified unit set to zero. The fields are calculated on the basis of using a UTC offset as seen in toString. For example, truncating with the MINUTES unit will round down to the nearest minute, setting the seconds and nanoseconds to zero.
+    Instant truncatedTo(@TimeDuration TemporalUnit arg0);
+
+    Instant plus(TemporalAmount arg0);
+    // TODO: ensure is same unit
+    Instant plus(@TimeDuration long duration, @TimeDuration TemporalUnit unit);
+
+    Instant plusSeconds(@s long secondsToAdd);
+    Instant plusMillis(@ms long millisToAdd);
+    Instant plusNanos(@ns long nanosToAdds);
+
+    Instant minus(TemporalAmount arg0);
+    // TODO: ensure is same unit
+    Instant minus(@TimeDuration long duration, @TimeDuration TemporalUnit unit);
+
+    Instant minusSeconds(@s long secondsToSubtract);
+    Instant minusMillis(@ms long millisToSubtract);
+    Instant minusNanos(@ns long nanosToSubtract);
+
+    <R> R query(TemporalQuery<R> arg0);
+    Temporal adjustInto(Temporal arg0);
+
+    // Calculates the amount of time until another instant in terms of the specified unit.
+    // TODO: ensure right operand is a @TimeDuration
+    @PolyUnit long until(Temporal endExclusive, @PolyUnit TemporalUnit unit);
+
+    OffsetDateTime atOffset(ZoneOffset arg0);
+    ZonedDateTime atZone(ZoneId arg0);
+
+    // Converts this instant to the number of milliseconds from Java Epoch
+    @CALms long toEpochMilli();
+
+    int compareTo(Instant arg0);
+    boolean isAfter(Instant arg0);
+    boolean isBefore(Instant arg0);
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+class LocalDate implements Temporal, TemporalAdjuster, ChronoLocalDate, Serializable {
+    static final LocalDate MIN;
+    static final LocalDate MAX;
+    static LocalDate now();
+    static LocalDate now(ZoneId arg0);
+    static LocalDate now(Clock arg0);
+
+    // This returns a LocalDate with the specified year, month and day-of-month. The day must be valid for the year and month, otherwise an exception will be thrown.
+    static LocalDate of(@CALyear int year, Month month, @CALday int dayOfMonth);
+    // This returns a LocalDate with the specified year, month and day-of-month. The day must be valid for the year and month, otherwise an exception will be thrown.
+    static LocalDate of(@CALyear int year, @CALmonth int month, @CALday int day);
+    // This returns a LocalDate with the specified year and day-of-year. The day-of-year must be valid for the year, otherwise an exception will be thrown.
+    static LocalDate ofYearDay(@CALyear int year, @CALday int dayOfYear);
+    // This returns a LocalDate with the specified epoch-day. The EPOCH_DAY is a simple incrementing count of days where day 0 is 1970-01-01. Negative numbers represent earlier days.
+    static LocalDate ofEpochDay(@CALday long epochDay);
+
+    static LocalDate from(TemporalAccessor arg0);
+    static LocalDate parse(CharSequence arg0);
+    static LocalDate parse(CharSequence arg0, DateTimeFormatter arg1);
+
+    boolean isSupported(@TimeInstant TemporalField arg0);
+    boolean isSupported(@TimeDuration TemporalUnit arg0);
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+
+    // TODO: ensure parameter is a @TimeInstant in ATF
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+
+    IsoChronology getChronology();
+
+    Era getEra();
+
+    // returns get(YEAR), but not get(YEAR_OF_ERA); value is from MIN_YEAR to MAX_YEAR
+    @CALyear int getYear(); // TODO: test to ensure it is calendar year
+    // returns month of year (1-12)
+    @CALmonth int getMonthValue();
+    Month getMonth();
+
+    @CALday int getDayOfMonth();
+    @CALday int getDayOfYear();
+    DayOfWeek getDayOfWeek();
+    boolean isLeapYear();
+    // returns number of days in the month represented by this date (28, 29, 30, or 31).
+    @day int lengthOfMonth();
+    // returns number of days in the year represented by this date (either 365 or 366)
+    @day int lengthOfYear();
+
+    LocalDate with(TemporalAdjuster arg0);
+    // TODO: ensure is same unit
+    LocalDate with(@TimeInstant TemporalField field, @TimeInstant long newValue); // TODO: ensure is same unit
+    // returns a copy of this local date with the year modified
+    LocalDate withYear(@CALyear int year);
+    // returns a copy of this local date with the month modified
+    LocalDate withMonth(@CALmonth int month);
+    LocalDate withDayOfMonth(@CALday int dayOfMonth);
+    LocalDate withDayOfYear(@CALday int dayOfYear);
+
+    LocalDate plus(TemporalAmount arg0);
+
+    // TODO: ensure is same unit
+    LocalDate plus(@TimeDuration long duration, @TimeDuration TemporalUnit unit);
+    LocalDate plusYears(@year long arg0);
+    LocalDate plusMonths(@month long arg0);
+    LocalDate plusWeeks(@week long arg0);
+    LocalDate plusDays(@day long arg0);
+
+    LocalDate minus(TemporalAmount arg0);
+
+    // TODO: ensure is same unit
+    LocalDate minus(@TimeDuration long duration, @TimeDuration TemporalUnit unit);
+    LocalDate minusYears(@year long arg0);
+    LocalDate minusMonths(@month long arg0);
+    LocalDate minusWeeks(@week long arg0);
+    LocalDate minusDays(@day long arg0);
+
+
+    <R> R query(TemporalQuery<R> arg0);
+    Temporal adjustInto(Temporal arg0);
+
+    // Calculates the amount of time until another instant in terms of the specified unit.
+    // TODO: ensure right operand is a @TimeDuration
+    @PolyUnit long until(Temporal endExclusive, @PolyUnit TemporalUnit unit);
+
+    Period until(ChronoLocalDate arg0);
+    String format(DateTimeFormatter arg0);
+
+    LocalDateTime atTime(LocalTime arg0);
+
+    /*
+     *     hour - the hour-of-day to use, from 0 to 23
+    minute - the minute-of-hour to use, from 0 to 59
+    second - the second-of-minute to represent, from 0 to 59
+    nanoOfSecond - the nano-of-second to represent, from 0 to 999,999,999
+     */
+    // Combines this date with a time to create a LocalDateTime.
+    // This returns a LocalDateTime formed from this date at the specified hour and minute. The seconds and nanosecond fields will be set to zero. The individual time fields must be within their valid range. All possible combinations of date and time are valid.
+    LocalDateTime atTime(@CALh int hour, @CALmin int minute); // at a particular hour of day and minute of hour
+    LocalDateTime atTime(@CALh int hour, @CALmin int minute, @CALs int second);
+    LocalDateTime atTime(@CALh int hour, @CALmin int minute, @CALs int second, @CALns int nanoOfSecond);
+
+    OffsetDateTime atTime(OffsetTime arg0);
+
+    LocalDateTime atStartOfDay();
+    ZonedDateTime atStartOfDay(ZoneId arg0);
+
+    // Converts this date to the Epoch Day.
+    // The Epoch Day count is a simple incrementing count of days where day 0 is 1970-01-01 (ISO). This definition is the same for all chronologies, enabling conversion.
+    // returns count of days since Java Epoch
+    @CALday long toEpochDay();
+
+    int compareTo(ChronoLocalDate arg0);
+    boolean isAfter(ChronoLocalDate arg0);
+    boolean isBefore(ChronoLocalDate arg0);
+    boolean isEqual(ChronoLocalDate arg0);
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+class LocalDateTime implements Temporal, TemporalAdjuster, ChronoLocalDateTime<LocalDate>, Serializable {
+    static final LocalDateTime MIN;
+    static final LocalDateTime MAX;
+
+    static LocalDateTime now();
+    static LocalDateTime now(ZoneId arg0);
+    static LocalDateTime now(Clock arg0);
+
+    static LocalDateTime of(@CALyear int year, Month month,
+            @CALday int dayOfMonth, @CALh int hour, @CALmin int minute);
+
+    static LocalDateTime of(@CALyear int year, Month month,
+            @CALday int dayOfMonth, @CALh int hour, @CALmin int minute,
+            @CALs int second);
+
+    static LocalDateTime of(@CALyear int year, Month month,
+            @CALday int dayOfMonth, @CALh int hour, @CALmin int minute,
+            @CALs int second, @CALns int nanoOfSecond);
+
+    static LocalDateTime of(@CALyear int year, @CALmonth int month,
+            @CALday int dayOfMonth, @CALh int hour, @CALmin int minute);
+
+    static LocalDateTime of(@CALyear int year, @CALmonth int month,
+            @CALday int dayOfMonth, @CALh int hour, @CALmin int minute,
+            @CALs int second);
+
+    static LocalDateTime of(@CALyear int year, @CALmonth int month,
+            @CALday int dayOfMonth, @CALh int hour, @CALmin int minute,
+            @CALs int second, @CALns int nanoOfSecond);
+
+    static LocalDateTime of(LocalDate arg0, LocalTime arg1);
+    static LocalDateTime ofInstant(Instant arg0, ZoneId arg1);
+
+    static LocalDateTime ofEpochSecond(@CALs long epochSecond,
+            @CALns int nanoOfSecond,
+            ZoneOffset offset);
+
+    static LocalDateTime from(TemporalAccessor arg0);
+    static LocalDateTime parse(CharSequence arg0);
+    static LocalDateTime parse(CharSequence arg0, DateTimeFormatter arg1);
+
+    boolean isSupported(@TimeInstant TemporalField arg0);
+    boolean isSupported(@TimeDuration TemporalUnit arg0);
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+
+    LocalDate toLocalDate();
+
+    @CALyear int getYear();
+    @CALmonth int getMonthValue();
+    Month getMonth();
+    @CALday int getDayOfMonth();
+    @CALday int getDayOfYear();
+
+    DayOfWeek getDayOfWeek();
+    LocalTime toLocalTime();
+
+    @CALh int getHour();
+    @CALmin int getMinute();
+    @CALs int getSecond();
+    @CALns int getNano();
+
+    LocalDateTime with(TemporalAdjuster arg0);
+
+    LocalDateTime with(@TimeInstant TemporalField field, @TimeInstant long newValue); // TODO: ensure is same unit
+    LocalDateTime withYear(@CALyear int arg0);
+    LocalDateTime withMonth(@CALmonth int arg0);
+    LocalDateTime withDayOfMonth(@CALday int arg0);
+    LocalDateTime withDayOfYear(@CALday int arg0);
+    LocalDateTime withHour(@CALh int arg0);
+    LocalDateTime withMinute(@CALmin int arg0);
+    LocalDateTime withSecond(@CALs int arg0);
+    LocalDateTime withNano(@CALns int arg0);
+
+    LocalDateTime truncatedTo(@TimeDuration TemporalUnit arg0);
+
+    LocalDateTime plus(TemporalAmount arg0);
+
+    LocalDateTime plus(@TimeDuration long amountToAdd, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    LocalDateTime plusYears(@year long arg0);
+    LocalDateTime plusMonths(@month long arg0);
+    LocalDateTime plusWeeks(@week long arg0);
+    LocalDateTime plusDays(@CALday long arg0);
+    LocalDateTime plusHours(@CALh long arg0);
+    LocalDateTime plusMinutes(@CALmin long arg0);
+    LocalDateTime plusSeconds(@CALs long arg0);
+    LocalDateTime plusNanos(@CALns long arg0);
+
+    LocalDateTime minus(TemporalAmount arg0);
+
+    LocalDateTime minus(@TimeDuration long amountToSubtract, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    LocalDateTime minusYears(@year long arg0);
+    LocalDateTime minusMonths(@month long arg0);
+    LocalDateTime minusWeeks(@week long arg0);
+    LocalDateTime minusDays(@CALday long arg0);
+    LocalDateTime minusHours(@CALh long arg0);
+    LocalDateTime minusMinutes(@CALmin long arg0);
+    LocalDateTime minusSeconds(@CALs long arg0);
+    LocalDateTime minusNanos(@CALns long arg0);
+
+    <R> R query(TemporalQuery<R> arg0);
+    Temporal adjustInto(Temporal arg0);
+
+    // TODO: ensure right operand is a @TimeDuration
+    @PolyUnit long until(Temporal endExclusive, @PolyUnit TemporalUnit unit);
+
+    String format(DateTimeFormatter arg0);
+    OffsetDateTime atOffset(ZoneOffset arg0);
+    ZonedDateTime atZone(ZoneId arg0);
+
+    int compareTo(ChronoLocalDateTime<?> arg0);
+    boolean isAfter(ChronoLocalDateTime<?> arg0);
+    boolean isBefore(ChronoLocalDateTime<?> arg0);
+    boolean isEqual(ChronoLocalDateTime<?> arg0);
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+class LocalTime implements Temporal, TemporalAdjuster, Comparable<LocalTime>, Serializable {
+    static final LocalTime MIN;
+    static final LocalTime MAX;
+    static final LocalTime MIDNIGHT;
+    static final LocalTime NOON;
+
+    static LocalTime now();
+    static LocalTime now(ZoneId arg0);
+    static LocalTime now(Clock arg0);
+
+    static LocalTime of(int arg0, int arg1);
+    static LocalTime of(int arg0, int arg1, int arg2);
+    static LocalTime of(int arg0, int arg1, int arg2, int arg3);
+    static LocalTime ofSecondOfDay(long arg0);
+    static LocalTime ofNanoOfDay(long arg0);
+
+    static LocalTime from(TemporalAccessor arg0);
+    static LocalTime parse(CharSequence arg0);
+    static LocalTime parse(CharSequence arg0, DateTimeFormatter arg1);
+
+    boolean isSupported(@TimeInstant TemporalField arg0);
+    boolean isSupported(@TimeDuration TemporalUnit arg0);
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+    @CALh int getHour();
+    @CALmin int getMinute();
+    @CALs int getSecond();
+    @CALns int getNano();
+
+    LocalTime with(TemporalAdjuster arg0);
+    LocalTime with(@TimeInstant TemporalField field, @TimeInstant long newValue); // TODO: ensure is same unit
+    LocalTime withHour(@CALh int arg0);
+    LocalTime withMinute(@CALmin int arg0);
+    LocalTime withSecond(@CALs int arg0);
+    LocalTime withNano(@CALns int arg0);
+
+    LocalTime truncatedTo(@TimeDuration TemporalUnit arg0);
+    LocalTime plus(TemporalAmount arg0);
+    LocalTime plus(@TimeDuration long amountToAdd, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    LocalTime plusHours(@h long arg0);
+    LocalTime plusMinutes(@min long arg0);
+    LocalTime plusSeconds(@s long arg0);
+    LocalTime plusNanos(@ns long arg0);
+
+    LocalTime minus(TemporalAmount arg0);
+    LocalTime minus(@TimeDuration long amountToSubtract, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    LocalTime minusHours(@h long arg0);
+    LocalTime minusMinutes(@min long arg0);
+    LocalTime minusSeconds(@s long arg0);
+    LocalTime minusNanos(@ns long arg0);
+
+    <R> R query(TemporalQuery<R> arg0);
+    Temporal adjustInto(Temporal arg0);
+    // TODO: ensure right operand is a @TimeDuration
+    @PolyUnit long until(Temporal endExclusive, @PolyUnit TemporalUnit unit);
+    String format(DateTimeFormatter arg0);
+    LocalDateTime atDate(LocalDate arg0);
+    OffsetTime atOffset(ZoneOffset arg0);
+
+    // Extracts the time as seconds of day, from 0 to 24 * 60 * 60 - 1.
+    @CALs int toSecondOfDay();
+    // Extracts the time as nanos of day, from 0 to 24 * 60 * 60 * 1,000,000,000 - 1.
+    @CALns long toNanoOfDay();
+
+    int compareTo(LocalTime arg0);
+    boolean isAfter(LocalTime arg0);
+    boolean isBefore(LocalTime arg0);
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+// enum
+class Month extends Enum<Month> implements TemporalAccessor, TemporalAdjuster {
+    // TODO: does this need to be annotated?
+    static final Month JANUARY;
+    static final Month FEBRUARY;
+    static final Month MARCH;
+    static final Month APRIL;
+    static final Month MAY;
+    static final Month JUNE;
+    static final Month JULY;
+    static final Month AUGUST;
+    static final Month SEPTEMBER;
+    static final Month OCTOBER;
+    static final Month NOVEMBER;
+    static final Month DECEMBER;
+
+    static Month[] values();
+    static Month valueOf(String arg0);
+
+    // Month is an enum representing the 12 months of the year. This factory allows the enum to be obtained from the int value. The int value follows the ISO-8601 standard, from 1 (January) to 12 (December).
+    static Month of(@CALmonth int arg0);
+    static Month from(TemporalAccessor arg0);
+
+    // Returns: the month-of-year, from 1 (January) to 12 (December).
+    @CALmonth int getValue();
+
+    String getDisplayName(TextStyle arg0, Locale arg1);
+    boolean isSupported(@TimeInstant TemporalField arg0);
+
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+
+    // Returns the month-of-year that is the specified number of months after this one.
+    // The calculation rolls around the start of the year from January to December. The specified period may be negative.
+    Month plus(@month long arg0);
+
+    // Returns the month-of-year that is the specified number of months before this one.
+    // The calculation rolls around the start of the year from January to December. The specified period may be negative.
+    Month minus(@month long arg0);
+
+    // Gets the length of this month in days.
+    // This takes a flag to determine whether to return the length for a leap year or not.
+    @day int length(boolean leapYear);
+
+    // Gets the minimum length of this month in days.
+    // February has a minimum length of 28 days. April, June, September and November have 30 days. All other months have 31 days.
+    @day int minLength();
+    // Gets the maximum length of this month in days.
+    // February has a maximum length of 29 days.
+    @day int maxLength();
+
+    // Gets the day-of-year corresponding to the first day of this month.
+    @CALday int firstDayOfYear(boolean leapYear);
+
+    Month firstMonthOfQuarter();
+    <R> R query(TemporalQuery<R> arg0);
+    Temporal adjustInto(Temporal arg0);
+}
+
+class MonthDay implements TemporalAccessor, TemporalAdjuster, Comparable<MonthDay>, Serializable {
+    static MonthDay now();
+    static MonthDay now(ZoneId arg0);
+    static MonthDay now(Clock arg0);
+
+    static MonthDay of(Month month, @CALday int dayOfMonth);
+    static MonthDay of(@CALmonth int month, @CALday int dayOfMonth);
+
+    static MonthDay from(TemporalAccessor arg0);
+    static MonthDay parse(CharSequence arg0);
+    static MonthDay parse(CharSequence arg0, DateTimeFormatter arg1);
+    boolean isSupported(@TimeInstant TemporalField arg0);
+
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+    @CALmonth int getMonthValue();
+
+    Month getMonth();
+    @CALday int getDayOfMonth();
+
+    // This method checks whether this month and day and the input year form a valid date. This can only return false for February 29th.
+    boolean isValidYear(@CALyear int year);
+
+    MonthDay withMonth(@CALmonth int arg0);
+    MonthDay with(Month arg0);
+    MonthDay withDayOfMonth(@CALday int arg0);
+
+    <R> R query(TemporalQuery<R> arg0);
+    Temporal adjustInto(Temporal arg0);
+    String format(DateTimeFormatter arg0);
+
+    // Combines this month-day with a year to create a LocalDate.
+    LocalDate atYear(@CALyear int year);
+
+    int compareTo(MonthDay arg0);
+    boolean isAfter(MonthDay arg0);
+    boolean isBefore(MonthDay arg0);
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+class OffsetDateTime implements Temporal, TemporalAdjuster, Comparable<OffsetDateTime>, Serializable {
+    static final OffsetDateTime MIN;
+    static final OffsetDateTime MAX;
+
+    static Comparator<OffsetDateTime> timeLineOrder();
+
+    static OffsetDateTime now();
+    static OffsetDateTime now(ZoneId arg0);
+    static OffsetDateTime now(Clock arg0);
+
+    static OffsetDateTime of(LocalDate arg0, LocalTime arg1, ZoneOffset arg2);
+    static OffsetDateTime of(LocalDateTime arg0, ZoneOffset arg1);
+
+    // Obtains an instance of OffsetDateTime from a year, month, day, hour,
+    // minute, second, nanosecond and offset.
+    static OffsetDateTime of(@CALyear int year, @CALmonth int month,
+            @CALday int dayOfMonth, @CALh int hour, @CALmin int minute,
+            @CALs int second, @CALns int nanoOfSecond, ZoneOffset offset);
+
+    static OffsetDateTime ofInstant(Instant arg0, ZoneId arg1);
+    static OffsetDateTime from(TemporalAccessor arg0);
+    static OffsetDateTime parse(CharSequence arg0);
+    static OffsetDateTime parse(CharSequence arg0, DateTimeFormatter arg1);
+
+    boolean isSupported(@TimeInstant TemporalField arg0);
+    boolean isSupported(@TimeDuration TemporalUnit arg0);
+
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+
+    ZoneOffset getOffset();
+    OffsetDateTime withOffsetSameLocal(ZoneOffset arg0);
+    OffsetDateTime withOffsetSameInstant(ZoneOffset arg0);
+
+    LocalDateTime toLocalDateTime();
+    LocalDate toLocalDate();
+
+    @CALyear int getYear();
+    @CALmonth int getMonthValue();
+    Month getMonth();
+    @CALday int getDayOfMonth();
+    @CALday int getDayOfYear();
+    DayOfWeek getDayOfWeek();
+    LocalTime toLocalTime();
+    @CALh int getHour();
+    @CALmin int getMinute();
+    @CALs int getSecond();
+    @CALns int getNano();
+
+    OffsetDateTime with(TemporalAdjuster arg0);
+    OffsetDateTime with(@TimeInstant TemporalField field, @TimeInstant long newValue); // TODO: ensure is same unit
+    OffsetDateTime withYear(@CALyear int arg0);
+    OffsetDateTime withMonth(@CALmonth int arg0);
+    OffsetDateTime withDayOfMonth(@CALday int arg0);
+    OffsetDateTime withDayOfYear(@CALday int arg0);
+    OffsetDateTime withHour(@CALh int arg0);
+    OffsetDateTime withMinute(@CALmin int arg0);
+    OffsetDateTime withSecond(@CALs int arg0);
+    OffsetDateTime withNano(@CALns int arg0);
+
+    OffsetDateTime truncatedTo(@TimeDuration TemporalUnit arg0);
+    OffsetDateTime plus(TemporalAmount arg0);
+    OffsetDateTime plus(@TimeDuration long amountToAdd, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    OffsetDateTime plusYears(@year long arg0);
+    OffsetDateTime plusMonths(@month long arg0);
+    OffsetDateTime plusWeeks(@week long arg0);
+    OffsetDateTime plusDays(@day long arg0);
+    OffsetDateTime plusHours(@h long arg0);
+    OffsetDateTime plusMinutes(@min long arg0);
+    OffsetDateTime plusSeconds(@s long arg0);
+    OffsetDateTime plusNanos(@ns long arg0);
+
+    OffsetDateTime minus(TemporalAmount arg0);
+    OffsetDateTime minus(@TimeDuration long amountToSubtract, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    OffsetDateTime minusYears(@year long arg0);
+    OffsetDateTime minusMonths(@month long arg0);
+    OffsetDateTime minusWeeks(@week long arg0);
+    OffsetDateTime minusDays(@day long arg0);
+    OffsetDateTime minusHours(@h long arg0);
+    OffsetDateTime minusMinutes(@min long arg0);
+    OffsetDateTime minusSeconds(@s long arg0);
+    OffsetDateTime minusNanos(@ns long arg0);
+
+    <R> R query(TemporalQuery<R> arg0);
+    Temporal adjustInto(Temporal arg0);
+    // TODO: ensure right operand is a @TimeDuration
+    @PolyUnit long until(Temporal endExclusive, @PolyUnit TemporalUnit unit);
+
+    String format(DateTimeFormatter arg0);
+    ZonedDateTime atZoneSameInstant(ZoneId arg0);
+    ZonedDateTime atZoneSimilarLocal(ZoneId arg0);
+    OffsetTime toOffsetTime();
+    ZonedDateTime toZonedDateTime();
+    Instant toInstant();
+
+    @CALs long toEpochSecond();
+
+    int compareTo(OffsetDateTime arg0);
+    boolean isAfter(OffsetDateTime arg0);
+    boolean isBefore(OffsetDateTime arg0);
+    boolean isEqual(OffsetDateTime arg0);
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+class OffsetTime implements Temporal, TemporalAdjuster, Comparable<OffsetTime>, Serializable {
+    static final OffsetTime MIN;
+    static final OffsetTime MAX;
+
+    static OffsetTime now();
+    static OffsetTime now(ZoneId arg0);
+    static OffsetTime now(Clock arg0);
+
+    static OffsetTime of(LocalTime arg0, ZoneOffset arg1);
+
+    // Obtains an instance of OffsetTime from an hour, minute, second and
+    // nanosecond.
+    static OffsetTime of(@CALh int hour, @CALmin int minute, @CALs int second,
+            @CALns int nanoOfSecond, ZoneOffset offset);
+
+    static OffsetTime ofInstant(Instant arg0, ZoneId arg1);
+    static OffsetTime from(TemporalAccessor arg0);
+    static OffsetTime parse(CharSequence arg0);
+    static OffsetTime parse(CharSequence arg0, DateTimeFormatter arg1);
+
+    boolean isSupported(@TimeInstant TemporalField arg0);
+    boolean isSupported(@TimeDuration TemporalUnit arg0);
+
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+
+    ZoneOffset getOffset();
+    OffsetTime withOffsetSameLocal(ZoneOffset arg0);
+    OffsetTime withOffsetSameInstant(ZoneOffset arg0);
+
+    LocalTime toLocalTime();
+    @CALh int getHour();
+    @CALmin int getMinute();
+    @CALs int getSecond();
+    @CALns int getNano();
+
+    OffsetTime with(TemporalAdjuster arg0);
+    OffsetTime with(@TimeInstant TemporalField field, @TimeInstant long newValue); // TODO: ensure is same unit
+    OffsetTime withHour(@CALh int arg0);
+    OffsetTime withMinute(@CALmin int arg0);
+    OffsetTime withSecond(@CALs int arg0);
+    OffsetTime withNano(@CALns int arg0);
+
+    OffsetTime truncatedTo(@TimeDuration TemporalUnit arg0);
+    OffsetTime plus(TemporalAmount arg0);
+    OffsetTime plus(@TimeDuration long amountToAdd, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    OffsetTime plusHours(@h long arg0);
+    OffsetTime plusMinutes(@min long arg0);
+    OffsetTime plusSeconds(@s long arg0);
+    OffsetTime plusNanos(@ns long arg0);
+
+    OffsetTime minus(TemporalAmount arg0);
+    OffsetTime minus(@TimeDuration long amountToSubtract, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    OffsetTime minusHours(@h long arg0);
+    OffsetTime minusMinutes(@min long arg0);
+    OffsetTime minusSeconds(@s long arg0);
+    OffsetTime minusNanos(@ns long arg0);
+
+    <R> R query(TemporalQuery<R> arg0);
+    Temporal adjustInto(Temporal arg0);
+
+    // TODO: ensure right operand is a @TimeDuration
+    @PolyUnit long until(Temporal endExclusive, @PolyUnit TemporalUnit unit);
+
+    String format(DateTimeFormatter arg0);
+    OffsetDateTime atDate(LocalDate arg0);
+
+    int compareTo(OffsetTime arg0);
+    boolean isAfter(OffsetTime arg0);
+    boolean isBefore(OffsetTime arg0);
+    boolean isEqual(OffsetTime arg0);
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+// A period of time using date based breakdown (years, months, weeks, days)
+class Period implements ChronoPeriod, Serializable {
+    static final Period ZERO;
+
+    static Period ofYears(@year int arg0);
+    static Period ofMonths(@month int arg0);
+    static Period ofWeeks(@week int arg0);
+    static Period ofDays(@day int arg0);
+
+    // Obtains a Period representing a number of years, months and days. e.g. 3 years, 3 months, 12 days
+    static Period of(@year int years, @month int months, @day int days);
+
+    static Period from(TemporalAmount arg0);
+    static Period parse(CharSequence arg0);
+    static Period between(LocalDate arg0, LocalDate arg1);
+
+    // TODO: ensure operand is a @TimeDuration
+    @PolyUnit long get(@PolyUnit TemporalUnit arg0);
+
+    List<TemporalUnit> getUnits();
+    IsoChronology getChronology();
+
+    boolean isZero();
+    boolean isNegative();
+
+    @year int getYears();
+    @month int getMonths();
+    @day int getDays();
+
+    Period withYears(@year int arg0);
+    Period withMonths(@month int arg0);
+    Period withDays(@day int arg0);
+
+    Period plus(TemporalAmount arg0);
+    Period plusYears(@year long arg0);
+    Period plusMonths(@month long arg0);
+    Period plusDays(@day long arg0);
+
+    Period minus(TemporalAmount arg0);
+    Period minusYears(@year long arg0);
+    Period minusMonths(@month long arg0);
+    Period minusDays(@day long arg0);
+
+    // Returns a new instance with each element in this period multiplied by the specified scalar.
+    Period multipliedBy(@scalar int scalar);
+
+    Period negated();
+    Period normalized();
+
+    // Gets the total number of months in this period.
+    @month long toTotalMonths();
+
+    Temporal addTo(Temporal arg0);
+    Temporal subtractFrom(Temporal arg0);
+
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+// an ISO year (a particular time instant, such as year 2007)
+class Year implements Temporal, TemporalAdjuster, Comparable<Year>, Serializable {
+    static final @CALyear int MIN_VALUE;
+    static final @CALyear int MAX_VALUE;
+
+    static Year now();
+    static Year now(ZoneId arg0);
+    static Year now(Clock arg0);
+
+    static Year of(@CALyear int isoYear);
+
+    static Year from(TemporalAccessor arg0);
+    static Year parse(CharSequence arg0);
+    static Year parse(CharSequence arg0, DateTimeFormatter arg1);
+
+    static boolean isLeap(@CALyear long year);
+
+    @CALyear int getValue();
+
+    boolean isSupported(@TimeInstant TemporalField arg0);
+    boolean isSupported(@TimeDuration TemporalUnit arg0);
+
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+
+    boolean isLeap();
+    boolean isValidMonthDay(MonthDay arg0);
+
+    // Gets the length of this year in days.
+    @day int length();
+
+    Year with(TemporalAdjuster arg0);
+    Year with(@TimeInstant TemporalField field, @TimeInstant long newValue); // TODO: ensure is same unit
+
+    Year plus(TemporalAmount arg0);
+    Year plus(@TimeDuration long amountToAdd, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    Year plusYears(@year long arg0);
+
+    Year minus(TemporalAmount arg0);
+    Year minus(@TimeDuration long amountToSubtract, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    Year minusYears(@year long arg0);
+
+    <R> R query(TemporalQuery<R> arg0);
+    Temporal adjustInto(Temporal arg0);
+
+    // TODO: ensure right operand is a @TimeDuration
+    @PolyUnit long until(Temporal endExclusive, @PolyUnit TemporalUnit unit);
+
+    String format(DateTimeFormatter arg0);
+
+    LocalDate atDay(@CALday int dayOfYear);
+    YearMonth atMonth(Month arg0);
+    YearMonth atMonth(@CALmonth int month);
+    LocalDate atMonthDay(MonthDay arg0);
+
+    int compareTo(Year arg0);
+    boolean isAfter(Year arg0);
+    boolean isBefore(Year arg0);
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+class YearMonth implements Temporal, TemporalAdjuster, Comparable<YearMonth>, Serializable {
+    static YearMonth now();
+    static YearMonth now(ZoneId arg0);
+    static YearMonth now(Clock arg0);
+
+    static YearMonth of(@CALyear int year, Month month);
+    static YearMonth of(@CALyear int year, @CALmonth int month);
+
+    static YearMonth from(TemporalAccessor arg0);
+    static YearMonth parse(CharSequence arg0);
+    static YearMonth parse(CharSequence arg0, DateTimeFormatter arg1);
+    boolean isSupported(@TimeInstant TemporalField arg0);
+    boolean isSupported(@TimeDuration TemporalUnit arg0);
+
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+    @CALyear int getYear();
+    @CALmonth int getMonthValue();
+    Month getMonth();
+    boolean isLeapYear();
+    boolean isValidDay(@CALday int dayOfMonth);
+
+    // Returns the length of the month in days, taking account of the year.
+    @day int lengthOfMonth();
+    // Returns the length of the year in days, either 365 or 366.
+    @day int lengthOfYear();
+
+    YearMonth with(TemporalAdjuster arg0);
+    YearMonth with(@TimeInstant TemporalField field, @TimeInstant long newValue); // TODO: ensure is same unit
+    YearMonth withYear(@CALyear int arg0);
+    YearMonth withMonth(@CALmonth int arg0);
+
+    YearMonth plus(TemporalAmount arg0);
+    YearMonth plus(@TimeDuration long amountToAdd, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    YearMonth plusYears(@year long arg0);
+    YearMonth plusMonths(@month long arg0);
+
+    YearMonth minus(TemporalAmount arg0);
+    YearMonth minus(@TimeDuration long amountToSubtract, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    YearMonth minusYears(@year long arg0);
+    YearMonth minusMonths(@month long arg0);
+
+    <R> R query(TemporalQuery<R> arg0);
+    Temporal adjustInto(Temporal arg0);
+
+    // TODO: ensure right operand is a @TimeDuration
+    @PolyUnit long until(Temporal endExclusive, @PolyUnit TemporalUnit unit);
+
+    String format(DateTimeFormatter arg0);
+
+    // Combines this year-month with a day-of-month to create a LocalDate.
+    LocalDate atDay(@CALday int dayOfMonth);
+    LocalDate atEndOfMonth();
+
+    int compareTo(YearMonth arg0);
+    boolean isAfter(YearMonth arg0);
+    boolean isBefore(YearMonth arg0);
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+class ZonedDateTime implements Temporal, ChronoZonedDateTime<LocalDate>, Serializable {
+    static ZonedDateTime now();
+    static ZonedDateTime now(ZoneId arg0);
+    static ZonedDateTime now(Clock arg0);
+
+    static ZonedDateTime of(LocalDate arg0, LocalTime arg1, ZoneId arg2);
+    static ZonedDateTime of(LocalDateTime arg0, ZoneId arg1);
+
+    // Obtains an instance of ZonedDateTime from a year, month, day, hour,
+    // minute, second, nanosecond and time-zone.
+    static ZonedDateTime of(@CALyear int year, @CALmonth int month,
+            @CALday int dayOfMonth, @CALh int hour, @CALmin int minute,
+            @CALs int second, @CALns int nanoOfSecond, ZoneId zone);
+
+    static ZonedDateTime ofLocal(LocalDateTime arg0, ZoneId arg1, ZoneOffset arg2);
+    static ZonedDateTime ofInstant(Instant arg0, ZoneId arg1);
+    static ZonedDateTime ofInstant(LocalDateTime arg0, ZoneOffset arg1, ZoneId arg2);
+    static ZonedDateTime ofStrict(LocalDateTime arg0, ZoneOffset arg1, ZoneId arg2);
+    static ZonedDateTime from(TemporalAccessor arg0);
+    static ZonedDateTime parse(CharSequence arg0);
+    static ZonedDateTime parse(CharSequence arg0, DateTimeFormatter arg1);
+
+    boolean isSupported(@TimeInstant TemporalField arg0);
+    boolean isSupported(@TimeDuration TemporalUnit arg0);
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+
+    ZoneOffset getOffset();
+    ZonedDateTime withEarlierOffsetAtOverlap();
+    ZonedDateTime withLaterOffsetAtOverlap();
+    ZoneId getZone();
+    ZonedDateTime withZoneSameLocal(ZoneId arg0);
+    ZonedDateTime withZoneSameInstant(ZoneId arg0);
+    ZonedDateTime withFixedOffsetZone();
+    LocalDateTime toLocalDateTime();
+    LocalDate toLocalDate();
+
+    @CALyear int getYear();
+    @CALmonth int getMonthValue();
+    Month getMonth();
+    @CALday int getDayOfMonth();
+    @CALday int getDayOfYear();
+    DayOfWeek getDayOfWeek();
+    LocalTime toLocalTime();
+    @CALh int getHour();
+    @CALmin int getMinute();
+    @CALs int getSecond();
+    @CALns int getNano();
+
+    ZonedDateTime with(TemporalAdjuster arg0);
+    ZonedDateTime with(@TimeInstant TemporalField field, @TimeInstant long newValue); // TODO: ensure is same unit
+    ZonedDateTime withYear(@CALyear int arg0);
+    ZonedDateTime withMonth(@CALmonth int arg0);
+    ZonedDateTime withDayOfMonth(@CALday int arg0);
+    ZonedDateTime withDayOfYear(@CALday int arg0);
+    ZonedDateTime withHour(@CALh int arg0);
+    ZonedDateTime withMinute(@CALmin int arg0);
+    ZonedDateTime withSecond(@CALs int arg0);
+    ZonedDateTime withNano(@CALns int arg0);
+
+    ZonedDateTime truncatedTo(@TimeDuration TemporalUnit arg0);
+    ZonedDateTime plus(TemporalAmount arg0);
+    ZonedDateTime plus(@TimeDuration long amountToAdd, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    ZonedDateTime plusYears(@year long arg0);
+    ZonedDateTime plusMonths(@month long arg0);
+    ZonedDateTime plusWeeks(@week long arg0);
+    ZonedDateTime plusDays(@day long arg0);
+    ZonedDateTime plusHours(@h long arg0);
+    ZonedDateTime plusMinutes(@min long arg0);
+    ZonedDateTime plusSeconds(@s long arg0);
+    ZonedDateTime plusNanos(@ns long arg0);
+
+    ZonedDateTime minus(TemporalAmount arg0);
+    ZonedDateTime minus(@TimeDuration long amountToSubtract, @TimeDuration TemporalUnit unit); // TODO: ensure is same unit
+    ZonedDateTime minusYears(@year long arg0);
+    ZonedDateTime minusMonths(@month long arg0);
+    ZonedDateTime minusWeeks(@week long arg0);
+    ZonedDateTime minusDays(@day long arg0);
+    ZonedDateTime minusHours(@h long arg0);
+    ZonedDateTime minusMinutes(@min long arg0);
+    ZonedDateTime minusSeconds(@s long arg0);
+    ZonedDateTime minusNanos(@ns long arg0);
+
+    <R> R query(TemporalQuery<R> arg0);
+
+    // TODO: ensure right operand is a @TimeDuration
+    @PolyUnit long until(Temporal endExclusive, @PolyUnit TemporalUnit unit);
+
+    String format(DateTimeFormatter arg0);
+    OffsetDateTime toOffsetDateTime();
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+class ZoneId implements Serializable {
+    static final Map<String, String> SHORT_IDS;
+    static ZoneId systemDefault();
+    static Set<String> getAvailableZoneIds();
+    static ZoneId of(String arg0, Map<String, String> arg1);
+    static ZoneId of(String arg0);
+    static ZoneId ofOffset(String arg0, ZoneOffset arg1);
+    static ZoneId from(TemporalAccessor arg0);
+    String getId();
+    String getDisplayName(TextStyle arg0, Locale arg1);
+    ZoneRules getRules();
+    ZoneId normalized();
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
+
+class ZoneOffset extends ZoneId implements TemporalAccessor, TemporalAdjuster, Comparable<ZoneOffset>, Serializable {
+    static final ZoneOffset UTC;
+    static final ZoneOffset MIN;
+    static final ZoneOffset MAX;
+    static ZoneOffset of(String arg0);
+    // Obtains an instance of ZoneOffset using an offset in hours.
+    static ZoneOffset ofHours(@h int hours);
+    // Obtains an instance of ZoneOffset using an offset in hours and minutes.
+    static ZoneOffset ofHoursMinutes(@h int hours, @min int minutes);
+    // Obtains an instance of ZoneOffset using an offset in hours, minutes and seconds.
+    static ZoneOffset ofHoursMinutesSeconds(@h int hours, @min int minutes, @s int seconds);
+    static ZoneOffset from(TemporalAccessor arg0);
+    // Obtains an instance of ZoneOffset specifying the total offset in seconds.
+    static ZoneOffset ofTotalSeconds(@s int totalSeconds);
+
+    @s int getTotalSeconds();
+
+    String getId();
+    ZoneRules getRules();
+
+    boolean isSupported(@TimeInstant TemporalField arg0);
+    @PolyUnit ValueRange range(@PolyUnit TemporalField arg0);
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+
+    <R> R query(TemporalQuery<R> arg0);
+    Temporal adjustInto(Temporal arg0);
+
+    int compareTo(ZoneOffset arg0);
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}

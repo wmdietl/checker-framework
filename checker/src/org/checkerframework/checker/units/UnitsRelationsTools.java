@@ -207,6 +207,28 @@ public class UnitsRelationsTools {
     }
 
     /**
+     * Given an Annotated Type, this method returns the Annotation representing
+     * the unit that this Annotated Type has.
+     *
+     * @param annoType an Annotated Type
+     * @return an AnnotationMirror representing the unit that this Annotated
+     *         Type has
+     */
+    public static /*@Nullable*/ AnnotationMirror getUnit(/*@Nullable*/ final AnnotatedTypeMirror annoType) {
+        if (annoType == null) {
+            return null;
+        }
+        // return the first unit (should always be the only unit) in the
+        // annotated type
+        Iterator<AnnotationMirror> it = annoType.getEffectiveAnnotations().iterator();
+        if (it.hasNext()) {
+            return annoType.getEffectiveAnnotations().iterator().next();
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Removes the Prefix value from an Annotation, by constructing and
      * returning a copy of its base SI unit's Annotation
      *

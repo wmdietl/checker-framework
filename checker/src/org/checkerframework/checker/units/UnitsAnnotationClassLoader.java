@@ -12,7 +12,7 @@ import javax.lang.model.element.AnnotationMirror;
 
 public class UnitsAnnotationClassLoader extends AnnotationClassLoader {
 
-    public UnitsAnnotationClassLoader(BaseTypeChecker checker) {
+    public UnitsAnnotationClassLoader(final BaseTypeChecker checker) {
         super(checker);
     }
 

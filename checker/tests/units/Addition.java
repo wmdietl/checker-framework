@@ -1,5 +1,7 @@
-import org.checkerframework.checker.units.UnitsTools;
 import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.instant.*;
+import org.checkerframework.checker.units.UnitsTools;
 
 public class Addition {
     // Addition is legal when the operands have the same units.
@@ -40,10 +42,10 @@ public class Addition {
     @Temperature int aTemperature = 5 * UnitsTools.K;
     @Temperature int bTemperature = 5 * UnitsTools.K;
 
-    // Time
-    @Time int aTime = 5 * UnitsTools.min;
-    @Time int bTime = 5 * UnitsTools.h;
-    @Time int cTime = 5 * UnitsTools.s;
+    // TimeDuration
+    @TimeDuration int aTime = 5 * UnitsTools.min;
+    @TimeDuration int bTime = 5 * UnitsTools.h;
+    @TimeDuration int cTime = 5 * UnitsTools.s;
 
     // Volume
     @Volume int aVolume = 5 * UnitsTools.m3;
@@ -192,8 +194,8 @@ public class Addition {
         //:: error: (assignment.type.incompatible)
         cTemperature = aTemperature + bSubstance;
 
-        // Time
-        @Time int cTime = aTime + bTime;
+        // TimeDuration
+        @TimeDuration int cTime = aTime + bTime;
         cTime = aSecond + bMinute;
         cTime = bSecond + aHour;
         cTime = aMinute + bHour;

@@ -1,4 +1,6 @@
 import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.instant.*;
 import org.checkerframework.checker.units.UnitsTools;
 
 public class Scalars {
@@ -6,8 +8,6 @@ public class Scalars {
     @UnknownUnits double u = 25.0d;
     @m double m = 30.0d * UnitsTools.m;
     @g double g = UnitsTools.g;
-
-    // TODO: Add negative tests
 
     void assignment() {
         // scalar should not be assigned an unknown

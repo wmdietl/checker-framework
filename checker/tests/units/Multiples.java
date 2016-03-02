@@ -1,5 +1,7 @@
-import org.checkerframework.checker.units.UnitsTools;
 import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.instant.*;
+import org.checkerframework.checker.units.UnitsTools;
 
 public class Multiples {
     void m() {

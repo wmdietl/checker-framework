@@ -1,11 +1,23 @@
 package org.checkerframework.checker.units;
 
+import org.checkerframework.checker.units.qual.Prefix;
+import org.checkerframework.checker.units.qual.km2;
+import org.checkerframework.checker.units.qual.km3;
+import org.checkerframework.checker.units.qual.kmPERh;
+import org.checkerframework.checker.units.qual.m;
+import org.checkerframework.checker.units.qual.m2;
+import org.checkerframework.checker.units.qual.m3;
+import org.checkerframework.checker.units.qual.mPERs;
+import org.checkerframework.checker.units.qual.mPERs2;
+import org.checkerframework.checker.units.qual.mm2;
+import org.checkerframework.checker.units.qual.mm3;
+import org.checkerframework.checker.units.qual.time.duration.h;
+import org.checkerframework.checker.units.qual.time.duration.s;
+import org.checkerframework.framework.type.AnnotatedTypeMirror;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.util.Elements;
-
-import org.checkerframework.checker.units.qual.*;
-import org.checkerframework.framework.type.AnnotatedTypeMirror;
 
 /*>>>
 import org.checkerframework.checker.nullness.qual.Nullable;

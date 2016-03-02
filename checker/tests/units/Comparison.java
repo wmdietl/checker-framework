@@ -1,5 +1,7 @@
 import org.checkerframework.checker.units.qual.*;
-import org.checkerframework.checker.units.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.instant.*;
+import org.checkerframework.checker.units.UnitsTools;
 
 public class Comparison {
     @m int meter = 20 * UnitsTools.m;
@@ -38,6 +40,7 @@ public class Comparison {
         if(x <= y);
 
         // comparison of Scalar variable to Scalar constant
+        // might have to override and allow as parameters need to be unknown
         if(x == 30);
         if(x != 30);
         if(x > 30);

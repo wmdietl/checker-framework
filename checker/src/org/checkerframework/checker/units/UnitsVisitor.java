@@ -10,13 +10,19 @@ import org.checkerframework.framework.type.AnnotatedTypeMirror;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedDeclaredType;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedExecutableType;
 import org.checkerframework.javacutil.AnnotationUtils;
+import org.checkerframework.javacutil.Pair;
+import org.checkerframework.javacutil.TreeUtils;
+
+import java.util.List;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.type.TypeMirror;
 
 import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
-import com.sun.source.tree.Tree.Kind;
 
 /**
  * Units visitor.
@@ -28,8 +34,14 @@ public class UnitsVisitor extends BaseTypeVisitor<UnitsAnnotatedTypeFactory> {
     protected final AnnotationMirror TOP = AnnotationUtils.fromClass(elements, UnknownUnits.class);
     protected final AnnotationMirror BOTTOM = AnnotationUtils.fromClass(elements, UnitsBottom.class);
 
+    private final TypeMirror stringType;
+    private final TypeMirror objectType;
+
     public UnitsVisitor(BaseTypeChecker checker) {
         super(checker);
+
+        stringType = checker.getElementUtils().getTypeElement(java.lang.String.class.getCanonicalName()).asType();
+        objectType = checker.getElementUtils().getTypeElement(java.lang.Object.class.getCanonicalName()).asType();
     }
 
     // Override to allow references to be declared using any units annotation
@@ -84,11 +96,15 @@ public class UnitsVisitor extends BaseTypeVisitor<UnitsAnnotatedTypeFactory> {
         ExpressionTree expr = node.getExpression();
         AnnotatedTypeMirror varType = atypeFactory.getAnnotatedType(var);
         AnnotatedTypeMirror exprType = atypeFactory.getAnnotatedType(expr);
+        Tree.Kind kind = node.getKind();
 
-        Kind kind = node.getKind();
+        // skip checking addition on Strings
+        if (kind == Tree.Kind.PLUS_ASSIGNMENT && isSameUnderlyingType(varType.getUnderlyingType(), stringType)) {
+            return null;
+        }
 
         // plus and minus assignment
-        if ((kind == Kind.PLUS_ASSIGNMENT || kind == Kind.MINUS_ASSIGNMENT)) {
+        if (kind == Tree.Kind.PLUS_ASSIGNMENT || kind == Tree.Kind.MINUS_ASSIGNMENT) {
             // if the right hand side (expr) is not a subtype of the left hand
             // side (var) then throw error
             if (!atypeFactory.getTypeHierarchy().isSubtype(exprType, varType)) {
@@ -97,7 +113,7 @@ public class UnitsVisitor extends BaseTypeVisitor<UnitsAnnotatedTypeFactory> {
             }
         }
         // multiply, divide, modulus assignment
-        else if ((kind == Kind.MULTIPLY_ASSIGNMENT || kind == Kind.DIVIDE_ASSIGNMENT || kind == Kind.REMAINDER_ASSIGNMENT)) {
+        else if (kind == Tree.Kind.MULTIPLY_ASSIGNMENT || kind == Tree.Kind.DIVIDE_ASSIGNMENT || kind == Tree.Kind.REMAINDER_ASSIGNMENT) {
             if (UnitsRelationsTools.hasSpecificUnit(varType, TOP)) {
                 // if the left hand side is unknown, turn it into whatever is on
                 // right hand side
@@ -111,5 +127,103 @@ public class UnitsVisitor extends BaseTypeVisitor<UnitsAnnotatedTypeFactory> {
         }
 
         return null;
+    }
+
+    private boolean isSameUnderlyingType(TypeMirror lht, TypeMirror rht) {
+        // use typeUtils.isSameType instead of TypeMirror.equals as this
+        // will check only the underlying type and ignores declarations on
+        // the type mirror
+        return checker.getTypeUtils().isSameType(lht, rht);
+    }
+
+    private boolean isNotPrimitiveNumberTypes(TypeMirror t) {
+        switch(t.getKind()) {
+        case BYTE:
+        case SHORT:
+        case INT:
+        case LONG:
+        case FLOAT:
+        case DOUBLE:
+            return false;
+        default:
+            return true;
+        }
+    }
+
+    // allow the passing of UnknownUnits variables into Scalar method parameters
+    // (all parameters are scalar by default), if the variable is a
+    // non-primitive type.
+    // keep in sync with super implementation.
+    @Override
+    protected void checkArguments(List<? extends AnnotatedTypeMirror> requiredArgs, List<? extends ExpressionTree> passedArgs) {
+        assert requiredArgs.size() == passedArgs.size() : "mismatch between required args (" + requiredArgs +
+                ") and passed args (" + passedArgs + ")";
+
+        Pair<Tree, AnnotatedTypeMirror> preAssCtxt = visitorState.getAssignmentContext();
+        try {
+            for (int i = 0; i < requiredArgs.size(); ++i) {
+                visitorState.setAssignmentContext(Pair.<Tree, AnnotatedTypeMirror>of((Tree) null, (AnnotatedTypeMirror) requiredArgs.get(i)));
+
+                AnnotatedTypeMirror requiredArg = requiredArgs.get(i);
+                AnnotatedTypeMirror passedArg = atypeFactory.getAnnotatedType(passedArgs.get(i));
+
+                if (UnitsRelationsTools.hasSpecificUnit(requiredArg, scalar) && UnitsRelationsTools.hasSpecificUnit(passedArg, TOP)
+                        && isNotPrimitiveNumberTypes(requiredArg.getUnderlyingType()) && isNotPrimitiveNumberTypes(passedArg.getUnderlyingType())) {
+                    // if the method parameter is Scalar, and the passed in
+                    // argument is UnknownUnits, and both the parameter and the
+                    // argument are not primitive number types, pass
+                } else if (UnitsRelationsTools.hasSpecificUnit(requiredArg, scalar) && isSameUnderlyingType(requiredArg.getUnderlyingType(), objectType)) {
+                    // if the method parameter is Scalar Object, pass regardless of what the argument is as Object accepts anything
+                } else {
+                    commonAssignmentCheck(requiredArg, passedArgs.get(i),
+                            "argument.type.incompatible", false);
+                }
+
+                // Also descend into the argument within the correct assignment
+                // context.
+                scan(passedArgs.get(i), null);
+            }
+        } finally {
+            visitorState.setAssignmentContext(preAssCtxt);
+        }
+    }
+
+    // allow the invocation of a method defined in a Scalar class (all classes
+    // are scalar by default) on an UnknownUnits object
+    // keep in sync with super implementation.
+    @Override
+    protected void checkMethodInvocability(AnnotatedExecutableType method, MethodInvocationTree node) {
+        if (method.getReceiverType() == null) {
+            // Static methods don't have a receiver.
+            return;
+        }
+        if (method.getElement().getKind() == ElementKind.CONSTRUCTOR) {
+            // TODO: Explicit "this()" calls of constructors have an implicit passed
+            // from the enclosing constructor. We must not use the self type, but
+            // instead should find a way to determine the receiver of the enclosing constructor.
+            // rcv = ((AnnotatedExecutableType)atypeFactory.getAnnotatedType(atypeFactory.getEnclosingMethod(node))).getReceiverType();
+            return;
+        }
+
+        AnnotatedTypeMirror methodReceiver = method.getReceiverType().getErased();
+        AnnotatedTypeMirror treeReceiver = methodReceiver.shallowCopy(false);
+        AnnotatedTypeMirror rcv = atypeFactory.getReceiverType(node);
+
+        treeReceiver.addAnnotations(rcv.getEffectiveAnnotations());
+
+        if (skipReceiverSubtypeCheck(node, methodReceiver, rcv)) {
+            return;
+        }
+
+        // if the method receiver is Scalar and the receiving object is UnknownUnits, pass
+        if (UnitsRelationsTools.hasSpecificUnit(methodReceiver, scalar) && UnitsRelationsTools.hasSpecificUnit(treeReceiver, TOP)) {
+            return;
+        }
+
+        if (!atypeFactory.getTypeHierarchy().isSubtype(treeReceiver, methodReceiver)) {
+            checker.report(Result.failure("method.invocation.invalid",
+                    TreeUtils.elementFromUse(node),
+                    treeReceiver.toString(), methodReceiver.toString()), node);
+        }
     }
 }
