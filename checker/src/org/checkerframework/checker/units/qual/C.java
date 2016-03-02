@@ -5,7 +5,7 @@ import java.lang.annotation.*;
 import org.checkerframework.framework.qual.*;
 
 /**
- *  Degree Centigrade (Celsius).
+ * Degree Centigrade (Celsius).
  *
  * @checker_framework.manual #units-checker Units Checker
  */

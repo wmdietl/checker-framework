@@ -1,33 +1,14 @@
 package org.checkerframework.checker.units;
 
-import org.checkerframework.checker.units.qual.A;
-import org.checkerframework.checker.units.qual.C;
-import org.checkerframework.checker.units.qual.K;
-import org.checkerframework.checker.units.qual.cd;
-import org.checkerframework.checker.units.qual.degrees;
-import org.checkerframework.checker.units.qual.g;
-import org.checkerframework.checker.units.qual.h;
-import org.checkerframework.checker.units.qual.kg;
-import org.checkerframework.checker.units.qual.km;
-import org.checkerframework.checker.units.qual.km2;
-import org.checkerframework.checker.units.qual.kmPERh;
-import org.checkerframework.checker.units.qual.m;
-import org.checkerframework.checker.units.qual.m2;
-import org.checkerframework.checker.units.qual.mPERs;
-import org.checkerframework.checker.units.qual.mPERs2;
-import org.checkerframework.checker.units.qual.min;
-import org.checkerframework.checker.units.qual.mm;
-import org.checkerframework.checker.units.qual.mm2;
-import org.checkerframework.checker.units.qual.mol;
-import org.checkerframework.checker.units.qual.radians;
-import org.checkerframework.checker.units.qual.s;
+import org.checkerframework.checker.units.qual.*;
 
 /**
  * Utility methods to generate annotated types and to convert between them.
  */
-@SuppressWarnings("units")
+// Developer notes: add fromTo methods for all useful unit combinations here.
 
-// TODO: add fromTo methods for all useful unit combinations.
+// Forcefully suppress all warnings here, since this tools class provides means to assign types to value literals and convert between types
+@SuppressWarnings("units")
 public class UnitsTools {
     // Acceleration
     public static final @mPERs2 int mPERs2 = 1;
@@ -93,4 +74,23 @@ public class UnitsTools {
     public static @s int fromMinuteToSecond(@min int min) { return min * 60; }
     public static @h int fromMinuteToHour(@min int min) { return min / 60; }
     public static @min int fromHourToMinute(@h int h) { return h * 60; }
+
+    // Volume
+    public static final @mm3 int mm3 = 1;
+    public static final @m3 int m3 = 1;
+    public static final @km3 int km3 = 1;
+
+    // Scalar Conversion Method
+    /**
+     * This method takes in any variable or reference and returns the same
+     * variable or reference with the Scalar unit instead of what it had.
+     *
+     * @param x a variable or reference with any unit
+     * @return x with the Scalar unit replacing the unit it had
+     */
+    public static final @Scalar <T> T toScalar(@UnknownUnits T x) {
+        // for version 8:
+        // public static final <T> @Scalar T toScalar(@UnknownUnits T x) {
+        return x;
+    }
 }

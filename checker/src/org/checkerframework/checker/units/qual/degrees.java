@@ -5,7 +5,7 @@ import java.lang.annotation.*;
 import org.checkerframework.framework.qual.*;
 
 /**
- * Degrees.
+ * Degrees in Angle.
  *
  * @checker_framework.manual #units-checker Units Checker
  */

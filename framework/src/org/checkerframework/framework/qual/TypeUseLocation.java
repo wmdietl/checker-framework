@@ -58,7 +58,7 @@ public enum TypeUseLocation {
     /**
      * Apply default annotations to unannotated lower bounds
      * for type variables and wildcards both explicit ones in
-     * <tt>extends</tt> clauses, and implicit upper bounds
+     * <tt>extends</tt> clauses, and implicit lower bounds
      * when no explicit <tt>extends</tt> or <tt>super</tt>
      * clause is present
      */
