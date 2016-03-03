@@ -1,6 +1,6 @@
 import org.checkerframework.checker.units.UnitsTools;
 import org.checkerframework.checker.units.qual.Prefix;
-import org.checkerframework.checker.units.qual.s;
+import org.checkerframework.checker.units.qual.time.duration.s;
 
 import qual.Hz;
 import qual.kHz;
@@ -45,6 +45,7 @@ class UnitsExtensionDemo {
     public static void main(String[] args) {
         @Hz int hertz = toHz(20);
         @s int seconds = 5 * UnitsTools.s;
+        @s int otherSeconds = 7 * UnitsTools.s;
 
         @SuppressWarnings("units")
         @s(Prefix.milli) int millisec = 10;
@@ -59,10 +60,10 @@ class UnitsExtensionDemo {
         System.out.println(resultkHz);
 
         // this demonstrates the type hierarchy resolution: the common supertype of Hz and kHz is Frequency, so this statement will pass
-        @Frequency int okTernaryAssign = seconds > 10 ? hertz : kilohertz;
+        @Frequency int okTernaryAssign = seconds > otherSeconds ? hertz : kilohertz;
 
         // on the other hand, this statement expects the right hand side to be a Hz, so it will fail
         //:: error: (assignment.type.incompatible)
-        @Hz int badTernaryAssign = seconds > 10 ? hertz : kilohertz;
+        @Hz int badTernaryAssign = seconds > otherSeconds ? hertz : kilohertz;
     }
 }

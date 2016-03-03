@@ -1,0 +1,552 @@
+import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.instant.*;
+
+package java.util;
+
+// the Date API is largely deprecated since JDK 1.1, and was designed with the year field storing the current year minus 1900
+class Date implements Serializable, Cloneable, Comparable<Date> {
+    Date();
+
+    // Allocates a Date object and initializes it to represent the specified
+    // number of milliseconds since the standard base time known as "the epoch",
+    // namely January 1, 1970, 00:00:00 GMT.
+    Date(@ms long date);
+
+    // Deprecated
+    // As of JDK version 1.1, replaced by Calendar.set(year + 1900, month, date)
+    // or GregorianCalendar(year + 1900, month, date).
+    // Parameters: year - the year minus 1900. month - the month between 0-11.
+    // date - the day of the month between 1-31.
+    Date(@Year int year, @Month int month, @Day int date);
+
+    // Deprecated
+    // As of JDK version 1.1, replaced by Calendar.set(year + 1900, month, date,
+    // hrs, min) or GregorianCalendar(year + 1900, month, date, hrs, min).
+    Date(@Year int year, @Month int month, @Day int date, @h int hrs, @min int min);
+
+    // Deprecated
+    // As of JDK version 1.1, replaced by Calendar.set(year + 1900, month, date,
+    // hrs, min, sec) or GregorianCalendar(year + 1900, month, date, hrs, min,
+    // sec).
+    Date(@Year int year, @Month int month, @Day int date, @h int hrs, @min int min, @s int sec);
+
+    // Deprecated
+    // As of JDK version 1.1, replaced by DateFormat.parse(String s).
+    Date(String s);
+
+    Object clone();
+
+    // Deprecated
+    // As of JDK version 1.1, replaced by Calendar.set(year + 1900, month, date,
+    // hrs, min, sec) or GregorianCalendar(year + 1900, month, date, hrs, min,
+    // sec), using a UTC TimeZone, followed by Calendar.getTime().getTime().
+    // Determines the time relative to UTC and returns it in milliseconds since
+    // epoch
+    static @ms long UTC(@Year int year, @Month int month, @Day int date, @h int hrs, @min int min, @s int sec);
+
+    // Deprecated
+    // Attempts to parse string s into a date and time, if successful returns
+    // number of milliseconds since epoch.
+    // IllegalArgumentException is thrown if unsuccessful.
+    static @ms long parse(String s);
+
+    // Deprecated
+    // Gets and sets the year minus 1900
+    @Year int getYear();
+    void setYear(@Year int arg0);
+
+    // Deprecated
+    // Gets and sets the month using 0-11
+    @Month int getMonth();
+    void setMonth(@Month int arg0);
+
+    // Deprecated
+    // Gets and sets the day of the month using 1->31
+    @Day int getDate();
+    void setDate(@Day int arg0);
+
+    // Deprecated
+    // returns 0->7 representing day of the week
+    @WeekDay int getDay();
+
+    // Deprecated
+    // Gets and sets the hour of the day using 0-23
+    @h int getHours();
+    void setHours(@h int arg0);
+
+    // Deprecated
+    // Gets and sets the minut within the current hour using 0-59
+    @min int getMinutes();
+    void setMinutes(@min int arg0);
+
+    // Deprecated
+    // Gets and sets the seconds within the current minute using 0-61
+    // the values 60 and 61 are only used by JVMs that support leap seconds
+    @s int getSeconds();
+    void setSeconds(@s int arg0);
+
+    // Gets and sets the time in milliseconds since epoch
+    @ms long getTime();
+    void setTime(@ms long arg0);
+
+    boolean before(Date arg0);
+    boolean after(Date arg0);
+    boolean equals(Object arg0);
+
+    int compareTo(Date arg0);
+    int hashCode();
+
+    String toString();
+
+    // Deprecated
+    String toLocaleString();
+
+    // Deprecated
+    String toGMTString();
+
+    // Deprecated
+    // returns the offset, measured in minutes, for the local time zone relative
+    // to UTC
+    @min int getTimezoneOffset();
+
+    // new in java 8
+    static Date from(Instant arg0);
+    Instant toInstant();
+}
+
+class Calendar implements Serializable, Cloneable, Comparable<Calendar> {
+    static final int ERA;
+    static final int YEAR;
+    static final int MONTH;
+    static final int WEEK_OF_YEAR;
+    static final int WEEK_OF_MONTH;
+    static final int DATE;
+    static final int DAY_OF_MONTH;
+    static final int DAY_OF_YEAR;
+    static final int DAY_OF_WEEK;
+    static final int DAY_OF_WEEK_IN_MONTH;
+    static final int AM_PM;
+    static final int HOUR;
+    static final int HOUR_OF_DAY;
+    static final int MINUTE;
+    static final int SECOND;
+    static final int MILLISECOND;
+    static final int ZONE_OFFSET;
+    static final int DST_OFFSET;
+    static final int FIELD_COUNT;
+
+    static final @WeekDay(Days.sunday) int SUNDAY;
+    static final @WeekDay(Days.monday) int MONDAY;
+    static final @WeekDay(Days.tuesday) int TUESDAY;
+    static final @WeekDay(Days.wednesday) int WEDNESDAY;
+    static final @WeekDay(Days.thursday) int THURSDAY;
+    static final @WeekDay(Days.friday) int FRIDAY;
+    static final @WeekDay(Days.saturday) int SATURDAY;
+
+    static final int JANUARY;
+    static final int FEBRUARY;
+    static final int MARCH;
+    static final int APRIL;
+    static final int MAY;
+    static final int JUNE;
+    static final int JULY;
+    static final int AUGUST;
+    static final int SEPTEMBER;
+    static final int OCTOBER;
+    static final int NOVEMBER;
+    static final int DECEMBER;
+    // 13th month
+    static final int UNDECIMBER;
+
+    static final int AM;
+    static final int PM;
+    static final int ALL_STYLES;
+    static final int SHORT;
+    static final int LONG;
+    static final int NARROW_FORMAT;
+    static final int NARROW_STANDALONE;
+    static final int SHORT_FORMAT;
+    static final int LONG_FORMAT;
+    static final int SHORT_STANDALONE;
+    static final int LONG_STANDALONE;
+    protected int[] fields;
+    protected boolean[] isSet;
+    protected long time;
+    protected boolean isTimeSet;
+    protected boolean areFieldsSet;
+
+    protected Calendar();
+
+    protected Calendar(TimeZone arg0, Locale arg1);
+
+    static Calendar getInstance();
+
+    static Calendar getInstance(TimeZone arg0);
+
+    static Calendar getInstance(Locale arg0);
+
+    static Calendar getInstance(TimeZone arg0, Locale arg1);
+
+    static Locale[] getAvailableLocales();
+
+    protected void computeTime();
+
+    protected void computeFields();
+
+    Date getTime();
+
+    void setTime(Date arg0);
+
+    long getTimeInMillis();
+
+    void setTimeInMillis(long arg0);
+
+    int get(int arg0);
+
+    protected int internalGet(int arg0);
+
+    void set(int arg0, int arg1);
+
+    void set(int arg0, int arg1, int arg2);
+
+    void set(int arg0, int arg1, int arg2, int arg3, int arg4);
+
+    void set(int arg0, int arg1, int arg2, int arg3, int arg4, int arg5);
+
+    void clear();
+
+    void clear(int arg0);
+
+    boolean isSet(int arg0);
+
+    String getDisplayName(int arg0, int arg1, Locale arg2);
+
+    Map<String, Integer> getDisplayNames(int arg0, int arg1, Locale arg2);
+
+    protected void complete();
+
+    static Set<String> getAvailableCalendarTypes();
+
+    String getCalendarType();
+
+    boolean equals(Object arg0);
+
+    int hashCode();
+
+    boolean before(Object arg0);
+
+    boolean after(Object arg0);
+
+    int compareTo(Calendar arg0);
+
+    void add(int arg0, int arg1);
+
+    void roll(int arg0, boolean arg1);
+
+    void roll(int arg0, int arg1);
+
+    void setTimeZone(TimeZone arg0);
+
+    TimeZone getTimeZone();
+
+    void setLenient(boolean arg0);
+
+    boolean isLenient();
+
+    void setFirstDayOfWeek(int arg0);
+
+    int getFirstDayOfWeek();
+
+    void setMinimalDaysInFirstWeek(int arg0);
+
+    int getMinimalDaysInFirstWeek();
+
+    boolean isWeekDateSupported();
+
+    int getWeekYear();
+
+    void setWeekDate(int arg0, int arg1, int arg2);
+
+    int getWeeksInWeekYear();
+
+    int getMinimum(int arg0);
+
+    int getMaximum(int arg0);
+
+    int getGreatestMinimum(int arg0);
+
+    int getLeastMaximum(int arg0);
+
+    int getActualMinimum(int arg0);
+
+    int getActualMaximum(int arg0);
+
+    Object clone();
+
+    String toString();
+
+    Instant toInstant();
+}
+
+class Calendar$Builder {
+    Builder();
+
+    Builder setInstant(long arg0);
+
+    Builder setInstant(Date arg0);
+
+    Builder set(int arg0, int arg1);
+
+    Builder setFields(int[] arg0);
+
+    Builder setDate(int arg0, int arg1, int arg2);
+
+    Builder setTimeOfDay(int arg0, int arg1, int arg2);
+
+    Builder setTimeOfDay(int arg0, int arg1, int arg2, int arg3);
+
+    Builder setWeekDate(int arg0, int arg1, int arg2);
+
+    Builder setTimeZone(TimeZone arg0);
+
+    Builder setLenient(boolean arg0);
+
+    Builder setCalendarType(String arg0);
+
+    Builder setLocale(Locale arg0);
+
+    Builder setWeekDefinition(int arg0, int arg1);
+
+    Calendar build();
+}
+
+class GregorianCalendar extends Calendar {
+    // ERA field value (year values are in BC/BCE)
+    static final @Year int BC;
+    // ERA field value (year values are in AD/CE)
+    static final @Year int AD;
+
+    GregorianCalendar();
+    GregorianCalendar(TimeZone arg0);
+    GregorianCalendar(Locale arg0);
+    GregorianCalendar(TimeZone arg0, Locale arg1);
+
+    GregorianCalendar(int arg0, int arg1, int arg2);
+
+    GregorianCalendar(int arg0, int arg1, int arg2, int arg3, int arg4);
+
+    GregorianCalendar(int arg0, int arg1, int arg2, int arg3, int arg4, int arg5);
+
+    void setGregorianChange(Date arg0);
+    Date getGregorianChange();
+
+    boolean isLeapYear(int arg0);
+
+    String getCalendarType();
+
+    boolean equals(Object arg0);
+    int hashCode();
+
+    void add(int arg0, int arg1);
+
+    void roll(int arg0, boolean arg1);
+
+    void roll(int arg0, int arg1);
+
+    int getMinimum(int arg0);
+
+    int getMaximum(int arg0);
+
+    int getGreatestMinimum(int arg0);
+
+    int getLeastMaximum(int arg0);
+
+    int getActualMinimum(int arg0);
+
+    int getActualMaximum(int arg0);
+
+    Object clone();
+
+    TimeZone getTimeZone();
+
+    void setTimeZone(TimeZone arg0);
+
+    boolean isWeekDateSupported();
+
+    int getWeekYear();
+
+    void setWeekDate(int arg0, int arg1, int arg2);
+
+    int getWeeksInWeekYear();
+
+    protected void computeFields();
+
+    protected void computeTime();
+
+    ZonedDateTime toZonedDateTime();
+
+    static GregorianCalendar from(ZonedDateTime arg0);
+}
+
+class TimeZone implements Serializable, Cloneable {
+    static final int SHORT;
+    static final int LONG;
+
+    TimeZone();
+
+    int getOffset(int arg0, int arg1, int arg2, int arg3, int arg4, int arg5);
+
+    int getOffset(long arg0);
+
+    void setRawOffset(int arg0);
+
+    int getRawOffset();
+
+    String getID();
+
+    void setID(String arg0);
+
+    String getDisplayName();
+
+    String getDisplayName(Locale arg0);
+
+    String getDisplayName(boolean arg0, int arg1);
+
+    String getDisplayName(boolean arg0, int arg1, Locale arg2);
+
+    int getDSTSavings();
+
+    boolean useDaylightTime();
+
+    boolean observesDaylightTime();
+
+    boolean inDaylightTime(Date arg0);
+
+    static TimeZone getTimeZone(String arg0);
+
+    static TimeZone getTimeZone(ZoneId arg0);
+
+    ZoneId toZoneId();
+
+    static String[] getAvailableIDs(int arg0);
+
+    static String[] getAvailableIDs();
+
+    static TimeZone getDefault();
+
+    static void setDefault(TimeZone arg0);
+
+    boolean hasSameRules(TimeZone arg0);
+
+    Object clone();
+}
+
+class SimpleTimeZone extends TimeZone {
+    static final int WALL_TIME;
+    static final int STANDARD_TIME;
+    static final int UTC_TIME;
+
+    SimpleTimeZone(int arg0, String arg1);
+
+    SimpleTimeZone(int arg0, String arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9);
+
+    SimpleTimeZone(int arg0, String arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10);
+
+    SimpleTimeZone(int arg0, String arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11, int arg12);
+
+    void setStartYear(int arg0);
+
+    void setStartRule(int arg0, int arg1, int arg2, int arg3);
+
+    void setStartRule(int arg0, int arg1, int arg2);
+
+    void setStartRule(int arg0, int arg1, int arg2, int arg3, boolean arg4);
+
+    void setEndRule(int arg0, int arg1, int arg2, int arg3);
+
+    void setEndRule(int arg0, int arg1, int arg2);
+
+    void setEndRule(int arg0, int arg1, int arg2, int arg3, boolean arg4);
+
+    int getOffset(long arg0);
+
+    int getOffset(int arg0, int arg1, int arg2, int arg3, int arg4, int arg5);
+
+    int getRawOffset();
+
+    void setRawOffset(int arg0);
+
+    void setDSTSavings(int arg0);
+
+    int getDSTSavings();
+
+    boolean useDaylightTime();
+
+    boolean observesDaylightTime();
+
+    boolean inDaylightTime(Date arg0);
+
+    Object clone();
+
+    int hashCode();
+
+    boolean equals(Object arg0);
+
+    boolean hasSameRules(TimeZone arg0);
+
+    String toString();
+}
+
+// Timer uses a delay and period in milliseconds to schedule tasks, in addition
+// to Date objects
+class Timer {
+    Timer();
+    Timer(boolean arg0);
+    Timer(String arg0);
+    Timer(String arg0, boolean arg1);
+
+    // Schedules the specified task for execution after the specified delay.
+    void schedule(TimerTask task, @ms long delay);
+
+    // Schedules the specified task for execution at the specified time. If the
+    // time is in the past, the task is scheduled for immediate execution.
+    void schedule(TimerTask task, Date time);
+
+    // Schedules the specified task for repeated fixed-delay execution,
+    // beginning after the specified delay. Subsequent executions take place at
+    // approximately regular intervals separated by the specified period.
+    void schedule(TimerTask task, @ms long delay, @ms long period);
+
+    // Schedules the specified task for repeated fixed-delay execution,
+    // beginning at the specified time. Subsequent executions take place at
+    // approximately regular intervals, separated by the specified period.
+    void schedule(TimerTask task, Date firstTime, @ms long period);
+
+    // Schedules the specified task for repeated fixed-rate execution, beginning
+    // after the specified delay. Subsequent executions take place at
+    // approximately regular intervals, separated by the specified period.
+    void scheduleAtFixedRate(TimerTask task, @ms long delay, @ms long period);
+
+    // Schedules the specified task for repeated fixed-rate execution, beginning
+    // at the specified time. Subsequent executions take place at approximately
+    // regular intervals, separated by the specified period.
+    void scheduleAtFixedRate(TimerTask task, Date firstTime, @ms long period);
+
+    void cancel();
+    int purge();
+}
+
+class TimerTask implements Runnable {
+    protected TimerTask();
+    void run();
+    boolean cancel();
+
+    // Returns the scheduled execution time of the most recent actual execution
+    // of this task. (If this method is invoked while task execution is in
+    // progress, the return value is the scheduled execution time of the ongoing
+    // task execution.) The return value is undefined if the task has yet to
+    // commence its first execution.
+    // Return format is same as Date.getTime(), in milliseconds.
+    @ms long scheduledExecutionTime();
+}

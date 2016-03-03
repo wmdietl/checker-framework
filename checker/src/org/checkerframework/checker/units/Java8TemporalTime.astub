@@ -1,0 +1,427 @@
+import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.instant.*;
+
+package java.time.temporal;
+
+// enum
+@TimeInstant class ChronoField extends Enum<@TimeInstant ChronoField> implements @TimeInstant TemporalField {
+    // This counts the nanosecond within the second, from 0 to 999,999,999. This field has the same meaning for all calendar systems.
+    static final @CALns ChronoField NANO_OF_SECOND;
+    // This counts the nanosecond within the day, from 0 to (24 * 60 * 60 * 1,000,000,000) - 1. This field has the same meaning for all calendar systems.
+    static final @CALns ChronoField NANO_OF_DAY;
+    // This counts the microsecond within the second, from 0 to 999,999. This field has the same meaning for all calendar systems.
+    static final @CALus ChronoField MICRO_OF_SECOND;
+    // This counts the microsecond within the day, from 0 to (24 * 60 * 60 * 1,000,000) - 1.
+    static final @CALus ChronoField MICRO_OF_DAY;
+    // This counts the millisecond within the second, from 0 to 999.
+    static final @CALms ChronoField MILLI_OF_SECOND;
+    // This counts the millisecond within the day, from 0 to (24 * 60 * 60 * 1,000) - 1.
+    static final @CALms ChronoField MILLI_OF_DAY;
+    // This counts the second within the minute, from 0 to 59.
+    static final @CALs ChronoField SECOND_OF_MINUTE;
+    // This counts the second within the day, from 0 to (24 * 60 * 60) - 1.
+    static final @CALs ChronoField SECOND_OF_DAY;
+    // This counts the minute within the hour, from 0 to 59.
+    static final @CALmin ChronoField MINUTE_OF_HOUR;
+    // This counts the minute within the day, from 0 to (24 * 60) - 1.
+    static final @CALmin ChronoField MINUTE_OF_DAY;
+    // This counts the hour within the AM/PM, from 0 to 11.
+    static final @CALh ChronoField HOUR_OF_AMPM;
+    // This counts the hour within the AM/PM, from 1 to 12.
+    static final @CALh ChronoField CLOCK_HOUR_OF_AMPM;
+    // This counts the hour within the day, from 0 to 23. This is the hour that would be observed on a standard 24-hour digital clock.
+    static final @CALh ChronoField HOUR_OF_DAY;
+    // This counts the hour within the AM/PM, from 1 to 24. This is the hour that would be observed on a 24-hour analog wall clock.
+    static final @CALh ChronoField CLOCK_HOUR_OF_DAY;
+    // This counts the AM/PM within the day, from 0 (AM) to 1 (PM).
+    static final @CALampm ChronoField AMPM_OF_DAY;
+    // This represents the standard concept of the day of the week. In the default ISO calendar system, this has values from Monday (1) to Sunday (7). The DayOfWeek class can be used to interpret the result.
+    static final @CALday ChronoField DAY_OF_WEEK;
+
+    //  This represents concept of the count of days within the period of a week where the weeks are aligned to the start of the month. This field is typically used with ALIGNED_WEEK_OF_MONTH.
+    // For example, in a calendar systems with a seven day week, the first aligned-week-of-month starts on day-of-month 1, the second aligned-week starts on day-of-month 8, and so on. Within each of these aligned-weeks, the days are numbered from 1 to 7 and returned as the value of this field. As such, day-of-month 1 to 7 will have aligned-day-of-week values from 1 to 7. And day-of-month 8 to 14 will repeat this with aligned-day-of-week values from 1 to 7.
+    static final @CALday ChronoField ALIGNED_DAY_OF_WEEK_IN_MONTH; // @CALday??
+
+    // The aligned day-of-week within a year.
+    // This represents concept of the count of days within the period of a week where the weeks are aligned to the start of the year. This field is typically used with ALIGNED_WEEK_OF_YEAR.
+    // For example, in a calendar systems with a seven day week, the first aligned-week-of-year starts on day-of-year 1, the second aligned-week starts on day-of-year 8, and so on. Within each of these aligned-weeks, the days are numbered from 1 to 7 and returned as the value of this field. As such, day-of-year 1 to 7 will have aligned-day-of-week values from 1 to 7. And day-of-year 8 to 14 will repeat this with aligned-day-of-week values from 1 to 7.
+    static final @CALday ChronoField ALIGNED_DAY_OF_WEEK_IN_YEAR; // @CALday??
+
+    // This represents the concept of the day within the month. In the default ISO calendar system, this has values from 1 to 31 in most months. April, June, September, November have days from 1 to 30, while February has days from 1 to 28, or 29 in a leap year.
+    static final @CALday ChronoField DAY_OF_MONTH;
+
+    // This represents the concept of the day within the year. In the default ISO calendar system, this has values from 1 to 365 in standard years and 1 to 366 in leap years.
+    static final @CALday ChronoField DAY_OF_YEAR;
+
+    // This field is the sequential count of days where 1970-01-01 (ISO) is zero. Note that this uses the local time-line, ignoring offset and time-zone.
+    static final @CALday ChronoField EPOCH_DAY;
+
+    // This represents concept of the count of weeks within the period of a month where the weeks are aligned to the start of the month. This field is typically used with ALIGNED_DAY_OF_WEEK_IN_MONTH.
+    // For example, in a calendar systems with a seven day week, the first aligned-week-of-month starts on day-of-month 1, the second aligned-week starts on day-of-month 8, and so on. Thus, day-of-month values 1 to 7 are in aligned-week 1, while day-of-month values 8 to 14 are in aligned-week 2, and so on.
+    // Informally, Week 1->5 of a month
+    static final @CALweek ChronoField ALIGNED_WEEK_OF_MONTH;
+
+    // This represents concept of the count of weeks within the period of a year where the weeks are aligned to the start of the year. This field is typically used with ALIGNED_DAY_OF_WEEK_IN_YEAR.
+    // For example, in a calendar systems with a seven day week, the first aligned-week-of-year starts on day-of-year 1, the second aligned-week starts on day-of-year 8, and so on. Thus, day-of-year values 1 to 7 are in aligned-week 1, while day-of-year values 8 to 14 are in aligned-week 2, and so on.
+    static final @CALweek ChronoField ALIGNED_WEEK_OF_YEAR;
+
+    // This represents the concept of the month within the year. In the default ISO calendar system, this has values from January (1) to December (12).
+    static final @CALmonth ChronoField MONTH_OF_YEAR;
+
+    // This field is the sequential count of months where the first month in proleptic-year zero has the value zero. Later months have increasingly larger values. Earlier months have increasingly small values. There are no gaps or breaks in the sequence of months. Note that this uses the local time-line, ignoring offset and time-zone.
+    // In the default ISO calendar system, June 2012 would have the value (2012 * 12 + 6 - 1). This field is primarily for internal use.
+    static final @CALmonth ChronoField PROLEPTIC_MONTH;
+
+    //  This represents the concept of the year within the era. This field is typically used with ERA.
+    // The standard mental model for a date is based on three concepts - year, month and day. These map onto the YEAR, MONTH_OF_YEAR and DAY_OF_MONTH fields. Note that there is no reference to eras. The full model for a date requires four concepts - era, year, month and day. These map onto the ERA, YEAR_OF_ERA, MONTH_OF_YEAR and DAY_OF_MONTH fields. Whether this field or YEAR is used depends on which mental model is being used. See ChronoLocalDate for more discussion on this topic.
+    // In the default ISO calendar system, there are two eras defined, 'BCE' and 'CE'. The era 'CE' is the one currently in use and year-of-era runs from 1 to the maximum value. The era 'BCE' is the previous era, and the year-of-era runs backwards.
+    // For example, subtracting a year each time yield the following:
+    // - year-proleptic 2 = 'CE' year-of-era 2
+    // - year-proleptic 1 = 'CE' year-of-era 1
+    // - year-proleptic 0 = 'BCE' year-of-era 1
+    // - year-proleptic -1 = 'BCE' year-of-era 2
+    static final @CALyear ChronoField YEAR_OF_ERA;
+
+    // The proleptic year, such as 2012.
+    // This represents the concept of the year, counting sequentially and using negative numbers. The proleptic year is not interpreted in terms of the era.
+    static final @CALyear ChronoField YEAR;
+
+    // This represents the concept of the era, which is the largest division of the time-line. This field is typically used with YEAR_OF_ERA.
+    static final @CALera ChronoField ERA;
+
+    // This represents the concept of the sequential count of seconds where 1970-01-01T00:00Z (ISO) is zero.
+    static final @CALs ChronoField INSTANT_SECONDS;
+
+    // This represents the concept of the offset in seconds of local time from UTC/Greenwich.
+    // This is a more precise way to indicate timezone offsets than using hours or half hours, useful for astronomy calculations where precise GPS coordinates map to precise timezone offsets.
+    static final @CALs ChronoField OFFSET_SECONDS;
+
+    static ChronoField[] values();
+    static ChronoField valueOf(String arg0);
+
+    String getDisplayName(Locale arg0);
+    // TODO
+    @TimeDuration TemporalUnit getBaseUnit();
+    @TimeDuration TemporalUnit getRangeUnit();
+
+    // TODO: must return the same unit as the current field through ATF
+    // receiver type is @TimeInstant
+    ValueRange range() @TimeInstant;
+
+    boolean isDateBased();
+    boolean isTimeBased();
+    // TODO
+    long checkValidValue(long arg0);
+    // TODO
+    int checkValidIntValue(long arg0);
+
+    boolean isSupportedBy(TemporalAccessor arg0);
+    ValueRange rangeRefinedBy(TemporalAccessor arg0);
+    // TODO
+    long getFrom(TemporalAccessor arg0);
+    // TODO
+    <R> R adjustInto(R arg0, long arg1);
+
+    String toString();
+}
+
+// enum
+class ChronoUnit extends Enum<ChronoUnit> implements @TimeDuration TemporalUnit {
+    static final @ns ChronoUnit NANOS;
+    static final @s(Prefix.micro) ChronoUnit MICROS;
+    static final @ms ChronoUnit MILLIS;
+    static final @s ChronoUnit SECONDS;
+    static final @min ChronoUnit MINUTES;
+    static final @h ChronoUnit HOURS;
+    static final @halfday ChronoUnit HALF_DAYS;
+    static final @day ChronoUnit DAYS;
+    static final @week ChronoUnit WEEKS;
+    static final @month ChronoUnit MONTHS;
+    static final @year ChronoUnit YEARS;
+    static final @decade ChronoUnit DECADES;
+    static final @century ChronoUnit CENTURIES;
+    static final @millenia ChronoUnit MILLENNIA;
+    // In ISO calendar, it is impossible to add an era to a date or a date-time.
+    static final @era ChronoUnit ERAS;
+    // Forever represents infinite time, artificially defined as Long.MAX_VALUE seconds + 999999999 nanoseconds.
+    static final @forever ChronoUnit FOREVER;
+
+    static ChronoUnit[] values();
+    static ChronoUnit valueOf(String arg0);
+    Duration getDuration() @TimeDuration;
+    boolean isDurationEstimated() @TimeDuration;
+    boolean isDateBased() @TimeDuration;
+    boolean isTimeBased() @TimeDuration;
+    boolean isSupportedBy(Temporal arg0) @TimeDuration;
+
+    // TODO
+    <R> R addTo(R arg0, long arg1) @TimeDuration;
+    // TODO
+    @PolyUnit long between(@PolyUnit Temporal arg0, @PolyUnit Temporal arg1) @TimeDuration;
+
+    String toString() @TimeDuration;
+}
+
+class IsoFields {
+    // The day within the quarter, from 1 to 90, 91 or 92.
+    static final @CALday TemporalField DAY_OF_QUARTER;
+    // The quarter-of-year has values from 1 to 4.
+    static final @CALquarteryear TemporalField QUARTER_OF_YEAR;
+    // The week-of-week-based-year has values from 1 to 52, or 53 if the week-based-year has 53 weeks.
+    static final @CALweek TemporalField WEEK_OF_WEEK_BASED_YEAR;
+    // The field that represents the week-based-year. The estimated duration of a week-based-year is the same as that of a standard ISO year at 365.2425 Days.
+    static final @CALyear TemporalField WEEK_BASED_YEAR;
+    // This allows a number of week-based-years to be added to, or subtracted from, a date. The unit is equal to either 52 or 53 weeks. The estimated duration of a week-based-year is the same as that of a standard ISO year at 365.2425 Days.
+    static final @year TemporalUnit WEEK_BASED_YEARS;
+    // Unit that represents the concept of a quarter-year. For the ISO calendar system, it is equal to 3 months.
+    static final @quarteryear TemporalUnit QUARTER_YEARS;
+}
+
+class JulianFields {
+    // Julian day is the continuous count of days since the beginning of the Julian Period used primarily by astronomers.
+    static final @CALday TemporalField JULIAN_DAY;
+    // The Modified Julian Date (MJD) was introduced by the Smithsonian Astrophysical Observatory in 1957 to record the orbit of Sputnik via an IBM 704 (36-bit machine) and using only 18 bits until August 7, 2576. MJD is the epoch of VAX/VMS and its successor OpenVMS, using 63-bit date/time, which allows times to be stored up to July 31, 31086, 02:48:05.47.[11] The MJD has a starting point of midnight on November 17, 1858 and is computed by MJD = JD - 2400000.5
+    static final @CALday TemporalField MODIFIED_JULIAN_DAY;
+    // Rata Die (R.D.) is a system for assigning numbers to calendar days (optionally with time of day), independent of any calendar, for the purposes of calendrical calculations.
+    static final @CALday TemporalField RATA_DIE;
+}
+
+interface Temporal extends TemporalAccessor {
+    // Checks if the specified unit is supported.
+    boolean isSupported(@TimeDuration TemporalUnit unit);
+
+    // Returns an adjusted object of the same type as this object with the adjustment made.
+    Temporal with(TemporalAdjuster adjuster);
+
+    // Returns an object of the same type as this object with the specified field altered.
+    // TODO: ensure is same unit
+    Temporal with(@TimeInstant TemporalField field, @TimeInstant long newValue);
+
+    // Returns an object of the same type as this object with an amount added.
+    Temporal plus(TemporalAmount amount);
+
+    // Returns an object of the same type as this object with the specified period added.
+    // TODO: ensure is same unit
+    Temporal plus(@TimeDuration long amountToAdd, @TimeDuration TemporalUnit unit);
+
+    // Returns an object of the same type as this object with an amount subtracted.
+    Temporal minus(TemporalAmount amount);
+
+    // Returns an object of the same type as this object with the specified period subtracted.
+    // TODO: ensure is same unit
+    Temporal minus(@TimeDuration long amountToSubtract, @TimeDuration TemporalUnit unit);
+
+    // Calculates the amount of time until another temporal in terms of the specified unit.
+    // TODO: ensure right operand is a @TimeDuration
+    @PolyUnit long until(Temporal endExclusive, @PolyUnit TemporalUnit unit);
+}
+
+interface TemporalAccessor {
+    boolean isSupported(@TimeInstant TemporalField arg0);
+    ValueRange range(@TimeInstant TemporalField arg0);
+
+    // Gets the value of the specified field as an int.
+    // Implementing classes have specific returnable units
+    // TODO: ensure right operand is a @TimeInstant
+    @PolyUnit int get(@PolyUnit TemporalField arg0);
+
+    // Gets the value of the specified field as a long.
+    // Implementing classes have specific returnable units
+    // TODO: ensure right operand is a @TimeInstant
+    @PolyUnit long getLong(@PolyUnit TemporalField arg0);
+
+    <R> R query(TemporalQuery<R> arg0);
+}
+
+interface TemporalAdjuster {
+    Temporal adjustInto(Temporal arg0);
+}
+
+class TemporalAdjusters {
+    static TemporalAdjuster ofDateAdjuster(UnaryOperator<LocalDate> arg0);
+    static TemporalAdjuster firstDayOfMonth();
+    static TemporalAdjuster lastDayOfMonth();
+    static TemporalAdjuster firstDayOfNextMonth();
+    static TemporalAdjuster firstDayOfYear();
+    static TemporalAdjuster lastDayOfYear();
+    static TemporalAdjuster firstDayOfNextYear();
+
+    static TemporalAdjuster firstInMonth(DayOfWeek arg0);
+    static TemporalAdjuster lastInMonth(DayOfWeek arg0);
+
+    // returns the day-of-week in month adjuster. This adjuster will adjust a date, producing a new date based upon the ordinal day-of-week. It is used for expressions such as "second tuesday in March"
+    // The input 2011-12-15 for (1,TUESDAY) will return 2011-12-06.
+    // The input 2011-12-15 for (2,TUESDAY) will return 2011-12-13.
+    // or in short, the adjuster will adjust some date to the ordinal day-of-week (2nd tuesday, 3rd friday, etc...)
+    static TemporalAdjuster dayOfWeekInMonth(@CALweek int ordinal, DayOfWeek dayOfWeek); // TODO: Could also be @Scalar
+    // Scalar makes this more strict, that the int has to have no unit at all
+    // @CALweek would accept week values from other methods, once which must produce a week as a time instant (eg 20nd week of this year, or 20000th week since Java Epoch?)
+
+    static TemporalAdjuster next(DayOfWeek arg0);
+    static TemporalAdjuster nextOrSame(DayOfWeek arg0);
+    static TemporalAdjuster previous(DayOfWeek arg0);
+    static TemporalAdjuster previousOrSame(DayOfWeek arg0);
+}
+
+interface TemporalAmount {
+    // TODO: ensure operand is a @TimeDuration
+    @PolyUnit long get(@PolyUnit TemporalUnit arg0);
+
+    List<@TimeDuration TemporalUnit> getUnits();
+    Temporal addTo(Temporal arg0);
+    Temporal subtractFrom(Temporal arg0);
+}
+
+@TimeInstant interface TemporalField {
+    String getDisplayName(Locale arg0);
+    // Gets the unit that the field is measured in.
+    // The unit of the field is the period that varies within the range. For example, in the field 'MonthOfYear', the unit is 'Months'.
+    TemporalUnit getBaseUnit();
+    // Gets the range that the field is bound by.
+    // The range of the field is the period that the field varies within. For example, in the field 'MonthOfYear', the range is 'Years'.
+    TemporalUnit getRangeUnit();
+
+    ValueRange range();
+
+    boolean isDateBased();
+    boolean isTimeBased();
+    boolean isSupportedBy(TemporalAccessor arg0);
+    ValueRange rangeRefinedBy(TemporalAccessor arg0);
+
+    // equivalant syntax:
+    // temporal = thisField.getFrom(temporal); // the long has the same unit as the field
+    // temporal = temporal.getLong(thisField); // the long has the same unit as the unit of the field
+    // Gets the value of this field from the specified temporal object. Same unit as the field.
+    // TODO: in ATF produce the refined time instant unit??? (implementation classes should be able to annotate individually)
+    @TimeInstant long getFrom(TemporalAccessor temporal);
+
+    // equivalent syntax:
+    // temporal = thisField.adjustInto(temporal);
+    // temporal = temporal.with(thisField);
+    // Returns a copy of the specified temporal object with the value of this field set to newValue.
+    // newValue has to have the same unit as this TemporalField
+    // TODO: in ATF check the unit?? (implementation classes should be able to annotate individually)
+    <R> R adjustInto(R temporal, @TimeInstant long newValue);
+
+    TemporalAccessor resolve(Map<@TimeInstant TemporalField, Long> arg0, TemporalAccessor arg1, ResolverStyle arg2);
+    String toString();
+}
+
+class TemporalQueries {
+    static TemporalQuery<ZoneId> zoneId();
+    static TemporalQuery<Chronology> chronology();
+    static TemporalQuery<@TimeDuration TemporalUnit> precision();
+    static TemporalQuery<ZoneId> zone();
+    static TemporalQuery<ZoneOffset> offset();
+    static TemporalQuery<LocalDate> localDate();
+    static TemporalQuery<LocalTime> localTime();
+}
+
+interface TemporalQuery<R> {
+    R queryFrom(TemporalAccessor arg0);
+}
+
+// by itself, a TemporalUnit has an associated non-specific time duration unit
+// implementations of this interface should specify which precise time duration unit it has
+@TimeDuration interface TemporalUnit {
+    Duration getDuration();
+    boolean isDurationEstimated();
+    boolean isDateBased();
+    boolean isTimeBased();
+    boolean isSupportedBy(Temporal arg0);
+
+    // Returns a copy of the specified temporal object with the specified period added.
+    // The period added is a multiple of this unit. For example, this method could be used to add "3 days" to a date by calling this method on the instance representing "days", passing the date and the period "3". The period to be added may be negative, which is equivalent to subtraction.
+    // equivalent syntax:
+    // temporal = thisUnit.addTo(temporal);
+    // temporal = temporal.plus(thisUnit);
+    // amount has to have the same unit as this TemporalUnit
+    // TODO: in ATF check the unit?? (implementation classes should be able to annotate individually)
+    <R> R addTo(R temporal, @TimeDuration long amount);
+
+    // Calculates the amount of time between two temporal objects. This calculates the amount in terms of this unit. The start and end points are supplied as temporal objects and must be of compatible types.
+    // TODO: in ATF check the unit?? (implementation classes should be able to annotate individually)
+    @TimeDuration long between(Temporal arg0, Temporal arg1);
+
+    String toString();
+}
+
+class UnsupportedTemporalTypeException extends DateTimeException {
+    UnsupportedTemporalTypeException(String arg0);
+    UnsupportedTemporalTypeException(String arg0, Throwable arg1);
+}
+
+
+// The range of valid values for a date-time field. All TemporalField instances have a valid range of values.
+// TODO:
+// Need a mechanism to assign a type qualifier to each instance of ValueRange, so that the longs passed in and returned have that unit
+// TODO: decide on a good class annotation... instant, or scalar?
+
+// class ValueRange <<@S>> // qualifier parameter system
+
+@TimeInstant class ValueRange implements Serializable {
+    // Obtains a fixed value range.
+    // This factory obtains a range where the minimum and maximum values are fixed. For example, the ISO month-of-year always runs from 1 to 12.
+    static @PolyUnit ValueRange of(@PolyUnit long min, @PolyUnit long max);
+    // This factory obtains a range where the minimum value is fixed and the maximum value may vary. For example, the ISO day-of-month always starts at 1, but ends between 28 and 31.
+    static @PolyUnit ValueRange of(@PolyUnit long min, @PolyUnit long maxSmallest, @PolyUnit long maxLargest);
+    // This factory obtains a range where both the minimum and maximum value may vary.
+    static @PolyUnit ValueRange of(@PolyUnit long minSmallest, @PolyUnit long minLargest, @PolyUnit long maxSmallest, @PolyUnit long maxLargest);
+
+    boolean isFixed() @TimeInstant;
+
+    // TODO: needs to return a precise time instant unit
+    // same semantic meaning as getSmallestMinimum() if the min isn't fixed
+    @TimeInstant long getMinimum() @TimeInstant;
+    @TimeInstant long getLargestMinimum() @TimeInstant;
+    @TimeInstant long getSmallestMaximum() @TimeInstant;
+    // same semantic meaning as getLargestMaximum() if the max isn't fixed
+    @TimeInstant long getMaximum() @TimeInstant;
+
+    boolean isIntValue() @TimeInstant;
+
+    // This checks that the value is within the stored range of values.
+    // Receiver type is @TimeInstant
+    // TODO : can we make it more precise? eg INSTANT_SECOND.range().isValidValue() only accepts @CALs
+    boolean isValidValue(@TimeInstant long value) @TimeInstant;
+
+    // Checks if the value is within the valid range and that all values in the range fit in an int.
+    // Receiver type is @TimeInstant
+    // TODO : can we make it more precise?
+    boolean isValidIntValue(@TimeInstant long value) @TimeInstant;
+
+    // This validates that the value is within the valid range of values. The field is only used to improve the error message.
+    // Returns the value that was passed in.
+    @PolyUnit long checkValidValue(@PolyUnit long value, @TimeInstant TemporalField field) @TimeInstant;
+
+    // This validates that the value is within the valid range of values and that all valid values are within the bounds of an int. The field is only used to improve the error message.
+    // Returns the value that was passed in.
+    @PolyUnit int checkValidIntValue(@PolyUnit long value, @TimeInstant TemporalField field) @TimeInstant;
+
+    boolean equals(Object arg0) @TimeInstant;
+    int hashCode() @TimeInstant;
+    String toString() @TimeInstant;
+}
+
+class WeekFields implements Serializable {
+    static final WeekFields ISO;
+    static final WeekFields SUNDAY_START;
+    // the week-based-year system considers a year as a multiple of weeks (52 or 53) instead of days (365)
+    // the value of this year system is the same as the ISO year (based on days), except for possibly the first and last few days of each ISO year.
+    // If Dec 31 of ISO year X falls on a monday, then that day is counted as part of week-based-year X+1.
+    // If Jan 1 of ISO year Y falls on a friday, then that day is counted as part of week-based-year Y-1.
+    static final @year TemporalUnit WEEK_BASED_YEARS;
+    static WeekFields of(Locale arg0);
+    static WeekFields of(DayOfWeek firstDayOfWeek, @day int minimalDaysInFirstWeek);
+    DayOfWeek getFirstDayOfWeek();
+    @day int getMinimalDaysInFirstWeek();
+    @CALday TemporalField dayOfWeek();
+    @CALweek TemporalField weekOfMonth();
+    @CALweek TemporalField weekOfYear();
+    @CALweek TemporalField weekOfWeekBasedYear();
+    @CALyear TemporalField weekBasedYear();
+    boolean equals(Object arg0);
+    int hashCode();
+    String toString();
+}
