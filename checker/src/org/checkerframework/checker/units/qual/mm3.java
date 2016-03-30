@@ -1,18 +1,16 @@
 package org.checkerframework.checker.units.qual;
 
+import org.checkerframework.framework.qual.SubtypeOf;
+
 import java.lang.annotation.*;
 
-import org.checkerframework.framework.qual.*;
-
 /**
- * A second (1/60 of a minute).
+ * Volume of millimeter cubed.
  *
  * @checker_framework.manual #units-checker Units Checker
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
-@SubtypeOf(Time.class)
-public @interface s {
-    Prefix value() default Prefix.one;
-}
+@SubtypeOf(Volume.class)
+public @interface mm3 {}

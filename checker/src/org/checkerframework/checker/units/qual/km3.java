@@ -1,18 +1,16 @@
 package org.checkerframework.checker.units.qual;
 
+import org.checkerframework.framework.qual.SubtypeOf;
+
 import java.lang.annotation.*;
 
-import org.checkerframework.framework.qual.*;
-
 /**
- * Hour.
+ * Volume of kilometer cubed.
  *
  * @checker_framework.manual #units-checker Units Checker
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
-@SubtypeOf(Time.class)
-// TODO: support arbitrary factors?
-// @UnitsMultiple(quantity=s.class, factor=3600)
-public @interface h {}
+@SubtypeOf(Volume.class)
+public @interface km3 {}
