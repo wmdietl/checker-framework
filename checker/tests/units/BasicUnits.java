@@ -1,7 +1,20 @@
 import org.checkerframework.checker.units.qual.*;
-import org.checkerframework.checker.units.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.point.*;
+import org.checkerframework.checker.units.UnitsTools;
 
 public class BasicUnits {
+
+    void AutoWidening() {
+        @m byte meterByte = (byte) (100 * UnitsTools.m);
+        @m short meterShort = meterByte;
+        //:: error: (assignment.type.incompatible)
+        @s short secondShort = meterByte;
+        @m int meterInt = meterShort;
+        @m long meterLong = meterInt;
+        @m float meterFloat = meterLong;
+        @m double meterDouble = meterFloat;
+    }
 
     void demo() {
         //:: error: (assignment.type.incompatible)
@@ -80,20 +93,22 @@ public class BasicUnits {
         @h int hours = UnitsTools.h;
         @kmPERh int speed = kilometers / hours;
 
+        // TimePoint
+        @TimePoint int aTimePt = 5 * UnitsTools.CALmin;
+        @TimePoint int bTimePt = 5 * UnitsTools.CALh;
+
+        aTimePt = aTimePt % 5;
+        bTimePt = bTimePt % speed;
+
         // Addition/substraction only accepts another @kmPERh value
         //:: error: (assignment.type.incompatible)
         speed = speed + 5;
-        //:: error: (compound.assignment.type.incompatible)
-        speed += 5;
-
-        speed += speed;
-        speed = (speed += speed);
+        speed = speed + speed;
+        speed = speed - speed;
 
         // Multiplication/division with an unqualified type is allowed
-        speed = kilometers / hours * 2;
-        speed /= 2;
-
-        speed = (speed /= 2);
+        speed = speed * 2;
+        speed = speed / 2;
     }
 
     void prefixOutputTest() {

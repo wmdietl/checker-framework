@@ -1,5 +1,7 @@
-import org.checkerframework.checker.units.UnitsTools;
 import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.point.*;
+import org.checkerframework.checker.units.UnitsTools;
 
 public class Multiples {
     void m() {
@@ -76,6 +78,33 @@ public class Multiples {
         //:: error: (assignment.type.incompatible)
         @km2 int areammbad2 = mm * mm;
 
+        // m * m2 = m3
+        @m3 int volume = m * area;
+        volume = area * m;
+        volume = m * m * m;
+        //:: error: (assignment.type.incompatible)
+        @km3 int volumembad1 = m * area;
+        //:: error: (assignment.type.incompatible)
+        @mm3 int volumembad2 = area * m;
+
+        // km * km2 = km3
+        @km3 int kvolume = km * karea;
+        kvolume = karea * km;
+        kvolume = km * km * km;
+        //:: error: (assignment.type.incompatible)
+        @m3 int kvolumembad1 = km * karea;
+        //:: error: (assignment.type.incompatible)
+        @mm3 int kvolumembad2 = karea * km;
+
+        // mm * mm2 = mm3
+        @mm3 int mvolume = mm * marea;
+        mvolume = marea * mm;
+        mvolume = mm * mm * mm;
+        //:: error: (assignment.type.incompatible)
+        @km3 int mvolumembad1 = mm * marea;
+        //:: error: (assignment.type.incompatible)
+        @m3 int mvolumembad2 = marea * mm;
+
         // s * mPERs = m
         @mPERs int speedm = 10 * UnitsTools.mPERs;
         @m int lengthm = s * speedm;
@@ -109,5 +138,15 @@ public class Multiples {
         @m int distance = s * s * accelm;
         // if we bracket for order of operations, it works fine
         distance = s * (s * accelm);
+
+        // TimePoint
+        @TimePoint int aTimePt = 5 * UnitsTools.CALmin;
+        @TimePoint int bTimePt = 5 * UnitsTools.CALh;
+        //:: error: (time.point.multiplication.disallowed)
+        @UnknownUnits int junk = aTimePt * bTimePt;
+        //:: error: (time.point.multiplication.disallowed)
+        junk = aTimePt * s;
+        //:: error: (time.point.multiplication.disallowed)
+        junk = s * bTimePt;
     }
 }
