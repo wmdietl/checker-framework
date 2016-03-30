@@ -1,0 +1,28 @@
+import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.point.*;
+
+package java.lang;
+
+class Thread implements Runnable {
+    // Causes the currently executing thread to sleep (temporarily cease
+    // execution) for the specified number of milliseconds, subject to the
+    // precision and accuracy of system timers and schedulers. The thread does
+    // not lose ownership of any monitors.
+    static void sleep(@ms long millis) throws InterruptedException;
+
+    // Causes the currently executing thread to sleep (temporarily cease
+    // execution) for the specified number of milliseconds plus the specified
+    // number of nanoseconds, subject to the precision and accuracy of system
+    // timers and schedulers. The thread does not lose ownership of any
+    // monitors.
+    static void sleep(@ms long millis, @ns int nanos) throws InterruptedException;
+
+    // Waits at most millis milliseconds for this thread to die. A timeout of 0
+    // means to wait forever.
+    void join(@ms long millis) throws InterruptedException;
+
+    // Waits at most millis milliseconds plus nanos nanoseconds for this thread
+    // to die.
+    void join(@ms long millis, @ns int nanos) throws InterruptedException;
+}

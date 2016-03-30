@@ -1,0 +1,31 @@
+import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.point.*;
+
+package java.sql;
+
+class Date extends Date {
+    // Deprecated
+    Date(@CALyear int year, @CALmonth int month, @CALday int day);
+    // Time point: # ms since Java Epoch
+    Date(@CALms long date);
+    // Time point: # ms since Java Epoch
+    void setTime(@CALms long arg0);
+    @CALh int getHours();
+    @CALmin int getMinutes();
+    @CALs int getSeconds();
+    void setHours(@CALh int arg0);
+    void setMinutes(@CALmin int arg0);
+    void setSeconds(@CALs int arg0);
+}
+
+class Timestamp extends Date {
+    Timestamp(@CALyear int year, @CALmonth int month, @CALday int date, @CALh int hour, @CALmin int minute, @CALs int second, @CALns int nano);
+    // Time since epoch
+    Timestamp(@CALms long arg0);
+    void setTime(@CALms long arg0);
+    @CALms long getTime();
+    @CALns int getNanos();
+    void setNanos(@CALns int arg0);
+    boolean equals(@UnknownUnits Object arg0);
+}

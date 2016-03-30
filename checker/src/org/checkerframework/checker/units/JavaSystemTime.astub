@@ -1,0 +1,33 @@
+import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.point.*;
+
+package java.lang;
+
+// Object methods should be invokable by objects with any unit
+class Object {
+    Object();
+    Class<?> getClass() @UnknownUnits;
+    int hashCode() @UnknownUnits;
+    boolean equals(@UnknownUnits Object arg0) @UnknownUnits;
+    protected @PolyUnit Object clone() @PolyUnit throws CloneNotSupportedException;
+    String toString() @UnknownUnits;
+    void notify() @UnknownUnits;
+    void notifyAll() @UnknownUnits;
+    void wait(@ms long arg0) @UnknownUnits throws InterruptedException;
+    void wait(@ms long arg0, @ns int arg1) @UnknownUnits throws InterruptedException;
+    void wait() @UnknownUnits throws InterruptedException;
+    protected void finalize() @UnknownUnits throws Throwable;
+}
+
+class System {
+    // Returns the current time in milliseconds.
+    static @CALms long currentTimeMillis();
+    // Returns the current value of the running Java Virtual Machine's
+    // high-resolution time source, in nanoseconds.
+    // The value is technically a time point since some "origin" time, but not
+    // Java Epoch.
+    static @CALns long nanoTime();
+    // Future TODO: units checker array support
+    static void arraycopy(Object arg0, int arg1, Object arg2, int arg3, int arg4);
+}

@@ -1,0 +1,691 @@
+import org.checkerframework.checker.units.qual.UnknownUnits;
+import org.checkerframework.checker.units.qual.Scalar;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.point.*;
+import org.checkerframework.framework.qual.DefaultQualifier;
+import org.checkerframework.framework.qual.DefaultQualifiers;
+import org.checkerframework.framework.qual.TypeUseLocation;
+
+package java.lang;
+
+interface Iterable<T extends @UnknownUnits Object> {}
+
+package java.util;
+
+class AbstractCollection<E extends @UnknownUnits Object> implements Collection<E> {
+    boolean contains(@UnknownUnits Object arg0);
+    @UnknownUnits Object[] toArray();
+    <T extends @UnknownUnits Object> T[] toArray(T[] arg0);
+    boolean remove(@UnknownUnits Object arg0);
+    boolean containsAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean removeAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean retainAll(Collection<? extends @UnknownUnits Object> arg0);
+}
+
+class AbstractList<E extends @UnknownUnits Object> extends AbstractCollection<E> implements List<E> {
+    int indexOf(@UnknownUnits Object arg0);
+    int lastIndexOf(@UnknownUnits Object arg0);
+    boolean equals(@UnknownUnits Object arg0);
+}
+
+class AbstractMap<K extends @UnknownUnits Object, V extends @UnknownUnits Object> implements Map<K,V> {
+    boolean containsValue(@UnknownUnits Object arg0);
+    boolean containsKey(@UnknownUnits Object arg0);
+    V get(@UnknownUnits Object arg0);
+    V remove(@UnknownUnits Object arg0);
+    boolean equals(@UnknownUnits Object arg0);
+    protected @PolyUnit Object clone() @PolyUnit throws CloneNotSupportedException;
+}
+class AbstractMap$SimpleEntry<K extends @UnknownUnits Object, V extends @UnknownUnits Object> implements Entry<K,V>, Serializable {
+    boolean equals(@UnknownUnits Object arg0);
+}
+class AbstractMap$SimpleImmutableEntry<K extends @UnknownUnits Object, V extends @UnknownUnits Object> implements Entry<K,V>, Serializable {
+    boolean equals(@UnknownUnits Object arg0);
+}
+
+class AbstractQueue<E extends @UnknownUnits Object> extends AbstractCollection<E> implements Queue<E> {}
+
+class AbstractSequentialList<E extends @UnknownUnits Object> extends AbstractList<E> {}
+
+class AbstractSet<E extends @UnknownUnits Object> extends AbstractCollection<E> implements Set<E> {
+    boolean equals(@UnknownUnits Object arg0);
+    boolean removeAll(Collection<? extends @UnknownUnits Object> arg0);
+}
+
+class ArrayDeque<E extends @UnknownUnits Object> extends AbstractCollection<E> implements Deque<E>, Cloneable, Serializable {
+    boolean removeFirstOccurrence(@UnknownUnits Object arg0);
+    boolean removeLastOccurrence(@UnknownUnits Object arg0);
+    boolean contains(@UnknownUnits Object arg0);
+    boolean remove(@UnknownUnits Object arg0);
+    @UnknownUnits Object[] toArray();
+    <T extends @UnknownUnits Object> T[] toArray(T[] arg0);
+    @PolyUnit ArrayDeque<E> clone() @PolyUnit;
+}
+
+class ArrayList<E extends @UnknownUnits Object> extends AbstractList<E> implements List<E>, RandomAccess, Cloneable, Serializable {
+    boolean contains(@UnknownUnits Object arg0);
+    int indexOf(@UnknownUnits Object arg0);
+    int lastIndexOf(@UnknownUnits Object arg0);
+    @PolyUnit Object clone() @PolyUnit;
+    @UnknownUnits Object[] toArray();
+    <T extends @UnknownUnits Object> T[] toArray(T[] arg0);
+    boolean remove(@UnknownUnits Object arg0);
+    boolean removeAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean retainAll(Collection<? extends @UnknownUnits Object> arg0);
+}
+
+// Future TODO: array support
+//class Arrays {
+//    static void sort(int[] arg0);
+//    static void sort(int[] arg0, int arg1, int arg2);
+//    static void sort(long[] arg0);
+//    static void sort(long[] arg0, int arg1, int arg2);
+//    static void sort(short[] arg0);
+//    static void sort(short[] arg0, int arg1, int arg2);
+//    static void sort(char[] arg0);
+//    static void sort(char[] arg0, int arg1, int arg2);
+//    static void sort(byte[] arg0);
+//    static void sort(byte[] arg0, int arg1, int arg2);
+//    static void sort(float[] arg0);
+//    static void sort(float[] arg0, int arg1, int arg2);
+//    static void sort(double[] arg0);
+//    static void sort(double[] arg0, int arg1, int arg2);
+//    static void parallelSort(byte[] arg0);
+//    static void parallelSort(byte[] arg0, int arg1, int arg2);
+//    static void parallelSort(char[] arg0);
+//    static void parallelSort(char[] arg0, int arg1, int arg2);
+//    static void parallelSort(short[] arg0);
+//    static void parallelSort(short[] arg0, int arg1, int arg2);
+//    static void parallelSort(int[] arg0);
+//    static void parallelSort(int[] arg0, int arg1, int arg2);
+//    static void parallelSort(long[] arg0);
+//    static void parallelSort(long[] arg0, int arg1, int arg2);
+//    static void parallelSort(float[] arg0);
+//    static void parallelSort(float[] arg0, int arg1, int arg2);
+//    static void parallelSort(double[] arg0);
+//    static void parallelSort(double[] arg0, int arg1, int arg2);
+//    static <T> void parallelSort(T[] arg0);
+//    static <T> void parallelSort(T[] arg0, int arg1, int arg2);
+//    static <T> void parallelSort(T[] arg0, Comparator<? super T> arg1);
+//    static <T> void parallelSort(T[] arg0, int arg1, int arg2, Comparator<? super T> arg3);
+//    static void sort(@UnknownUnits Object[] arg0);
+//    static void sort(@UnknownUnits Object[] arg0, int arg1, int arg2);
+//    static <T> void sort(T[] arg0, Comparator<? super T> arg1);
+//    static <T> void sort(T[] arg0, int arg1, int arg2, Comparator<? super T> arg3);
+//    static <T> void parallelPrefix(T[] arg0, BinaryOperator<T> arg1);
+//    static <T> void parallelPrefix(T[] arg0, int arg1, int arg2, BinaryOperator<T> arg3);
+//    static void parallelPrefix(long[] arg0, LongBinaryOperator arg1);
+//    static void parallelPrefix(long[] arg0, int arg1, int arg2, LongBinaryOperator arg3);
+//    static void parallelPrefix(double[] arg0, DoubleBinaryOperator arg1);
+//    static void parallelPrefix(double[] arg0, int arg1, int arg2, DoubleBinaryOperator arg3);
+//    static void parallelPrefix(int[] arg0, IntBinaryOperator arg1);
+//    static void parallelPrefix(int[] arg0, int arg1, int arg2, IntBinaryOperator arg3);
+//    static int binarySearch(long[] arg0, long arg1);
+//    static int binarySearch(long[] arg0, int arg1, int arg2, long arg3);
+//    static int binarySearch(int[] arg0, int arg1);
+//    static int binarySearch(int[] arg0, int arg1, int arg2, int arg3);
+//    static int binarySearch(short[] arg0, short arg1);
+//    static int binarySearch(short[] arg0, int arg1, int arg2, short arg3);
+//    static int binarySearch(char[] arg0, char arg1);
+//    static int binarySearch(char[] arg0, int arg1, int arg2, char arg3);
+//    static int binarySearch(byte[] arg0, byte arg1);
+//    static int binarySearch(byte[] arg0, int arg1, int arg2, byte arg3);
+//    static int binarySearch(double[] arg0, double arg1);
+//    static int binarySearch(double[] arg0, int arg1, int arg2, double arg3);
+//    static int binarySearch(float[] arg0, float arg1);
+//    static int binarySearch(float[] arg0, int arg1, int arg2, float arg3);
+//    static int binarySearch(@UnknownUnits Object[] arg0, @UnknownUnits Object arg1);
+//    static int binarySearch(@UnknownUnits Object[] arg0, int arg1, int arg2, @UnknownUnits Object arg3);
+//    static <T> int binarySearch(T[] arg0, T arg1, Comparator<? super T> arg2);
+//    static <T> int binarySearch(T[] arg0, int arg1, int arg2, T arg3, Comparator<? super T> arg4);
+//    static boolean equals(long[] arg0, long[] arg1);
+//    static boolean equals(int[] arg0, int[] arg1);
+//    static boolean equals(short[] arg0, short[] arg1);
+//    static boolean equals(char[] arg0, char[] arg1);
+//    static boolean equals(byte[] arg0, byte[] arg1);
+//    static boolean equals(boolean[] arg0, boolean[] arg1);
+//    static boolean equals(double[] arg0, double[] arg1);
+//    static boolean equals(float[] arg0, float[] arg1);
+//    static boolean equals(@UnknownUnits Object[] arg0, @UnknownUnits Object[] arg1);
+//    static void fill(long[] arg0, long arg1);
+//    static void fill(long[] arg0, int arg1, int arg2, long arg3);
+//    static void fill(int[] arg0, int arg1);
+//    static void fill(int[] arg0, int arg1, int arg2, int arg3);
+//    static void fill(short[] arg0, short arg1);
+//    static void fill(short[] arg0, int arg1, int arg2, short arg3);
+//    static void fill(char[] arg0, char arg1);
+//    static void fill(char[] arg0, int arg1, int arg2, char arg3);
+//    static void fill(byte[] arg0, byte arg1);
+//    static void fill(byte[] arg0, int arg1, int arg2, byte arg3);
+//    static void fill(boolean[] arg0, boolean arg1);
+//    static void fill(boolean[] arg0, int arg1, int arg2, boolean arg3);
+//    static void fill(double[] arg0, double arg1);
+//    static void fill(double[] arg0, int arg1, int arg2, double arg3);
+//    static void fill(float[] arg0, float arg1);
+//    static void fill(float[] arg0, int arg1, int arg2, float arg3);
+//    static void fill(@UnknownUnits Object[] arg0, @UnknownUnits Object arg1);
+//    static void fill(@UnknownUnits Object[] arg0, int arg1, int arg2, @UnknownUnits Object arg3);
+//    static <T> T[] copyOf(T[] arg0, int arg1);
+//    static <T, U> T[] copyOf(U[] arg0, int arg1, Class<? extends T[]> arg2);
+//    static byte[] copyOf(byte[] arg0, int arg1);
+//    static short[] copyOf(short[] arg0, int arg1);
+//    static int[] copyOf(int[] arg0, int arg1);
+//    static long[] copyOf(long[] arg0, int arg1);
+//    static char[] copyOf(char[] arg0, int arg1);
+//    static float[] copyOf(float[] arg0, int arg1);
+//    static double[] copyOf(double[] arg0, int arg1);
+//    static boolean[] copyOf(boolean[] arg0, int arg1);
+//    static <T> T[] copyOfRange(T[] arg0, int arg1, int arg2);
+//    static <T, U> T[] copyOfRange(U[] arg0, int arg1, int arg2, Class<? extends T[]> arg3);
+//    static byte[] copyOfRange(byte[] arg0, int arg1, int arg2);
+//    static short[] copyOfRange(short[] arg0, int arg1, int arg2);
+//    static int[] copyOfRange(int[] arg0, int arg1, int arg2);
+//    static long[] copyOfRange(long[] arg0, int arg1, int arg2);
+//    static char[] copyOfRange(char[] arg0, int arg1, int arg2);
+//    static float[] copyOfRange(float[] arg0, int arg1, int arg2);
+//    static double[] copyOfRange(double[] arg0, int arg1, int arg2);
+//    static boolean[] copyOfRange(boolean[] arg0, int arg1, int arg2);
+//    static <T> List<T> asList(T[] arg0);
+//    static int hashCode(long[] arg0);
+//    static int hashCode(int[] arg0);
+//    static int hashCode(short[] arg0);
+//    static int hashCode(char[] arg0);
+//    static int hashCode(byte[] arg0);
+//    static int hashCode(boolean[] arg0);
+//    static int hashCode(float[] arg0);
+//    static int hashCode(double[] arg0);
+//    static int hashCode(@UnknownUnits Object[] arg0);
+//    static int deepHashCode(@UnknownUnits Object[] arg0);
+//    static boolean deepEquals(@UnknownUnits Object[] arg0, @UnknownUnits Object[] arg1);
+//    static String toString(long[] arg0);
+//    static String toString(int[] arg0);
+//    static String toString(short[] arg0);
+//    static String toString(char[] arg0);
+//    static String toString(byte[] arg0);
+//    static String toString(boolean[] arg0);
+//    static String toString(float[] arg0);
+//    static String toString(double[] arg0);
+//    static String toString(@UnknownUnits Object[] arg0);
+//    static String deepToString(@UnknownUnits Object[] arg0);
+//    static <T> void setAll(T[] arg0, IntFunction<? extends T> arg1);
+//    static <T> void parallelSetAll(T[] arg0, IntFunction<? extends T> arg1);
+//    static void setAll(int[] arg0, IntUnaryOperator arg1);
+//    static void parallelSetAll(int[] arg0, IntUnaryOperator arg1);
+//    static void setAll(long[] arg0, IntToLongFunction arg1);
+//    static void parallelSetAll(long[] arg0, IntToLongFunction arg1);
+//    static void setAll(double[] arg0, IntToDoubleFunction arg1);
+//    static void parallelSetAll(double[] arg0, IntToDoubleFunction arg1);
+//    static <T> Spliterator<T> spliterator(T[] arg0);
+//    static <T> Spliterator<T> spliterator(T[] arg0, int arg1, int arg2);
+//    static OfInt spliterator(int[] arg0);
+//    static OfInt spliterator(int[] arg0, int arg1, int arg2);
+//    static OfLong spliterator(long[] arg0);
+//    static OfLong spliterator(long[] arg0, int arg1, int arg2);
+//    static OfDouble spliterator(double[] arg0);
+//    static OfDouble spliterator(double[] arg0, int arg1, int arg2);
+//    static <T> Stream<T> stream(T[] arg0);
+//    static <T> Stream<T> stream(T[] arg0, int arg1, int arg2);
+//    static IntStream stream(int[] arg0);
+//    static IntStream stream(int[] arg0, int arg1, int arg2);
+//    static LongStream stream(long[] arg0);
+//    static LongStream stream(long[] arg0, int arg1, int arg2);
+//    static DoubleStream stream(double[] arg0);
+//    static DoubleStream stream(double[] arg0, int arg1, int arg2);
+//}
+
+interface Collection<E extends @UnknownUnits Object> extends Iterable<E> {
+    boolean contains(@UnknownUnits Object arg0);
+    @UnknownUnits Object[] toArray();
+    <T extends @UnknownUnits Object> T[] toArray(T[] arg0);
+    boolean remove(@UnknownUnits Object arg0);
+    boolean containsAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean removeAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean retainAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean equals(@UnknownUnits Object arg0);
+}
+
+class Collections {
+    static final Set EMPTY_SET;
+    static final List EMPTY_LIST;
+    static final Map EMPTY_MAP;
+    static <T extends @UnknownUnits Object> void sort(List<T> arg0);
+    static <T extends @UnknownUnits Object> void sort(List<T> arg0, Comparator<? super T> arg1);
+    // TODO test
+    static <T extends @UnknownUnits Object> int binarySearch(List<? extends Comparable<? super T>> arg0, T arg1);
+    static <T extends @UnknownUnits Object> int binarySearch(List<? extends T> arg0, T arg1, Comparator<? super T> arg2);
+
+    static void reverse(List<? extends @UnknownUnits Object> arg0);
+    static void shuffle(List<? extends @UnknownUnits Object> arg0);
+    static void shuffle(List<? extends @UnknownUnits Object> arg0, Random arg1);
+    static void swap(List<? extends @UnknownUnits Object> arg0, int arg1, int arg2);
+    // TODO test
+    static <T extends @UnknownUnits Object> void fill(List<? super T> arg0, T arg1);
+    static <T extends @UnknownUnits Object> void copy(List<? super T> arg0, List<? extends T> arg1);
+
+    static <T extends @UnknownUnits Object> T min(Collection<? extends T> arg0);
+    static <T extends @UnknownUnits Object> T min(Collection<? extends T> arg0, Comparator<? super T> arg1);
+
+    static <T extends @UnknownUnits Object> T max(Collection<? extends T> arg0);
+    static <T extends @UnknownUnits Object> T max(Collection<? extends T> arg0, Comparator<? super T> arg1);
+
+    static void rotate(List<? extends @UnknownUnits Object> arg0, int arg1);
+    static <T extends @UnknownUnits Object> boolean replaceAll(List<T> arg0, T arg1, T arg2);
+    static int indexOfSubList(List<? extends @UnknownUnits Object> arg0, List<? extends @UnknownUnits Object> arg1);
+    static int lastIndexOfSubList(List<? extends @UnknownUnits Object> arg0, List<? extends @UnknownUnits Object> arg1);
+    static <T extends @UnknownUnits Object> Collection<T> unmodifiableCollection(Collection<? extends T> arg0);
+    static <T extends @UnknownUnits Object> Set<T> unmodifiableSet(Set<? extends T> arg0);
+    static <T extends @UnknownUnits Object> SortedSet<T> unmodifiableSortedSet(SortedSet<T> arg0);
+    static <T extends @UnknownUnits Object> NavigableSet<T> unmodifiableNavigableSet(NavigableSet<T> arg0);
+    static <T extends @UnknownUnits Object> List<T> unmodifiableList(List<? extends T> arg0);
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> Map<K,V> unmodifiableMap(Map<? extends K,? extends V> arg0);
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> SortedMap<K,V> unmodifiableSortedMap(SortedMap<K,? extends V> arg0);
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> NavigableMap<K,V> unmodifiableNavigableMap(NavigableMap<K,? extends V> arg0);
+    static <T extends @UnknownUnits Object> Collection<T> synchronizedCollection(Collection<T> arg0);
+    static <T extends @UnknownUnits Object> Set<T> synchronizedSet(Set<T> arg0);
+    static <T extends @UnknownUnits Object> SortedSet<T> synchronizedSortedSet(SortedSet<T> arg0);
+    static <T extends @UnknownUnits Object> NavigableSet<T> synchronizedNavigableSet(NavigableSet<T> arg0);
+    static <T extends @UnknownUnits Object> List<T> synchronizedList(List<T> arg0);
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> Map<K,V> synchronizedMap(Map<K,V> arg0);
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> SortedMap<K,V> synchronizedSortedMap(SortedMap<K,V> arg0);
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> NavigableMap<K,V> synchronizedNavigableMap(NavigableMap<K,V> arg0);
+    static <E extends @UnknownUnits Object> Collection<E> checkedCollection(Collection<E> arg0, Class<E> arg1);
+    static <E extends @UnknownUnits Object> Queue<E> checkedQueue(Queue<E> arg0, Class<E> arg1);
+    static <E extends @UnknownUnits Object> Set<E> checkedSet(Set<E> arg0, Class<E> arg1);
+    static <E extends @UnknownUnits Object> SortedSet<E> checkedSortedSet(SortedSet<E> arg0, Class<E> arg1);
+    static <E extends @UnknownUnits Object> NavigableSet<E> checkedNavigableSet(NavigableSet<E> arg0, Class<E> arg1);
+    static <E extends @UnknownUnits Object> List<E> checkedList(List<E> arg0, Class<E> arg1);
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> Map<K,V> checkedMap(Map<K,V> arg0, Class<K> arg1, Class<V> arg2);
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> SortedMap<K,V> checkedSortedMap(SortedMap<K,V> arg0, Class<K> arg1, Class<V> arg2);
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> NavigableMap<K,V> checkedNavigableMap(NavigableMap<K,V> arg0, Class<K> arg1, Class<V> arg2);
+    static <T extends @UnknownUnits Object> Iterator<T> emptyIterator();
+    static <T extends @UnknownUnits Object> ListIterator<T> emptyListIterator();
+    static <T extends @UnknownUnits Object> Enumeration<T> emptyEnumeration();
+    static <T extends @UnknownUnits Object> Set<T> emptySet();
+    static <E extends @UnknownUnits Object> SortedSet<E> emptySortedSet();
+    static <E extends @UnknownUnits Object> NavigableSet<E> emptyNavigableSet();
+    static <T extends @UnknownUnits Object> List<T> emptyList();
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> Map<K,V> emptyMap();
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> SortedMap<K,V> emptySortedMap();
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> NavigableMap<K,V> emptyNavigableMap();
+    static <T extends @UnknownUnits Object> Set<T> singleton(T arg0);
+    static <T extends @UnknownUnits Object> List<T> singletonList(T arg0);
+    static <K extends @UnknownUnits Object, V extends @UnknownUnits Object> Map<K,V> singletonMap(K arg0, V arg1);
+    static <T extends @UnknownUnits Object> List<T> nCopies(int arg0, T arg1);
+    static <T extends @UnknownUnits Object> Comparator<T> reverseOrder();
+    static <T extends @UnknownUnits Object> Comparator<T> reverseOrder(Comparator<T> arg0);
+    static <T extends @UnknownUnits Object> Enumeration<T> enumeration(Collection<T> arg0);
+    static <T extends @UnknownUnits Object> ArrayList<T> list(Enumeration<T> arg0);
+    static int frequency(Collection<? extends @UnknownUnits Object> arg0, @UnknownUnits Object arg1);
+    static boolean disjoint(Collection<? extends @UnknownUnits Object> arg0, Collection<? extends @UnknownUnits Object> arg1);
+    static <T extends @UnknownUnits Object> boolean addAll(Collection<? super T> arg0, T[] arg1);
+    static <E extends @UnknownUnits Object> Set<E> newSetFromMap(Map<E,Boolean> arg0);
+    static <T extends @UnknownUnits Object> Queue<T> asLifoQueue(Deque<T> arg0);
+}
+
+interface Comparator<T extends @UnknownUnits Object> {
+    boolean equals(@UnknownUnits Object arg0);
+    <U extends @UnknownUnits Object> Comparator<T> thenComparing(Function<? super T,? extends U> arg0, Comparator<? super U> arg1);
+    <U extends @UnknownUnits Object> Comparator<T> thenComparing(Function<? super T,? extends U> arg0);
+    static <T extends @UnknownUnits Object> Comparator<T> reverseOrder();
+    static <T extends @UnknownUnits Object> Comparator<T> naturalOrder();
+    static <T extends @UnknownUnits Object> Comparator<T> nullsFirst(Comparator<? super T> arg0);
+    static <T extends @UnknownUnits Object> Comparator<T> nullsLast(Comparator<? super T> arg0);
+    static <T extends @UnknownUnits Object, U extends @UnknownUnits Object> Comparator<T> comparing(Function<? super T,? extends U> arg0, Comparator<? super U> arg1);
+    static <T extends @UnknownUnits Object, U extends @UnknownUnits Object> Comparator<T> comparing(Function<? super T,? extends U> arg0);
+    static <T extends @UnknownUnits Object> Comparator<T> comparingInt(ToIntFunction<? super T> arg0);
+    static <T extends @UnknownUnits Object> Comparator<T> comparingLong(ToLongFunction<? super T> arg0);
+    static <T extends @UnknownUnits Object> Comparator<T> comparingDouble(ToDoubleFunction<? super T> arg0);
+}
+
+interface Deque<E extends @UnknownUnits Object> extends Queue<E> {
+    boolean removeFirstOccurrence(@UnknownUnits Object arg0);
+    boolean removeLastOccurrence(@UnknownUnits Object arg0);
+    boolean remove(@UnknownUnits Object arg0);
+    boolean contains(@UnknownUnits Object arg0);
+}
+
+class Dictionary<K extends @UnknownUnits Object, V extends @UnknownUnits Object> {
+    V get(@UnknownUnits Object arg0);
+    V remove(@UnknownUnits Object arg0);
+}
+
+class EnumMap<K extends @UnknownUnits Object, V extends @UnknownUnits Object> extends AbstractMap<K,V> implements Serializable, Cloneable {
+    boolean containsValue(@UnknownUnits Object arg0);
+    boolean containsKey(@UnknownUnits Object arg0);
+    V get(@UnknownUnits Object arg0);
+    V remove(@UnknownUnits Object arg0);
+    boolean equals(@UnknownUnits Object arg0);
+    @PolyUnit EnumMap<K,V> clone() @PolyUnit;
+}
+
+class EnumSet<E extends @UnknownUnits Object> extends AbstractSet<E> implements Cloneable, Serializable {
+    static <E extends @UnknownUnits Object> EnumSet<E> noneOf(Class<E> arg0);
+    static <E extends @UnknownUnits Object> EnumSet<E> allOf(Class<E> arg0);
+    static <E extends @UnknownUnits Object> EnumSet<E> copyOf(EnumSet<E> arg0);
+    static <E extends @UnknownUnits Object> EnumSet<E> copyOf(Collection<E> arg0);
+    static <E extends @UnknownUnits Object> EnumSet<E> complementOf(EnumSet<E> arg0);
+    static <E extends @UnknownUnits Object> EnumSet<E> of(E arg0);
+    static <E extends @UnknownUnits Object> EnumSet<E> of(E arg0, E arg1);
+    static <E extends @UnknownUnits Object> EnumSet<E> of(E arg0, E arg1, E arg2);
+    static <E extends @UnknownUnits Object> EnumSet<E> of(E arg0, E arg1, E arg2, E arg3);
+    static <E extends @UnknownUnits Object> EnumSet<E> of(E arg0, E arg1, E arg2, E arg3, E arg4);
+    static <E extends @UnknownUnits Object> EnumSet<E> of(E arg0, E[] arg1);
+    static <E extends @UnknownUnits Object> EnumSet<E> range(E arg0, E arg1);
+    @PolyUnit EnumSet<E> clone() @PolyUnit;
+}
+
+interface Enumeration<E extends @UnknownUnits Object> {}
+
+class HashMap<K extends @UnknownUnits Object, V extends @UnknownUnits Object> extends AbstractMap<K,V> implements Map<K,V>, Cloneable, Serializable {
+    V get(@UnknownUnits Object arg0);
+    boolean containsKey(@UnknownUnits Object arg0);
+    V remove(@UnknownUnits Object arg0);
+    boolean containsValue(@UnknownUnits Object arg0);
+    V getOrDefault(@UnknownUnits Object arg0, V arg1);
+    boolean remove(@UnknownUnits Object arg0, @UnknownUnits Object arg1);
+    @PolyUnit Object clone() @PolyUnit;
+}
+
+class HashSet<E extends @UnknownUnits Object> extends AbstractSet<E> implements Set<E>, Cloneable, Serializable {
+    boolean contains(@UnknownUnits Object arg0);
+    boolean remove(@UnknownUnits Object arg0);
+    @PolyUnit Object clone() @PolyUnit;
+}
+
+class Hashtable<K extends @UnknownUnits Object, V extends @UnknownUnits Object> extends Dictionary<K,V> implements Map<K,V>, Cloneable, Serializable {
+    boolean contains(@UnknownUnits Object arg0);
+    boolean containsValue(@UnknownUnits Object arg0);
+    boolean containsKey(@UnknownUnits Object arg0);
+    V get(@UnknownUnits Object arg0);
+    V remove(@UnknownUnits Object arg0);
+    @PolyUnit Object clone() @PolyUnit;
+    boolean equals(@UnknownUnits Object arg0);
+    V getOrDefault(@UnknownUnits Object arg0, V arg1);
+    boolean remove(@UnknownUnits Object arg0, @UnknownUnits Object arg1);
+}
+
+class IdentityHashMap<K extends @UnknownUnits Object, V extends @UnknownUnits Object> extends AbstractMap<K,V> implements Map<K,V>, Serializable, Cloneable {
+    V get(@UnknownUnits Object arg0);
+    boolean containsKey(@UnknownUnits Object arg0);
+    boolean containsValue(@UnknownUnits Object arg0);
+    V remove(@UnknownUnits Object arg0);
+    boolean equals(@UnknownUnits Object arg0);
+    @PolyUnit Object clone() @PolyUnit;
+}
+
+interface Iterator<E extends @UnknownUnits Object> {}
+
+class LinkedHashMap<K extends @UnknownUnits Object, V extends @UnknownUnits Object> extends HashMap<K,V> implements Map<K,V> {
+    boolean containsValue(@UnknownUnits Object arg0);
+    V get(@UnknownUnits Object arg0);
+    V getOrDefault(@UnknownUnits Object arg0, V arg1);
+}
+
+class LinkedHashSet<E extends @UnknownUnits Object> extends HashSet<E> implements Set<E>, Cloneable, Serializable {}
+
+class LinkedList<E extends @UnknownUnits Object> extends AbstractSequentialList<E> implements List<E>, Deque<E>, Cloneable, Serializable {
+    boolean contains(@UnknownUnits Object arg0);
+    boolean remove(@UnknownUnits Object arg0);
+    int indexOf(@UnknownUnits Object arg0);
+    int lastIndexOf(@UnknownUnits Object arg0);
+    boolean removeFirstOccurrence(@UnknownUnits Object arg0);
+    boolean removeLastOccurrence(@UnknownUnits Object arg0);
+    @PolyUnit Object clone() @PolyUnit;
+    @UnknownUnits Object[] toArray();
+    <T extends @UnknownUnits Object> T[] toArray(T[] arg0);
+}
+
+interface List<E extends @UnknownUnits Object> extends Collection<E> {
+    boolean contains(@UnknownUnits Object arg0);
+    @UnknownUnits Object[] toArray();
+    <T extends @UnknownUnits Object> T[] toArray(T[] arg0);
+    boolean remove(@UnknownUnits Object arg0);
+    boolean containsAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean removeAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean retainAll(Collection<? extends @UnknownUnits Object> arg0);
+    // TODO : test super bound
+    void sort(Comparator<? super E> arg0);
+    boolean equals(@UnknownUnits Object arg0);
+    int indexOf(@UnknownUnits Object arg0);
+    int lastIndexOf(@UnknownUnits Object arg0);
+}
+
+interface ListIterator<E extends @UnknownUnits Object> extends Iterator<E> {}
+
+interface Map<K extends @UnknownUnits Object, V extends @UnknownUnits Object> {
+    boolean containsKey(@UnknownUnits Object arg0);
+    boolean containsValue(@UnknownUnits Object arg0);
+    V get(@UnknownUnits Object arg0);
+    V remove(@UnknownUnits Object arg0);
+    boolean equals(@UnknownUnits Object arg0);
+    V getOrDefault(@UnknownUnits Object arg0, V arg1);
+    boolean remove(@UnknownUnits Object arg0, @UnknownUnits Object arg1);
+}
+interface Map$Entry<K extends @UnknownUnits Object, V extends @UnknownUnits Object> {
+    boolean equals(@UnknownUnits Object arg0);
+}
+
+interface NavigableMap<K extends @UnknownUnits Object, V extends @UnknownUnits Object> extends SortedMap<K,V> {}
+
+interface NavigableSet<E extends @UnknownUnits Object> extends SortedSet<E> {}
+
+//class Objects {
+//    static boolean equals(@UnknownUnits Object arg0, @UnknownUnits Object arg1);
+//    static boolean deepEquals(@UnknownUnits Object arg0, @UnknownUnits Object arg1);
+//    static int hashCode(@UnknownUnits Object arg0);
+//    static int hash(@UnknownUnits Object[] arg0);
+//    static String toString(@UnknownUnits Object arg0);
+//    static String toString(@UnknownUnits Object arg0, String arg1);
+//    static <T extends @UnknownUnits Object> int compare(T arg0, T arg1, Comparator<? super T> arg2);
+//    static <T extends @UnknownUnits Object> T requireNonNull(T arg0);
+//    static <T extends @UnknownUnits Object> T requireNonNull(T arg0, String arg1);
+//    static boolean isNull(@UnknownUnits Object arg0);
+//    static boolean nonNull(@UnknownUnits Object arg0);
+//    static <T extends @UnknownUnits Object> T requireNonNull(T arg0, Supplier<String> arg1);
+//}
+//
+//class Optional<T> {
+//    static <T> Optional<T> empty();
+//    static <T> Optional<T> of(T arg0);
+//    static <T> Optional<T> ofNullable(T arg0);
+//    T get();
+//    boolean isPresent();
+//    void ifPresent(Consumer<? super T> arg0);
+//    Optional<T> filter(Predicate<? super T> arg0);
+//    <U> Optional<U> map(Function<? super T,? extends U> arg0);
+//    <U> Optional<U> flatMap(Function<? super T,Optional<U>> arg0);
+//    T orElse(T arg0);
+//    T orElseGet(Supplier<? extends T> arg0);
+//    <X> T orElseThrow(Supplier<? extends X> arg0) throws X;
+//    boolean equals(@UnknownUnits Object arg0);
+//    int hashCode();
+//    String toString();
+//}
+//
+//class OptionalDouble {
+//    static OptionalDouble empty();
+//    static OptionalDouble of(double arg0);
+//    double getAsDouble();
+//    boolean isPresent();
+//    void ifPresent(DoubleConsumer arg0);
+//    double orElse(double arg0);
+//    double orElseGet(DoubleSupplier arg0);
+//    <X extends @UnknownUnits Object> double orElseThrow(Supplier<X> arg0) throws X;
+//    boolean equals(@UnknownUnits Object arg0);
+//    int hashCode();
+//    String toString();
+//}
+//
+//class OptionalInt {
+//    static OptionalInt empty();
+//    static OptionalInt of(int arg0);
+//    int getAsInt();
+//    boolean isPresent();
+//    void ifPresent(IntConsumer arg0);
+//    int orElse(int arg0);
+//    int orElseGet(IntSupplier arg0);
+//    <X extends @UnknownUnits Object> int orElseThrow(Supplier<X> arg0) throws X;
+//    boolean equals(@UnknownUnits Object arg0);
+//    int hashCode();
+//    String toString();
+//}
+//
+//class OptionalLong {
+//    static OptionalLong empty();
+//    static OptionalLong of(long arg0);
+//    long getAsLong();
+//    boolean isPresent();
+//    void ifPresent(LongConsumer arg0);
+//    long orElse(long arg0);
+//    long orElseGet(LongSupplier arg0);
+//    <X extends @UnknownUnits Object> long orElseThrow(Supplier<X> arg0) throws X;
+//    boolean equals(@UnknownUnits Object arg0);
+//    int hashCode();
+//    String toString();
+//}
+//
+//interface PrimitiveIterator<T, T_CONS> extends Iterator<T> {
+//    void forEachRemaining(T_CONS arg0);
+//}
+//interface PrimitiveIterator$OfInt extends PrimitiveIterator<Integer,IntConsumer> {
+//    int nextInt();
+//    void forEachRemaining(IntConsumer arg0);
+//    Integer next();
+//    void forEachRemaining(Consumer<? super Integer> arg0);
+//}
+//interface PrimitiveIterator$OfLong extends PrimitiveIterator<Long,LongConsumer> {
+//    long nextLong();
+//    void forEachRemaining(LongConsumer arg0);
+//    Long next();
+//    void forEachRemaining(Consumer<? super Long> arg0);
+//}
+//interface PrimitiveIterator$OfDouble extends PrimitiveIterator<Double,DoubleConsumer> {
+//    double nextDouble();
+//    void forEachRemaining(DoubleConsumer arg0);
+//    Double next();
+//    void forEachRemaining(Consumer<? super Double> arg0);
+//}
+
+class PriorityQueue<E extends @UnknownUnits Object> extends AbstractQueue<E> implements Serializable {
+    boolean remove(@UnknownUnits Object arg0);
+    boolean contains(@UnknownUnits Object arg0);
+    @UnknownUnits Object[] toArray();
+    <T extends @UnknownUnits Object> T[] toArray(T[] arg0);
+}
+
+interface Queue<E extends @UnknownUnits Object> extends Collection<E> {}
+
+//class ServiceLoader<S> implements Iterable<S> {
+//    void reload();
+//    Iterator<S> iterator();
+//    static <S> ServiceLoader<S> load(Class<S> arg0, ClassLoader arg1);
+//    static <S> ServiceLoader<S> load(Class<S> arg0);
+//    static <S> ServiceLoader<S> loadInstalled(Class<S> arg0);
+//    String toString();
+//}
+
+interface Set<E extends @UnknownUnits Object> extends Collection<E> {
+    boolean contains(@UnknownUnits Object arg0);
+    @UnknownUnits Object[] toArray();
+    <T extends @UnknownUnits Object> T[] toArray(T[] arg0);
+    boolean remove(@UnknownUnits Object arg0);
+    boolean containsAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean retainAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean removeAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean equals(@UnknownUnits Object arg0);
+}
+
+interface SortedMap<K extends @UnknownUnits Object, V extends @UnknownUnits Object> extends Map<K,V> {}
+
+interface SortedSet<E extends @UnknownUnits Object> extends Set<E> {}
+
+interface Spliterator<T extends @UnknownUnits Object> {}
+interface Spliterator$OfPrimitive<T extends @UnknownUnits Object, T_CONS extends @UnknownUnits Object, T_SPLITR extends @UnknownUnits Object> extends Spliterator<T> {}
+//interface Spliterator$OfInt extends OfPrimitive<Integer,IntConsumer,OfInt> {
+//    // TODO: does this need annotations???
+//    boolean tryAdvance(Consumer<? super Integer> arg0);
+//    void forEachRemaining(Consumer<? super Integer> arg0);
+//}
+//interface Spliterator$OfLong extends OfPrimitive<Long,LongConsumer,OfLong> {
+//    boolean tryAdvance(Consumer<? super Long> arg0);
+//    void forEachRemaining(Consumer<? super Long> arg0);
+//}
+//interface Spliterator$OfDouble extends OfPrimitive<Double,DoubleConsumer,OfDouble> {
+//    boolean tryAdvance(Consumer<? super Double> arg0);
+//    void forEachRemaining(Consumer<? super Double> arg0);
+//}
+
+class Spliterators {
+    static <T extends @UnknownUnits Object> Spliterator<T> emptySpliterator();
+    static <T extends @UnknownUnits Object> Spliterator<T> spliterator(@UnknownUnits Object[] arg0, int arg1);
+    static <T extends @UnknownUnits Object> Spliterator<T> spliterator(@UnknownUnits Object[] arg0, int arg1, int arg2, int arg3);
+    // Future TODO: array support
+    //    static OfInt spliterator(int[] arg0, int arg1);
+    //    static OfInt spliterator(int[] arg0, int arg1, int arg2, int arg3);
+    //    static OfLong spliterator(long[] arg0, int arg1);
+    //    static OfLong spliterator(long[] arg0, int arg1, int arg2, int arg3);
+    //    static OfDouble spliterator(double[] arg0, int arg1);
+    //    static OfDouble spliterator(double[] arg0, int arg1, int arg2, int arg3);
+    static <T extends @UnknownUnits Object> Spliterator<T> spliterator(Collection<? extends T> arg0, int arg1);
+    static <T extends @UnknownUnits Object> Spliterator<T> spliterator(Iterator<? extends T> arg0, long arg1, int arg2);
+    static <T extends @UnknownUnits Object> Spliterator<T> spliteratorUnknownSize(Iterator<? extends T> arg0, int arg1);
+    static <T extends @UnknownUnits Object> Iterator<T> iterator(Spliterator<? extends T> arg0);
+}
+class Spliterators$AbstractSpliterator<T extends @UnknownUnits Object> implements Spliterator<T> {}
+
+class Stack<E extends @UnknownUnits Object> extends Vector<E> {
+    int search(@UnknownUnits Object arg0);
+}
+
+class TreeMap<K extends @UnknownUnits Object, V extends @UnknownUnits Object> extends AbstractMap<K,V> implements NavigableMap<K,V>, Cloneable, Serializable {
+    boolean containsKey(@UnknownUnits Object arg0);
+    boolean containsValue(@UnknownUnits Object arg0);
+    V get(@UnknownUnits Object arg0);
+    V remove(@UnknownUnits Object arg0);
+    @PolyUnit Object clone() @PolyUnit;
+}
+
+class TreeSet<E extends @UnknownUnits Object> extends AbstractSet<E> implements NavigableSet<E>, Cloneable, Serializable {
+    boolean contains(@UnknownUnits Object arg0);
+    boolean remove(@UnknownUnits Object arg0);
+    @PolyUnit Object clone() @PolyUnit;
+}
+
+// Future TODO: use these annotations when stubparser supports it
+//@DefaultQualifier(
+//        value = UnknownUnits.class,
+//        locations = {TypeUseLocation.IMPLICIT_UPPER_BOUND, TypeUseLocation.EXPLICIT_UPPER_BOUND}
+//        )
+//@DefaultQualifiers({ @DefaultQualifier(value = UnknownUnits.class, locations = { TypeUseLocation.LOCAL_VARIABLE }),
+//    @DefaultQualifier(value = Scalar.class, locations = { TypeUseLocation.FIELD })
+//})
+class Vector<E extends @UnknownUnits Object> extends AbstractList<E> implements List<E>, RandomAccess, Cloneable, Serializable {
+    // future TODO: the unit for @UnknownUnits Object below should be the same as the current vector
+    void copyInto(@UnknownUnits Object[] arg0);
+    boolean contains(@UnknownUnits Object arg0);
+    int indexOf(@UnknownUnits Object arg0);
+    int indexOf(@UnknownUnits Object arg0, int arg1);
+    int lastIndexOf(@UnknownUnits Object arg0);
+    int lastIndexOf(@UnknownUnits Object arg0, int arg1);
+    boolean removeElement(@UnknownUnits Object arg0);
+    // clone can only retain the unit of the Vector container, not the content unit
+    // ie most often it will retain Scalar from @Scalar Vector<@someUnit T>
+    @PolyUnit Object clone() @PolyUnit;
+    // future TODO: this should copy the unit within the type parameter of Vector
+    @UnknownUnits Object[] toArray();
+    // ArrayStoreException is thrown if type of arg0 is not a supertype of every element of vector
+    // future TODO: enforce that the unit of T is a supertype of the unit of every element of vector
+    <T extends @UnknownUnits Object> T[] toArray(T[] arg0);
+    boolean remove(@UnknownUnits Object arg0);
+    boolean containsAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean removeAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean retainAll(Collection<? extends @UnknownUnits Object> arg0);
+    boolean equals(@UnknownUnits Object arg0);
+}
+
+class WeakHashMap<K extends @UnknownUnits Object, V extends @UnknownUnits Object> extends AbstractMap<K,V> implements Map<K,V> {
+    V get(@UnknownUnits Object arg0);
+    boolean containsKey(@UnknownUnits Object arg0);
+    V remove(@UnknownUnits Object arg0);
+    boolean containsValue(@UnknownUnits Object arg0);
+}
