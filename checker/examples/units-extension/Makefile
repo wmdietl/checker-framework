@@ -15,7 +15,7 @@ all: compile-for-test named-quals-test qual-folder-test clean
 
 demo:
 	$(JAVAC) $(JAVAOPTS) $(FILES)
-	@echo "***** This command is expected to produce errors on line 15 & 66:"
+	@echo "***** This command is expected to produce errors on line 15 & 71:"
 	$(JAVAC) -Xbootclasspath/p:$(PROJECTDIR) -AprintErrorStack -processor org.checkerframework.checker.units.UnitsChecker -AunitsDirs=$(PROJECTDIR) Demo.java
 
 # compile qualifiers
