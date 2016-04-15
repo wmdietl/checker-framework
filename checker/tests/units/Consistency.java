@@ -1,5 +1,8 @@
-import org.checkerframework.checker.units.qual.*;
 import org.checkerframework.checker.units.*;
+import org.checkerframework.checker.units.qual.*;
+import org.checkerframework.checker.units.qual.time.duration.*;
+import org.checkerframework.checker.units.qual.time.point.*;
+import org.checkerframework.checker.units.UnitsTools;
 
 /**
  * One possible future extension is adding method annotations to check

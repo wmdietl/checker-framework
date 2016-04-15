@@ -1,11 +1,11 @@
 package org.checkerframework.checker.units.qual;
 
+import org.checkerframework.framework.qual.SubtypeOf;
+
 import java.lang.annotation.*;
 
-import org.checkerframework.framework.qual.*;
-
 /**
- * Degrees.
+ * Degrees in Angle.
  *
  * @checker_framework.manual #units-checker Units Checker
  */

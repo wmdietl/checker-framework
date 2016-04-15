@@ -15,28 +15,25 @@ For example, consider the following code:
 @mPERs int speed = meters / secs;
 \end{alltt}
 
-Due to the annotations \<@m> and \<@s>, the variables \code{meters} and \code{secs} are guaranteed to contain
-only values with meters and seconds as units of measurement.
+Due to the annotations \<@m> and \<@s>, the variables \code{meters} and
+\code{secs} are guaranteed to contain only values with meters and seconds
+as units of measurement.
+
 Utility class \code{UnitsTools} provides constants with which
-unqualified integer are multiplied to get values of the corresponding unit.
+unqualified number literals are multiplied to get values of the corresponding unit.
 The assignment of an unqualified value to \code{meters}, as in
 \code{meters = 99}, will be flagged as an error by the Units Checker.
 
 The division \code{meters/secs} takes the types of the two operands
 into account and determines that the result is of type
 meters per second, signified by the \code{@mPERs} qualifier.
+
 We provide an extensible framework to define the result of operations
 on units.
 
-
 \section{Units annotations\label{units-annotations}}
 
-The checker currently supports three varieties of units annotations:
-kind annotations (\refqualclass{checker/units/qual}{Length},
-\refqualclass{checker/units/qual}{Mass}, \dots),
-the SI units (\refqualclass{checker/units/qual}{m}, \refqualclass{checker/units/qual}{kg}, \dots), and polymorphic annotations
-(\refqualclass{checker/units/qual}{PolyUnit}).
-
+The checker currently supports three varieties of units annotations: kind annotations, SI units, and special annotations.
 
 Kind annotations can be used to declare what the expected unit of
 measurement is, without fixing the particular unit used.
@@ -65,10 +62,15 @@ The following kind annotations are defined:
 
 \item[\refqualclass{checker/units/qual}{Temperature}]
 
-\item[\refqualclass{checker/units/qual}{Time}]
-\end{description}
+\item[\refqualclass{checker/units/qual/time/duration}{TimeDuration}]
+  which represents a length on a time scale, or simply the elapsed time between two events. For example, 5 hours, 3 months, or 12 years.
 
-% \medskip
+\item[\refqualclass{checker/units/qual/time/point}{TimePoint}]
+  which represents a point on a time scale relative to some reference point denoted as zero point of this time scale, or simply the precise time at which some event occurs.
+  For example, 5am (relative to midnight), March (relative to beginning of a year), or 2012 (relative to 0 BCE).
+
+\item[\refqualclass{checker/units/qual}{Volume}]
+\end{description}
 
 
 For each kind of unit, the corresponding SI unit of
@@ -76,55 +78,203 @@ measurement is defined:
 
 \begin{enumerate}
 \item For \code{@Acceleration}:
+
   Meter Per Second Square \refqualclass{checker/units/qual}{mPERs2}
 
 \item For \code{@Angle}:
+
   Radians \refqualclass{checker/units/qual}{radians},
   and the derived unit
+
   Degrees \refqualclass{checker/units/qual}{degrees}
 
 \item For \code{@Area}:
+
   the derived units
+
   square millimeters \refqualclass{checker/units/qual}{mm2},
+
   square meters \refqualclass{checker/units/qual}{m2}, and
+
   square kilometers \refqualclass{checker/units/qual}{km2}
 
 \item For \code{@Current}:
+
   Ampere \refqualclass{checker/units/qual}{A}
 
 \item For \code{@Length}:
-  Meters \refqualclass{checker/units/qual}{m}
+
+  Meters \refqualclass{checker/units/qual}{m},
   and the derived units
-  millimeters \refqualclass{checker/units/qual}{mm} and
+
+  millimeters \refqualclass{checker/units/qual}{mm}, and
+
   kilometers \refqualclass{checker/units/qual}{km}
 
 \item For \code{@Luminance}:
+
   Candela \refqualclass{checker/units/qual}{cd}
 
 \item For \code{@Mass}:
-  kilograms \refqualclass{checker/units/qual}{kg}
+
+  kilograms \refqualclass{checker/units/qual}{kg},
   and the derived unit
+
   grams \refqualclass{checker/units/qual}{g}
 
 \item For \code{@Speed}:
-  meters per second \refqualclass{checker/units/qual}{mPERs} and
+
+  meters per second \refqualclass{checker/units/qual}{mPERs}, and
+
   kilometers per hour \refqualclass{checker/units/qual}{kmPERh}
 
 \item For \code{@Substance}:
+
   Mole \refqualclass{checker/units/qual}{mol}
 
 \item For \code{@Temperature}:
-  Kelvin \refqualclass{checker/units/qual}{K}
+
+  Kelvin \refqualclass{checker/units/qual}{K},
   and the derived unit
+
   Celsius \refqualclass{checker/units/qual}{C}
 
-\item For \code{@Time}:
-  seconds \refqualclass{checker/units/qual}{s}
+\item For \code{@TimeDuration}:
+
+  seconds \refqualclass{checker/units/qual/time/duration}{s},
   and the derived units
-  minutes \refqualclass{checker/units/qual}{min} and
-  hours \refqualclass{checker/units/qual}{h}
+
+  nanoseconds \refqualclass{checker/units/qual/time/duration}{ns},
+
+  microseconds \refqualclass{checker/units/qual/time/duration}{us},
+
+  milliseconds \refqualclass{checker/units/qual/time/duration}{ms},
+
+  minutes \refqualclass{checker/units/qual/time/duration}{min},
+
+  hours \refqualclass{checker/units/qual/time/duration}{h},
+
+  half-days \refqualclass{checker/units/qual/time/duration}{halfday},
+
+  days \refqualclass{checker/units/qual/time/duration}{day},
+
+  weeks \refqualclass{checker/units/qual/time/duration}{week},
+
+  months \refqualclass{checker/units/qual/time/duration}{month},
+
+  quarter-years \refqualclass{checker/units/qual/time/duration}{quarteryear},
+
+  years \refqualclass{checker/units/qual/time/duration}{year},
+
+  decades \refqualclass{checker/units/qual/time/duration}{decade},
+
+  centuries \refqualclass{checker/units/qual/time/duration}{century},
+
+  millennia \refqualclass{checker/units/qual/time/duration}{millennia},
+
+  era \refqualclass{checker/units/qual/time/duration}{era},
+
+  as well as an artificially defined conceptual unit of
+  forever \refqualclass{checker/units/qual/time/duration}{forever}
+
+\item For \code{@TimePoint}:
+
+  the units
+
+  calendar seconds \refqualclass{checker/units/qual/time/point}{CALs},
+
+  calendar nanoseconds \refqualclass{checker/units/qual/time/point}{CALns},
+
+  calendar microseconds \refqualclass{checker/units/qual/time/point}{CALus},
+
+  calendar milliseconds \refqualclass{checker/units/qual/time/point}{CALms},
+
+  calendar minutes \refqualclass{checker/units/qual/time/point}{CALmin},
+
+  calendar hours \refqualclass{checker/units/qual/time/point}{CALh},
+
+  calendar half-days \refqualclass{checker/units/qual/time/point}{CALhalfday},
+
+  calendar days \refqualclass{checker/units/qual/time/point}{CALday},
+
+  calendar weeks \refqualclass{checker/units/qual/time/point}{CALweek},
+
+  calendar months \refqualclass{checker/units/qual/time/point}{CALmonth},
+
+  calendar quarter-years \refqualclass{checker/units/qual/time/point}{CALquarteryear},
+
+  calendar years \refqualclass{checker/units/qual/time/point}{CALyear},
+
+  calendar decades \refqualclass{checker/units/qual/time/point}{CALdecade},
+
+  calendar centuries \refqualclass{checker/units/qual/time/point}{CALcentury},
+
+  calendar millennia \refqualclass{checker/units/qual/time/point}{CALmillennia},
+
+  calendar era \refqualclass{checker/units/qual/time/point}{CALera},
+
+  as well as an artificially defined conceptual unit of
+  calendar forever \refqualclass{checker/units/qual/time/point}{CALforever}
+
+\item For \code{@Volume}:
+
+  the derived units
+
+  meters cubed \refqualclass{checker/units/qual}{m3},
+
+  millimeters cubed \refqualclass{checker/units/qual}{mm3}, and
+
+  kilometers cubed \refqualclass{checker/units/qual}{km3}
+
 \end{enumerate}
 
+
+There are 4 special annotations:
+\begin{enumerate}
+\item \refqualclass{checker/units/qual}{Scalar}
+  Which represents unitless scalars in scientific computation such as the special
+  values \code{pi} and \code{e}, and is the annotation for programming constructs
+  that do not have any units at all such as Strings. \code{@Scalar} is the
+  default type for the units checker type hierarchy, and it is also the default
+  unit for implicit and explicit upper bounds in type parameters.
+
+\item \refqualclass{checker/units/qual}{UnitsBottom}
+  which is the annotation of the \code{null} literal and the Void class. It is
+  the bottom type of the units checker type hierarchy, and is also the default
+  unit for implicit lower bounds in type parameters.
+
+\item \refqualclass{checker/units/qual}{UnknownUnits}
+  which is the default annotation of local variables, exceptions, and resource
+  variables. It is the top type of the units checker type hierarchy.
+  As the default annotation of local variables, any local variable can have its
+  unit adapted through a data-flow sensitive type qualifier inference process.
+  For example:
+
+\begin{alltt}
+@Length int method(int y) \{
+  int x;                   // x is initially an UnknownUnit
+  if (y > 10) \{
+    x = 5 * UnitsTools.m;  // x becomes a meter
+  \} else \{
+    x = 9 * UnitsTools.km; // x becomes a kilometer here
+  \}
+  // data-flow analysis computes the smallest generalization
+  // possible between the two units, which is Length.
+  return x;                // x becomes simply a length here
+\}
+\end{alltt}
+
+See \ref{type-refinement} for more information about flow-sensitive type qualifier inference.
+
+\item \refqualclass{checker/units/qual}{PolyUnit}
+  which is the polymorphic annotation for the units checker. This annotation
+  enables you to write a method that takes an argument of any unit type and
+  returns a result of that same type. For more about polymorphic qualifiers,
+  see Section~\ref{qualifier-polymorphism}. For an example of it use, see
+  \code{@PolyUnit}, see the
+  \href{api/org/checkerframework/checker/units/qual/PolyUnit.html}{\<@PolyUnit>} Javadoc.
+
+\end{enumerate}
 
 You may specify SI unit prefixes, using enumeration \code{\refclass{checker/units/qual}{Prefix}}.
 The basic SI units
@@ -132,9 +282,8 @@ The basic SI units
  \code{@mol}, \code{@cd})
 take an optional \code{Prefix} enum as argument.
 For example, to use nanoseconds as unit, you could use
-\code{@s(Prefix.nano)} as a unit type.
-You can sometimes use a different annotation instead of a prefix;
-for example, \<@mm> is equivalent to \<@m(Prefix.milli)>.
+\code{@s(Prefix.nano)} as a unit type or use the provided \code{@ns}.
+The two are interchangeable.
 
 Class \code{UnitsTools} contains a constant for each SI unit.
 To create a value of the particular unit, multiply an unqualified
@@ -145,14 +294,6 @@ the expression \code{5 * m} represents five meters.
 As all these unit constants are public, static, and final with value
 one, the compiler will optimize away these multiplications.
 
-
-The polymorphic annotation \refqualclass{checker/units/qual}{PolyUnit}
-enables you to write a method that takes an argument of any unit type and
-returns a result of that same type.  For more about polymorphic qualifiers,
-see Section~\ref{qualifier-polymorphism}.  For an example of it use, see
-\code{@PolyUnit}, see the
-\href{api/org/checkerframework/checker/units/qual/PolyUnit.html}{\<@PolyUnit>
-Javadoc}.
 
 
 \section{Extending the Units Checker\label{extending-units}}
@@ -168,18 +309,17 @@ Here is an example of a new unit annotation.
 \begin{alltt}
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@SubtypeOf( \ttlcb{} Time.class \ttrcb{} )
-@UnitsMultiple(quantity=s.class, prefix=Prefix.nano)
+@SubtypeOf( \ttlcb{} Length.class \ttrcb{} )
+@UnitsMultiple(quantity=m.class, prefix=Prefix.nano)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
-public @interface ns \ttlcb{}\ttrcb{}
+public @interface nm \ttlcb{}\ttrcb{}
 \end{alltt}
 
 The \code{@SubtypeOf} meta-annotation specifies that this annotation
 introduces an additional unit of time.
 The \code{@UnitsMultiple} meta-annotation specifies that this annotation
-should be a nano multiple of the basic unit \code{@s}:  \code{@ns} and
-\code{@s(Prefix.nano)}
-behave equivalently and interchangeably.
+should be a nano multiple of the basic unit \code{@m}:  \code{@nm} and
+\code{@m(Prefix.nano)} behave equivalently and interchangeably.
 Most annotation definitions do not have a \<@UnitsMultiple> meta-annotation.
 
 Note that all custom annotations must have the
@@ -205,6 +345,8 @@ implementation of \code{UnitsRelations} to enforce it.
 
 \section{What the Units Checker checks\label{units-checks}}
 
+
+
 The Units Checker ensures that unrelated types are not mixed.
 
 All types with a particular unit annotation are
@@ -215,25 +357,82 @@ different prefix.
 Subtyping between the units and the unit kinds is taken into account,
 as is the \code{@UnitsMultiple} meta-annotation.
 
+Three categories of rules are enforced: arithmetic, compound assignment,
+and comparison rules.
+
+\begin{itemize}
+\item
+Arithmetic rules:
+
+Time durations and time points have a special logic between them.
+
+The definition of a duration is the differece between two time points, thus
+the subtraction of one time point to another results in a duration.
+For example 10 am - 5 am = 5 hours.
+
+By the same logic, adding a time duration to a time point results in a time
+point. For example 2015 + 5 years = 2020.
+
+The addition, multiplication, division, and modulo of two time points is
+scientifically undefined, and is disallowed by the checker.
+
+The rules for arithmetic operations between two duration units is the same as
+all other units in the units checker, as follows:
+
+Addition and subtraction is allowed between two variables or values of
+the same unit type.
+
 Multiplying a scalar with a unit type results in the same unit type.
 
-The division of a unit type by the same unit type
-results in the unqualified type.
+The division of a unit type by the same unit type results in a scalar.
 
 Multiplying or dividing different unit types, for which no unit
-relation is known to the system, will result in a \code{MixedUnits}
-type, which is separate from all other units.
-If you encounter a \code{MixedUnits} annotation in an error message,
+relation is known to the system, will result in a \code{UnknownUnits}
+type.
+If you encounter a \code{UnknownUnits} annotation in an error message,
 ensure that your operations are performed on correct units or refine
 your \code{UnitsRelations} implementation.
 
-The Units Checker does \emph{not} change units based on multiplication; for
-example, if variable \<mass> has the type \<@kg double>, then \<mass *
-1000> has that same type rather than the type \<@g double>.  (The Units
-Checker has no way of knowing whether you intended a conversion, or you
+The modulo of a unit type with any other type keeps its unit, as the remainder
+of a division always has the same unit as the dividend.
+
+The Units Checker does \emph{not} change units based on multiplication or
+division; for example, if variable \<mass> has the type \<@kg double>, then
+\<mass * 1000> has that same type rather than the type \<@g double>. (The
+Units Checker has no way of knowing whether you intended a conversion, or you
 were computing the mass of 1000 items.  You need to make all conversions
 explicit in your code, and it's good style to minimize the number of
 conversions.)
+
+\item
+Compound Assignment rules:
+
+For \code{+=} and \code{-=}, the right hand expression must have a unit that
+is a subtype of the left hand variable. For example \code{length += meter}
+would pass but \code{seconds += grams} will not.
+
+For \code{*=} and \code{/=}, if the left hand variable has the unit
+\code{@UnknownUnits}, then regardless of what the right hand expression's unit
+is, the variable stays as \code{@UnknownUnits}. If the left hand variable has
+some other unit and the right hand expression has the unit scalar, then the
+variable keeps its unit. Any other units combinations is disallowed.
+
+For \code{\%=}, the left hand variable keeps its unit regardless of what the
+right hand expression's unit is.
+
+\item
+Comparison rules:
+
+For all comparison operations, units checker permits comparisons between two
+variables or values with identical units, as well as comparisons between any
+unit with a scalar, or with a null literal.
+
+Comparisons between a unit and a scalar is conceptually understood as a
+comparison of the scalar magnitude of the unit with the scalar.
+
+Comparisons with null literals are of course permitted due to the need to
+check for null references on objects.
+\end{itemize}
 
 
 \section{Running the Units Checker\label{units-running}}
@@ -299,13 +498,12 @@ Also, see the example project in the \<checker/examples/units-extension> directo
 
 \section{Suppressing warnings\label{units-suppressing}}
 
-One example of when you need to suppress warnings is when you
-initialize a variable with a unit type by a literal value.
-To remove this warning message, it is best to introduce a
-constant that represents the unit and to
-add a \code{@SuppressWarnings}
-annotation to that constant.
+One example of when you need to suppress warnings is when you initialize a
+variable with a unit type by a literal value. To remove this warning message,
+it is best to introduce a constant that represents the unit and to add a
+\code{@SuppressWarnings} annotation to that constant.
 For examples, see class \code{UnitsTools}.
+
 
 
 \section{References\label{units-references}}

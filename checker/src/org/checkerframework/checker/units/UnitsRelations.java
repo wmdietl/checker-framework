@@ -16,7 +16,7 @@ public interface UnitsRelations {
     /**
      * Initialize the object. Needs to be called before any other method.
      *
-     * @param env The ProcessingEnvironment to use.
+     * @param env The ProcessingEnvironment of the Checker.
      * @return A reference to "this".
      */
     UnitsRelations init(ProcessingEnvironment env);
@@ -27,7 +27,7 @@ public interface UnitsRelations {
      * @param lht Left hand side in multiplication.
      * @param rht Right hand side in multiplication.
      * @return The annotation to use for the result of the multiplication or
-     *      null if no special relation is known.
+     *         null if no special relation is known.
      */
     /*@Nullable*/ AnnotationMirror multiplication(AnnotatedTypeMirror lht, AnnotatedTypeMirror rht);
 

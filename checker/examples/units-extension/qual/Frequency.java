@@ -6,7 +6,6 @@ import org.checkerframework.checker.units.qual.UnitsRelations;
 import org.checkerframework.checker.units.qual.UnknownUnits;
 import org.checkerframework.framework.qual.*;
 
-
 /**
  * Units of frequency, such as hertz (@{@link Hz}).
  */
