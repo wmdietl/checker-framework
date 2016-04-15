@@ -1,8 +1,7 @@
 package org.checkerframework.checker.units;
 
-import org.checkerframework.checker.units.qual.*;
-import org.checkerframework.checker.units.qual.time.duration.TimeDuration;
-import org.checkerframework.checker.units.qual.time.point.TimePoint;
+import org.checkerframework.checker.units.qual.Prefix;
+import org.checkerframework.checker.units.qual.UnitsMultiple;
 import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.framework.type.*;
@@ -37,27 +36,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
 
-    protected final AnnotationMirror scalar = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, Scalar.class);
-    protected final AnnotationMirror TOP = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, UnknownUnits.class);
-    protected final AnnotationMirror BOTTOM = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, UnitsBottom.class);
-
-    protected final AnnotationMirror m = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, m.class);
-    protected final AnnotationMirror mm = UnitsRelationsTools.buildAnnoMirrorWithSpecificPrefix(processingEnv, m.class, Prefix.milli);
-    protected final AnnotationMirror km = UnitsRelationsTools.buildAnnoMirrorWithSpecificPrefix(processingEnv, m.class, Prefix.kilo);
-
-    protected final AnnotationMirror m2 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, m2.class);
-    protected final AnnotationMirror mm2 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, mm2.class);
-    protected final AnnotationMirror km2 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, km2.class);
-
-    protected final AnnotationMirror m3 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, m3.class);
-    protected final AnnotationMirror km3 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, km3.class);
-    protected final AnnotationMirror mm3 = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, mm3.class);
-
-    protected final AnnotationMirror timeDuration = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, TimeDuration.class);;
-    protected final AnnotationMirror timeInstant = UnitsRelationsTools.buildAnnoMirrorWithNoPrefix(processingEnv, TimePoint.class);;
-
     // used to detect and skip string addition processing
     protected final TypeMirror stringType = getTypeMirror(java.lang.String.class);
+
+    // used to store a set of annotation mirrors for all bundled units annotations
+    protected final UnitsAnnotationMirrors unitsMirrors = new UnitsAnnotationMirrors(processingEnv);
 
     // used to handle the loading of external and internally defined
     // UnitsRelations classes
@@ -84,12 +67,19 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
     private static final Map<String, Map<String, Boolean>> typeMirrorSameCache = new HashMap<String, Map<String, Boolean>>();
 
     public UnitsAnnotatedTypeFactory(BaseTypeChecker checker) {
+
+        // formatter created in super..
         // use flow inference
         super(checker, true);
 
+        // both of these must be instantiated before the call to postInit
         mathOpRelations = new UnitsMathOperatorsRelations((UnitsChecker) checker, this);
+        UnitAnnotationTools.init(unitsMirrors);
 
         this.postInit();
+
+        //        System.out.println("qual set:");
+        //        System.out.println(this.getQualifierHierarchy().toString());
     }
 
     // In Units Checker, we always want to print out the Invisible Qualifiers
@@ -120,6 +110,13 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
 
         // copy all loaded external Units to qual set
         qualSet.addAll(externalQualsMap.values());
+
+        // TODO: add mirrors to UnitsAnnotationMirrors (qualSet only contains non alias annos though)
+        // rough algo:
+        // if it's a prefix multiple of some base unit, then normalize the name
+        // otherwise add the simple name
+        // some are still
+        // TODO: add a meta annotation for the scientific symbol string for each unit (meta is better)
 
         return Collections.unmodifiableSet(qualSet);
     }
@@ -320,6 +317,10 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
         return mathOpRelations;
     }
 
+    protected UnitsAnnotationMirrors getUnitsAnnotationMirrors() {
+        return unitsMirrors;
+    }
+
     /**
      * Returns an interned string of the canonical class name of clazz
      *
@@ -511,7 +512,7 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
      */
     @Override
     public QualifierHierarchy createQualifierHierarchy(MultiGraphFactory factory) {
-        return new UnitsQualifierHierarchy(factory, BOTTOM);
+        return new UnitsQualifierHierarchy(factory, unitsMirrors.BOTTOM);
     }
 
     protected class UnitsQualifierHierarchy extends GraphQualifierHierarchy {
@@ -528,7 +529,69 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             lhs = removePrefix(lhs);
             rhs = removePrefix(rhs);
 
-            return super.isSubtype(rhs, lhs);
+            boolean rhsIsUnitAnno = UnitAnnotationTools.isUnitAnno(rhs);
+            boolean lhsIsUnitAnno = UnitAnnotationTools.isUnitAnno(lhs);
+
+            Pair<AnnotationMirror, Boolean> rhsConverted = UnitAnnotationTools.convertToStandardAnno(rhs);
+            Pair<AnnotationMirror, Boolean> lhsConverted = UnitAnnotationTools.convertToStandardAnno(lhs);
+
+            // if @Unit is encountered, see if we can retrieve it's alias
+            // if so, determine whether the alias is a subtype or supertype
+            if(rhsIsUnitAnno && rhsConverted.second) {
+                System.out.println("rhs original: " + rhs);
+                System.out.println("rhs normalized: " + UnitAnnotationTools.getNormalizedUnitName(rhs));
+                rhs = rhsConverted.first;
+                System.out.println("converted rhs: " + rhs);
+            }
+//            if(lhsIsUnitAnno && lhsConverted.second) {
+//                System.out.println("lhs original: " + lhs);
+//                System.out.println("lhs normalized: " + UnitAnnotationTools.getNormalizedUnitName(lhs));
+//                lhs = lhsConverted.first;
+//                System.out.println("converted lhs: " + lhs);
+//            }
+
+            // subtyping rules for UnitsAnno:
+            // if it can be converted into a bundled or externally loaded units annotation, then determine subtyping from that annotation
+            // if not, then it is only a subtype of UnknownUnits and nothing else
+            // two UnitsAnnos are not subtypes of each other
+
+            if(rhsIsUnitAnno && !lhsIsUnitAnno) {
+                // if rhs is a UnitAnno and lhs is not, check conversion status
+                if(rhsConverted.second) {
+                    // if rhs was converted successfully
+                    return super.isSubtype(rhsConverted.first, lhs);
+                } else {
+                    return super.isSubtype(unitsMirrors.UNIT, lhs);
+                    //                    Set<AnnotationMirror> supermap1 = this.supertypesMap.get(unitsMirrors.unit);
+                    //                    return AnnotationUtils.containsSame(supermap1, lhs);
+                }
+            } else if (lhsIsUnitAnno && !rhsIsUnitAnno) {
+                // if lhs is a UnitAnno and rhs is not, check conversion status
+                if(lhsConverted.second) {
+                    // if lhs was converted successfully
+                    return super.isSubtype(rhs, lhsConverted.first);
+                } else {
+                    return super.isSubtype(rhs, unitsMirrors.UNIT);
+                }
+            } else if (rhsIsUnitAnno && lhsIsUnitAnno) {
+                // if both are UnitAnnos
+                if(rhsConverted.second && lhsConverted.second) {
+                    // if both were converted successfully, check via super the converted annotation mirrors
+                    return super.isSubtype(rhsConverted.first, lhsConverted.first);
+                } else if (rhsConverted.second) {
+                    // if only right was converted successfully, check via super
+                    return super.isSubtype(rhsConverted.first, unitsMirrors.UNIT);
+                } else if (lhsConverted.second) {
+                    // if only left was converted successfully, check via super
+                    return super.isSubtype(unitsMirrors.UNIT, lhsConverted.first);
+                } else {
+                    return false;
+                }
+                // TODO: check 2nd and 3rd cases, possibly incorrect
+            } else {
+                // if neither are UnitAnnos, then check via super implementation
+                return super.isSubtype(rhs, lhs);
+            }
         }
 
         // Overriding leastUpperBound due to the fact that alias annotations are

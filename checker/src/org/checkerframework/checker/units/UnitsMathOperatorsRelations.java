@@ -181,12 +181,12 @@ public class UnitsMathOperatorsRelations {
      */
     private void processMinus(AnnotatedTypeMirror resultType, AnnotatedTypeMirror lht, AnnotatedTypeMirror rht) {
         // Process time units first
-        if (UnitsRelationsTools.hasSpecificUnit(lht, factory.TOP)
-                || UnitsRelationsTools.hasSpecificUnit(rht, factory.TOP)) {
+        if (UnitsRelationsTools.hasSpecificUnit(lht, factory.unitsMirrors.TOP)
+                || UnitsRelationsTools.hasSpecificUnit(rht, factory.unitsMirrors.TOP)) {
             // unknown + or - unknown = unknown
             // unknown + or - anything = unknown
             // anything + or - unknown = unknown
-            resultType.replaceAnnotation(factory.TOP);
+            resultType.replaceAnnotation(factory.unitsMirrors.TOP);
         } else if (isTimePoint(lht) && isTimePoint(rht)) {
             if (UnitsRelationsTools.areSameUnits(lht, rht)) {
                 // Time point - time point ==> timeDuration if they are the
@@ -230,12 +230,12 @@ public class UnitsMathOperatorsRelations {
      * @param node the AST node of the multiplication
      */
     private void processMultiply(AnnotatedTypeMirror resultType, AnnotatedTypeMirror lht, AnnotatedTypeMirror rht, ExpressionTree node) {
-        if (UnitsRelationsTools.hasSpecificUnit(lht, factory.TOP)
-                || UnitsRelationsTools.hasSpecificUnit(rht, factory.TOP)) {
+        if (UnitsRelationsTools.hasSpecificUnit(lht, factory.unitsMirrors.TOP)
+                || UnitsRelationsTools.hasSpecificUnit(rht, factory.unitsMirrors.TOP)) {
             // unknown * unknown = unknown
             // unknown * anything = unknown
             // anything * unknown = unknown
-            resultType.replaceAnnotation(factory.TOP);
+            resultType.replaceAnnotation(factory.unitsMirrors.TOP);
         } else if ((isTimeDuration(lht) && isTimePoint(rht)) ||
                 (isTimePoint(lht) && isTimeDuration(rht)) ||
                 (isTimePoint(lht) && isTimePoint(rht))) {
@@ -257,7 +257,7 @@ public class UnitsMathOperatorsRelations {
             // return unknown
             // Future TODO: track partial units eg (unit ^ 2), so that
             // equations like unit * unit / unit == unit work
-            resultType.replaceAnnotation(factory.TOP);
+            resultType.replaceAnnotation(factory.unitsMirrors.TOP);
         }
     }
 
@@ -273,12 +273,12 @@ public class UnitsMathOperatorsRelations {
      * @param node the AST node of the division
      */
     private void processDivide(AnnotatedTypeMirror resultType, AnnotatedTypeMirror lht, AnnotatedTypeMirror rht, ExpressionTree node) {
-        if (UnitsRelationsTools.hasSpecificUnit(lht, factory.TOP)
-                || UnitsRelationsTools.hasSpecificUnit(rht, factory.TOP)) {
+        if (UnitsRelationsTools.hasSpecificUnit(lht, factory.unitsMirrors.TOP)
+                || UnitsRelationsTools.hasSpecificUnit(rht, factory.unitsMirrors.TOP)) {
             // unknown / unknown = unknown
             // unknown / anything = unknown
             // anything / unknown = unknown
-            resultType.replaceAnnotation(factory.TOP);
+            resultType.replaceAnnotation(factory.unitsMirrors.TOP);
         } else if ((isTimeDuration(lht) && isTimePoint(rht)) ||
                 (isTimePoint(lht) && isTimeDuration(rht)) ||
                 (isTimePoint(lht) && isTimePoint(rht))) {
@@ -288,7 +288,7 @@ public class UnitsMathOperatorsRelations {
             checker.report(Result.failure("time.point.division.disallowed", lht.toString(), rht.toString()), node);
         } else if (UnitsRelationsTools.areSameUnits(lht, rht)) {
             // if the units of the division match, return scalar
-            resultType.replaceAnnotation(factory.scalar);
+            resultType.replaceAnnotation(factory.unitsMirrors.SCALAR);
         } else if (UnitsRelationsTools.hasNoUnits(rht)) {
             // any unit divided by a scalar keeps that unit
             resultType.replaceAnnotations(lht.getAnnotations());
@@ -297,7 +297,7 @@ public class UnitsMathOperatorsRelations {
             // Future TODO: track partial units eg (scalar / unit), so
             // that equations like scalar / unit * unit == scalar
             // work
-            resultType.replaceAnnotation(factory.TOP);
+            resultType.replaceAnnotation(factory.unitsMirrors.TOP);
         } else {
             // else it is a division of two units that have no
             // defined relations from a units relations class
@@ -305,7 +305,7 @@ public class UnitsMathOperatorsRelations {
             // Future TODO: track partial units eg (unit1 / unit2), so
             // that equations like unit1 / unit2 * unit2 == unit1
             // work
-            resultType.replaceAnnotation(factory.TOP);
+            resultType.replaceAnnotation(factory.unitsMirrors.TOP);
         }
     }
 
@@ -336,16 +336,16 @@ public class UnitsMathOperatorsRelations {
      */
     private void processComparison(AnnotatedTypeMirror resultType, AnnotatedTypeMirror lht, AnnotatedTypeMirror rht, ExpressionTree node) {
         if (UnitsRelationsTools.areSameUnits(lht, rht)
-                || UnitsRelationsTools.hasSpecificUnit(lht, factory.scalar)
-                || UnitsRelationsTools.hasSpecificUnit(rht, factory.scalar)
-                || UnitsRelationsTools.hasSpecificUnit(lht, factory.BOTTOM)
-                || UnitsRelationsTools.hasSpecificUnit(rht, factory.BOTTOM)) {
+                || UnitsRelationsTools.hasSpecificUnit(lht, factory.unitsMirrors.SCALAR)
+                || UnitsRelationsTools.hasSpecificUnit(rht, factory.unitsMirrors.SCALAR)
+                || UnitsRelationsTools.hasSpecificUnit(lht, factory.unitsMirrors.BOTTOM)
+                || UnitsRelationsTools.hasSpecificUnit(rht, factory.unitsMirrors.BOTTOM)) {
             // if the units are the same, or either are scalar, or either are
             // bottom (for null reference comparison) then set the resulting
             // boolean or integer to scalar
             // Note: a boolean result is most common, eg x >= y, or x.equals(y)
             // an int result is also possible for Integer.compare(x, y)
-            resultType.replaceAnnotation(factory.scalar);
+            resultType.replaceAnnotation(factory.unitsMirrors.SCALAR);
         } else {
             // otherwise if the operands have different units, then alert error
             checker.report(Result.failure("operands.unit.mismatch", lht.toString(), rht.toString()), node);
@@ -400,14 +400,14 @@ public class UnitsMathOperatorsRelations {
             // if the var is @UnknownUnits, the result is @UnknownUnits
             // if the expr is @Scalar, the result keeps the unit of var
             // otherwise raise error
-            if (!(UnitsRelationsTools.hasSpecificUnit(varType, factory.TOP)
-                    || UnitsRelationsTools.hasSpecificUnit(exprType, factory.scalar))) {
+            if (!(UnitsRelationsTools.hasSpecificUnit(varType, factory.unitsMirrors.TOP)
+                    || UnitsRelationsTools.hasSpecificUnit(exprType, factory.unitsMirrors.SCALAR))) {
                 // if the var is any unit other than UnknownUnits, then the expr
                 // can only have the type of scalar
                 // generate the required type by copying the expr type and
                 // replace the unit with scalar
                 AnnotatedTypeMirror requiredType = exprType.deepCopy();
-                requiredType.replaceAnnotation(factory.scalar);
+                requiredType.replaceAnnotation(factory.unitsMirrors.SCALAR);
                 checker.report(Result.failure("compound.assignment.type.incompatible", exprType, requiredType), node);
             }
             break;
@@ -480,7 +480,7 @@ public class UnitsMathOperatorsRelations {
         } else {
             // if the point isn't based upon the same unit however, then
             // return @TimePoint
-            resultType.replaceAnnotation(factory.timeInstant);
+            resultType.replaceAnnotation(factory.unitsMirrors.timeInstant);
         }
     }
 
@@ -492,7 +492,7 @@ public class UnitsMathOperatorsRelations {
      * @return true if it is a subtype of {@link TimeDuration}, false otherwise
      */
     protected boolean isTimeDuration(final AnnotatedTypeMirror atm) {
-        return annotatedTypeIsSubtype(atm, factory.timeDuration);
+        return annotatedTypeIsSubtype(atm, factory.unitsMirrors.timeDuration);
     }
 
     // There is also a version of isTimePoint in UnitsRelationsTools. The
@@ -511,7 +511,7 @@ public class UnitsMathOperatorsRelations {
      * @return true if it is a subtype of {@link TimePoint}, false otherwise
      */
     protected boolean isTimePoint(final AnnotatedTypeMirror atm) {
-        return annotatedTypeIsSubtype(atm, factory.timeInstant);
+        return annotatedTypeIsSubtype(atm, factory.unitsMirrors.timeInstant);
     }
 
     /**

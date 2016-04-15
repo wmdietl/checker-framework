@@ -101,9 +101,9 @@ public class UnitsVisitor extends BaseTypeVisitor<UnitsAnnotatedTypeFactory> {
                 ExpressionTree passedExpression = passedArgs.get(i);
                 AnnotatedTypeMirror passedArg = atypeFactory.getAnnotatedType(passedExpression);
 
-                if (UnitsRelationsTools.hasSpecificUnit(passedArg, atypeFactory.scalar)
+                if (UnitsRelationsTools.hasSpecificUnit(passedArg, atypeFactory.unitsMirrors.SCALAR)
                         && UnitsRelationsTools.isPrimitiveNumberLiteralExpression(passedExpression)
-                        && !UnitsRelationsTools.hasSpecificUnit(requiredArg, atypeFactory.BOTTOM)) {
+                        && !UnitsRelationsTools.hasSpecificUnit(requiredArg, atypeFactory.unitsMirrors.BOTTOM)) {
                     // if the method argument is a scalar number literal, or a
                     // numerical expression consisting only of scalar literals,
                     // and the method parameter is has any unit other than
@@ -160,8 +160,8 @@ public class UnitsVisitor extends BaseTypeVisitor<UnitsAnnotatedTypeFactory> {
         // Units Checker Code =======================
         // if the method receiver is Scalar and the receiving object is
         // UnknownUnits, pass
-        if (UnitsRelationsTools.hasSpecificUnit(methodReceiver, atypeFactory.scalar)
-                && UnitsRelationsTools.hasSpecificUnit(treeReceiver, atypeFactory.TOP)) {
+        if (UnitsRelationsTools.hasSpecificUnit(methodReceiver, atypeFactory.unitsMirrors.SCALAR)
+                && UnitsRelationsTools.hasSpecificUnit(treeReceiver, atypeFactory.unitsMirrors.TOP)) {
             return;
         }
         // End Units Checker Code ===================

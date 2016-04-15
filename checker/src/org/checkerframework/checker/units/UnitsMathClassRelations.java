@@ -85,18 +85,18 @@ public class UnitsMathClassRelations extends UnitsClassRelations {
      *         is a supported area unit
      */
     private void processSquareRoot(AnnotatedTypeMirror arg, AnnotatedTypeMirror type) {
-        if (UnitsRelationsTools.hasSpecificUnit(arg, factory.m2)) {
+        if (UnitsRelationsTools.hasSpecificUnit(arg, factory.unitsMirrors.m2)) {
             // if sqrt was called with a meter-squared unit, return
             // meter
-            type.replaceAnnotation(factory.m);
-        } else if (UnitsRelationsTools.hasSpecificUnit(arg, factory.mm2)) {
+            type.replaceAnnotation(factory.unitsMirrors.m);
+        } else if (UnitsRelationsTools.hasSpecificUnit(arg, factory.unitsMirrors.mm2)) {
             // if sqrt was called with a millimeter-squared unit, return
             // millimeter
-            type.replaceAnnotation(factory.mm);
-        } else if (UnitsRelationsTools.hasSpecificUnit(arg, factory.km2)) {
+            type.replaceAnnotation(factory.unitsMirrors.mm);
+        } else if (UnitsRelationsTools.hasSpecificUnit(arg, factory.unitsMirrors.km2)) {
             // if sqrt was called with a kilometer-squared unit, return
             // kilometer
-            type.replaceAnnotation(factory.km);
+            type.replaceAnnotation(factory.unitsMirrors.km);
         }
     }
 
@@ -111,18 +111,18 @@ public class UnitsMathClassRelations extends UnitsClassRelations {
      *         is a supported volume unit
      */
     private void processCubeRoot(AnnotatedTypeMirror arg, AnnotatedTypeMirror type) {
-        if (UnitsRelationsTools.hasSpecificUnit(arg, factory.m3)) {
+        if (UnitsRelationsTools.hasSpecificUnit(arg, factory.unitsMirrors.m3)) {
             // if cbrt was called with a meter-cubed unit, return
             // meter
-            type.replaceAnnotation(factory.m);
-        } else if (UnitsRelationsTools.hasSpecificUnit(arg, factory.mm3)) {
+            type.replaceAnnotation(factory.unitsMirrors.m);
+        } else if (UnitsRelationsTools.hasSpecificUnit(arg, factory.unitsMirrors.mm3)) {
             // if cbrt was called with a millimeter-cubed unit, return
             // millimeter
-            type.replaceAnnotation(factory.mm);
-        } else if (UnitsRelationsTools.hasSpecificUnit(arg, factory.km3)) {
+            type.replaceAnnotation(factory.unitsMirrors.mm);
+        } else if (UnitsRelationsTools.hasSpecificUnit(arg, factory.unitsMirrors.km3)) {
             // if cbrt was called with a kilometer-cubed unit, return
             // kilometer
-            type.replaceAnnotation(factory.km);
+            type.replaceAnnotation(factory.unitsMirrors.km);
         }
     }
 
@@ -168,29 +168,29 @@ public class UnitsMathClassRelations extends UnitsClassRelations {
             resultType.replaceAnnotations(powBase.getAnnotations());
         } else if (exp == 2.0) {
             // detect the unit of the first parameter
-            if (UnitsRelationsTools.hasSpecificUnit(powBase, factory.m)) {
-                resultType.replaceAnnotation(factory.m2);
-            } else if (UnitsRelationsTools.hasSpecificUnit(powBase, factory.mm)) {
-                resultType.replaceAnnotation(factory.mm2);
-            } else if (UnitsRelationsTools.hasSpecificUnit(powBase, factory.km)) {
-                resultType.replaceAnnotation(factory.km2);
+            if (UnitsRelationsTools.hasSpecificUnit(powBase, factory.unitsMirrors.m)) {
+                resultType.replaceAnnotation(factory.unitsMirrors.m2);
+            } else if (UnitsRelationsTools.hasSpecificUnit(powBase, factory.unitsMirrors.mm)) {
+                resultType.replaceAnnotation(factory.unitsMirrors.mm2);
+            } else if (UnitsRelationsTools.hasSpecificUnit(powBase, factory.unitsMirrors.km)) {
+                resultType.replaceAnnotation(factory.unitsMirrors.km2);
             } else {
                 // if the base unit is something other than m, mm, or km, then
                 // return unknown
-                resultType.replaceAnnotation(factory.TOP);
+                resultType.replaceAnnotation(factory.unitsMirrors.TOP);
             }
         } else if (exp == 3.0) {
             // detect the unit of the first parameter
-            if (UnitsRelationsTools.hasSpecificUnit(powBase, factory.m)) {
-                resultType.replaceAnnotation(factory.m3);
-            } else if (UnitsRelationsTools.hasSpecificUnit(powBase, factory.mm)) {
-                resultType.replaceAnnotation(factory.mm3);
-            } else if (UnitsRelationsTools.hasSpecificUnit(powBase, factory.km)) {
-                resultType.replaceAnnotation(factory.km3);
+            if (UnitsRelationsTools.hasSpecificUnit(powBase, factory.unitsMirrors.m)) {
+                resultType.replaceAnnotation(factory.unitsMirrors.m3);
+            } else if (UnitsRelationsTools.hasSpecificUnit(powBase, factory.unitsMirrors.mm)) {
+                resultType.replaceAnnotation(factory.unitsMirrors.mm3);
+            } else if (UnitsRelationsTools.hasSpecificUnit(powBase, factory.unitsMirrors.km)) {
+                resultType.replaceAnnotation(factory.unitsMirrors.km3);
             } else {
                 // if the base unit is something other than m, mm, or km, then
                 // return unknown
-                resultType.replaceAnnotation(factory.TOP);
+                resultType.replaceAnnotation(factory.unitsMirrors.TOP);
             }
         } else if (exp == 0.5) {
             // taking the power of 0.5 is the same as taking the square
@@ -203,7 +203,7 @@ public class UnitsMathClassRelations extends UnitsClassRelations {
         } else {
             // exp is either 0.0 or some other unhandled value
             // replace with UnknownUnits
-            resultType.replaceAnnotation(factory.TOP);
+            resultType.replaceAnnotation(factory.unitsMirrors.TOP);
         }
     }
 
