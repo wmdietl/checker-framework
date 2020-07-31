@@ -252,6 +252,24 @@ class SupertypeFinder {
             return supertypes;
         }
 
+        /**
+         * Determine type arguments for an anonymous class.
+         *
+         * @param adt type to modify
+         */
+        private void handleAnonymousClass(AnnotatedDeclaredType adt) {
+            List<AnnotatedTypeMirror> args = new ArrayList<>();
+            for (TypeParameterElement element :
+                    TypesUtils.getTypeElement(adt.getUnderlyingType()).getTypeParameters()) {
+                AnnotatedTypeMirror arg =
+                        AnnotatedTypeMirror.createType(element.asType(), atypeFactory, false);
+                // TODO: After #979 is fixed, calculate the correct type using inference.
+                atypeFactory.getUninferredWildcardType((AnnotatedTypeVariable) arg);
+                args.add(arg);
+            }
+            adt.setTypeArguments(args);
+        }
+
         private List<AnnotatedDeclaredType> supertypesFromTree(
                 AnnotatedDeclaredType type, ClassTree classTree) {
             List<AnnotatedDeclaredType> supertypes = new ArrayList<>();
@@ -260,6 +278,11 @@ class SupertypeFinder {
                         (AnnotatedDeclaredType)
                                 atypeFactory.getAnnotatedTypeFromTypeTree(
                                         classTree.getExtendsClause());
+
+                if (classTree.getSimpleName().contentEquals("")) {
+                    // classTree is an anonymous class with a diamond.
+                    handleAnonymousClass(adt);
+                }
                 supertypes.add(adt);
             } else if (!ElementUtils.isObject(TreeUtils.elementFromDeclaration(classTree))) {
                 supertypes.add(AnnotatedTypeMirror.createTypeOfObject(atypeFactory));
@@ -273,18 +296,7 @@ class SupertypeFinder {
                                 != adt.getUnderlyingType().getTypeArguments().size()
                         && classTree.getSimpleName().contentEquals("")) {
                     // classTree is an anonymous class with a diamond.
-                    List<AnnotatedTypeMirror> args = new ArrayList<>();
-                    for (TypeParameterElement element :
-                            TypesUtils.getTypeElement(adt.getUnderlyingType())
-                                    .getTypeParameters()) {
-                        AnnotatedTypeMirror arg =
-                                AnnotatedTypeMirror.createType(
-                                        element.asType(), atypeFactory, false);
-                        // TODO: After #979 is fixed, calculate the correct type using inference.
-                        atypeFactory.getUninferredWildcardType((AnnotatedTypeVariable) arg);
-                        args.add(arg);
-                    }
-                    adt.setTypeArguments(args);
+                    handleAnonymousClass(adt);
                 }
                 supertypes.add(adt);
             }
