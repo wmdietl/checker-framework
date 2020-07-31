@@ -485,6 +485,10 @@ public class AnnotatedTypes {
             AnnotatedTypeMirror of,
             Element member,
             AnnotatedTypeMirror memberType) {
+        if (TypesUtils.isAnonymous(of.getUnderlyingType())) {
+            // Nothing to do for anonymous classes.
+            return memberType;
+        }
 
         // Basic Algorithm:
         // 1. Find the enclosingClassOfMember of the element
