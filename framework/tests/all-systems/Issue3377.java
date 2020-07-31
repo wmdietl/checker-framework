@@ -9,9 +9,12 @@ class Issue3377 {
     }
 
     class Crash {
-        @SuppressWarnings("nullness") // check for crash only
         Box<String> crash(Unboxer ub) {
-            return ub.unbox(new Box<>() {});
+            if (ub.hashCode() > 10) {
+                return ub.unbox(new Box<>() {});
+            } else {
+                return ub.unbox(new Box<Box<String>>() {});
+            }
         }
     }
 }
