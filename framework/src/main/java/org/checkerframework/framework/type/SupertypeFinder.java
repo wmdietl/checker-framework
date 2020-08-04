@@ -270,6 +270,13 @@ class SupertypeFinder {
             adt.setTypeArguments(args);
         }
 
+        /**
+         * Determine the supertypes of the declared type with the given class tree.
+         *
+         * @param type the type to use
+         * @param classTree the class tree
+         * @return the direct supertypes of type
+         */
         private List<AnnotatedDeclaredType> supertypesFromTree(
                 AnnotatedDeclaredType type, ClassTree classTree) {
             List<AnnotatedDeclaredType> supertypes = new ArrayList<>();
