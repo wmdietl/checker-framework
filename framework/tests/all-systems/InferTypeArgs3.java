@@ -7,6 +7,7 @@ class InferTypeArgs3 {
         java.util.Arrays.asList(new Integer(1), "");
     }
 
+    @SuppressWarnings("") // only check for crashes until #979 is fixed
     void foo() {
         new HashSet<>(Arrays.asList(new Object()));
         new HashSet<Object>(Arrays.asList(new Object()));
