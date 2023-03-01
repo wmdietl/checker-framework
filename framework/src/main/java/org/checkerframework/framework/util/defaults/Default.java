@@ -2,6 +2,7 @@ package org.checkerframework.framework.util.defaults;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.framework.qual.TypeUseLocation;
+import org.checkerframework.framework.util.defaults.QualifierDefaults.AdditionalTypeUseLocation;
 import org.checkerframework.javacutil.AnnotationUtils;
 
 import java.util.Comparator;
@@ -34,6 +35,14 @@ public class Default implements Comparable<Default> {
      */
     public Default(
             final AnnotationMirror anno, final Enum<?> location, final boolean applyToSubpackages) {
+        if (!(location instanceof TypeUseLocation)
+                && !(location instanceof AdditionalTypeUseLocation)) {
+            throw new IllegalArgumentException(
+                    "location argument "
+                            + location
+                            + " has unrecognized class "
+                            + location.getDeclaringClass().getName());
+        }
         this.anno = anno;
         this.location = location;
         this.applyToSubpackages = applyToSubpackages;

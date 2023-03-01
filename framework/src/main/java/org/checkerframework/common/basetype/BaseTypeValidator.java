@@ -574,6 +574,17 @@ public class BaseTypeValidator extends AnnotatedTypeScanner<Void, Tree> implemen
                 element.getSimpleName(),
                 element.getTypeParameters());
 
+        /*
+         * This check produces worse results, so we skip it.
+         *
+         * The whole check seems weird, anyway: It seems to be checking that each captured type argument
+         * is a subtype of the bound of the corresponding _wildcard_. But I read JLS 4.5 as requiring
+         * that each be a subtype of the bound of the corresponding _type parameter_.
+         */
+        if (true) {
+            return null;
+        }
+
         @SuppressWarnings(
                 "interning:not.interned") // applyCaptureConversion returns the passed type if type
         // does not have wildcards.

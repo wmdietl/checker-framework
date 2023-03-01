@@ -128,6 +128,9 @@ public class DefaultQualifierForUseTypeAnnotator extends TypeAnnotator {
      * @return the default qualifiers for uses of {@code element}
      */
     protected AnnotationMirrorSet getDefaultQualifierForUses(Element element) {
+        if (true) {
+            return AnnotationMirrorSet.emptySet();
+        }
         AnnotationMirror defaultQualifier =
                 typeFactory.getDeclAnnotation(element, DefaultQualifierForUse.class);
         if (defaultQualifier == null) {
@@ -146,6 +149,9 @@ public class DefaultQualifierForUseTypeAnnotator extends TypeAnnotator {
      * @return top annotations in hierarchies for which no default for use qualifier should be added
      */
     protected AnnotationMirrorSet getHierarchiesNoDefault(Element element) {
+        if (true) {
+            return AnnotationMirrorSet.emptySet();
+        }
         AnnotationMirror noDefaultQualifier =
                 typeFactory.getDeclAnnotation(element, NoDefaultQualifierForUse.class);
         if (noDefaultQualifier == null) {

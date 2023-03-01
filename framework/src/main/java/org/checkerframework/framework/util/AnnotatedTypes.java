@@ -246,7 +246,12 @@ public class AnnotatedTypes {
         }
     }
 
-    // Do not use `isUnbound()` because as of Java 18, it returns true for "?  extends Object".
+    /*
+     * In the methods below, we check the values of the bounds instead of checking isUnbound(). By
+     * doing so, we stick to the public javax.lang.model API. That said, our real motivation is that
+     * recent JDKs implement isUnbound() to return true for `? extends Object`. We want to distinguish
+     * that from `?`: https://jspecify.dev/spec#unbounded-wildcard
+     */
 
     /**
      * This method identifies wildcard types that are unbound.
@@ -255,7 +260,8 @@ public class AnnotatedTypes {
      * @return true if the given card is an unbounded wildcard
      */
     public static boolean hasNoExplicitBound(final AnnotatedTypeMirror wildcard) {
-        return ((Type.WildcardType) wildcard.getUnderlyingType()).kind == BoundKind.UNBOUND;
+        return ((WildcardType) wildcard.getUnderlyingType()).getExtendsBound() == null
+                && ((WildcardType) wildcard.getUnderlyingType()).getSuperBound() == null;
     }
 
     /**
@@ -264,9 +270,7 @@ public class AnnotatedTypes {
      * which necessitates this method
      */
     public static boolean hasExplicitSuperBound(final AnnotatedTypeMirror wildcard) {
-        final Type.WildcardType wildcardType = (Type.WildcardType) wildcard.getUnderlyingType();
-        return wildcardType.isSuperBound()
-                && ((WildcardType) wildcard.getUnderlyingType()).kind != BoundKind.UNBOUND;
+        return ((WildcardType) wildcard.getUnderlyingType()).getSuperBound() != null;
     }
 
     /**
@@ -275,9 +279,7 @@ public class AnnotatedTypes {
      * wildcards which necessitates this method
      */
     public static boolean hasExplicitExtendsBound(final AnnotatedTypeMirror wildcard) {
-        final Type.WildcardType wildcardType = (Type.WildcardType) wildcard.getUnderlyingType();
-        return wildcardType.isExtendsBound()
-                && ((WildcardType) wildcard.getUnderlyingType()).kind != BoundKind.UNBOUND;
+        return ((WildcardType) wildcard.getUnderlyingType()).getExtendsBound() != null;
     }
 
     /**
@@ -1570,6 +1572,16 @@ public class AnnotatedTypes {
 
         return result;
     }
+
+    /*
+     * In the methods below, we check the values of the bounds instead of checking isUnbound(). By
+     * doing so, we stick to the public javax.lang.model API. That said, our real motivation is that
+     * recent JDKs implement isUnbound() to return true for `? extends Object`. We want to distinguish
+     * that from `?`: https://jspecify.dev/spec#unbounded-wildcard
+     *
+     * It's possible that some of the methods would still have worked OK, but the safest move for us
+     * is to be consistent in checking the values of the bounds.
+     */
 
     // For Wildcards, isSuperBound() and isExtendsBound() will return true if isUnbound() does.
     // But don't use isUnbound(), because as of Java 18, it returns true for "? extends Object".

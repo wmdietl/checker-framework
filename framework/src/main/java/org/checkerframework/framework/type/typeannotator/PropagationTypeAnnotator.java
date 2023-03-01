@@ -8,6 +8,7 @@ import org.checkerframework.framework.type.AnnotatedTypeMirror;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedDeclaredType;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedTypeVariable;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedWildcardType;
+import org.checkerframework.framework.util.AnnotatedTypes;
 import org.checkerframework.javacutil.BugInCF;
 import org.checkerframework.javacutil.TypesUtils;
 import org.plumelib.util.StringsPlume;
@@ -143,22 +144,30 @@ public class PropagationTypeAnnotator extends TypeAnnotator {
             final Set<? extends AnnotationMirror> tops =
                     typeFactory.getQualifierHierarchy().getTopAnnotations();
 
-            // Do not test `wildcard.isUnbound()` because as of Java 18, it returns true for "?
-            // extends Object".
-            switch (wildcard.kind) {
-                case UNBOUND:
+            /*
+             * We check both bounds instead of checking isUnbound(). By doing so, we stick to the public
+             * javax.lang.model API. That said, our real motivation is that recent JDKs implement
+             * isUnbound() to return true for `? extends Object`. We want to distinguish that from `?`:
+             * https://jspecify.dev/spec#unbounded-wildcard
+             */
+            /* TODO
+                  if (wildcard.getExtendsBound() == null && wildcard.getSuperBound() == null) {
                     propagateExtendsBound(wildcardAtm, typeParam, tops);
                     propagateSuperBound(wildcardAtm, typeParam, tops);
-                    break;
-                case EXTENDS:
-                    propagateSuperBound(wildcardAtm, typeParam, tops);
-                    break;
-                case SUPER:
-                    propagateExtendsBound(wildcardAtm, typeParam, tops);
-                    break;
-                default:
-                    throw new BugInCF(
-                            "unexpected wildcard kind " + wildcard.kind + " for " + wildcard);
+            */
+            if (AnnotatedTypes.hasNoExplicitBound(wildcardAtm)) {
+                propagateExtendsBound(wildcardAtm, typeParam, tops);
+                propagateSuperBound(wildcardAtm, typeParam, tops);
+            } else if (AnnotatedTypes.hasExplicitExtendsBound(wildcardAtm)) {
+                propagateSuperBound(wildcardAtm, typeParam, tops);
+            } else if (AnnotatedTypes.hasExplicitSuperBound(wildcardAtm)) {
+                propagateExtendsBound(wildcardAtm, typeParam, tops);
+            } else {
+                // If this is thrown, then it means that there's a bug in one of the
+                // AnnotatedTypes.hasNoExplicit*Bound methods.  Probably something changed in the
+                // javac implementation.
+                throw new BugInCF(
+                        "Wildcard is neither unbound nor does it have an explicit bound.");
             }
         }
         scan(wildcardAtm.getExtendsBound(), null);

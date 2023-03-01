@@ -2148,7 +2148,10 @@ public class BaseTypeVisitor<Factory extends GenericAnnotatedTypeFactory<?, ?, ?
             AnnotatedTypeMirror ret = functionType.getReturnType();
             if (ret.getKind() != TypeKind.VOID) {
                 commonAssignmentCheck(
-                        ret, (ExpressionTree) tree.getBody(), "return.type.incompatible");
+                        ret,
+                        (ExpressionTree) tree.getBody(),
+                        "return.type.incompatible",
+                        extraArgForReturnTypeError(tree.getBody()));
             }
         }
 
@@ -2208,7 +2211,11 @@ public class BaseTypeVisitor<Factory extends GenericAnnotatedTypeFactory<?, ?, ?
         }
 
         if (ret != null) {
-            commonAssignmentCheck(ret, tree.getExpression(), "return.type.incompatible");
+            commonAssignmentCheck(
+                    ret,
+                    tree.getExpression(),
+                    "return.type.incompatible",
+                    extraArgForReturnTypeError(tree.getExpression()));
         }
         return super.visitReturn(tree, p);
     }

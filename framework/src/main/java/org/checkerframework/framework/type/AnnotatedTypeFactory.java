@@ -3,6 +3,15 @@ package org.checkerframework.framework.type;
 // The imports from com.sun are all @jdk.Exported and therefore somewhat safe to use.
 // Try to avoid using non-@jdk.Exported classes.
 
+import static com.google.common.collect.Comparators.emptiesFirst;
+import static com.google.common.collect.Comparators.min;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static com.google.common.collect.MoreCollectors.toOptional;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Stream.concat;
+import static org.checkerframework.javacutil.AnnotationUtils.areSameByName;
+
+import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.BinaryTree;
@@ -103,6 +112,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -110,6 +120,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.regex.Matcher;
@@ -4272,6 +4283,11 @@ public class AnnotatedTypeFactory implements AnnotationProvider {
             }
         }
 
+        // If parsing annotation files, return only the annotations in the element.
+        if (false) {
+            return results;
+        }
+
         // Add annotations from annotation files.
         results.addAll(stubTypes.getDeclAnnotations(elt));
         results.addAll(ajavaTypes.getDeclAnnotations(elt));
@@ -4304,6 +4320,9 @@ public class AnnotatedTypeFactory implements AnnotationProvider {
      */
     private void inheritOverriddenDeclAnnosFromTypeDecl(
             TypeMirror typeMirror, AnnotationMirrorSet results) {
+        if (true) {
+            return;
+        }
         List<? extends TypeMirror> superTypes = types.directSupertypes(typeMirror);
         for (TypeMirror superType : superTypes) {
             TypeElement elt = TypesUtils.getTypeElement(superType);
@@ -4342,6 +4361,9 @@ public class AnnotatedTypeFactory implements AnnotationProvider {
      *     the element itself.
      */
     private void inheritOverriddenDeclAnnos(ExecutableElement elt, AnnotationMirrorSet results) {
+        if (true) {
+            return;
+        }
         Map<AnnotatedDeclaredType, ExecutableElement> overriddenMethods =
                 AnnotatedTypes.overriddenMethods(elements, this, elt);
 
@@ -5521,6 +5543,117 @@ public class AnnotatedTypeFactory implements AnnotationProvider {
                         typeVarToAnnotatedTypeArg, typeVariable.getUpperBound());
         AnnotatedTypeMirror upperBound =
                 AnnotatedTypes.annotatedGLB(this, typeVarUpperBound, wildcard.getExtendsBound());
+
+        // OK, the following is a mess....
+        //
+        // For some reason (most likely, the weird way we do substitution and type variables), the
+        // computed upper bound is not what we want. So we roll it ourselves.
+        //
+        // Mostly, this is just a matter of looking up each element of the resulting type (which is
+        // theoretically always an intersection type but not always so in practice) to see what
+        // nullness operator was associated with it in the wildcard bound or type parameter bounds.
+        // If there is a different nullness operator from each of those, then we pick the more
+        // specific one.
+        //
+        // This is slightly complicated by the possible presence of type variables: In the CF model,
+        // those do not necessarily have an annotation associated with them, so we need to record
+        // the absence of an annotation. We consider it to be more specific than any annotation,
+        // which easy to implement but not *quite* correct: Really, @MinusNull should be more
+        // specific than the lack of an annotation. So, to patch the incorrectness, we do another
+        // pass to see if *any* of the original types had @MinusNull on it. If so, we apply that to
+        // all elements of the output instead of applying the nullness operator that we otherwise
+        // would.
+        //
+        // This patch also helps with another case caused by a javac quirk: Suppose that the
+        // type-parameter bound is `T`, where `T extends @Nullable Object`, and the wildcard is `?
+        // extends Object`. In that case, javac does not create `cap extends T & Object`, which we
+        // could annotate as `cap extends T & @MinusNull Object`. Instead, it creates simply `cap
+        // extends T`.
+        // Again, our patch addresses this by putting @MinusNull on the T.
+        //
+        // And finally... it gets worse still. Consider the example above but with a wildcard of `?
+        // extends @NullnessUnspecified Object`. In that case:
+        //
+        // - It's wrong to generate `cap extends @MinusNull T` because that would definitively
+        // exclude null -- when in fact the declaration of the type parameter T permits nullable
+        // types and we have no specification for Object.
+        //
+        // - It's wrong to generate `cap extends @NullnessUnspecified T` because that type is "at
+        // least as nullable as T." This means that dereferencing a type of that value would be an
+        // error even in lenient mode.
+        //
+        // To address that problem as best we can, we generate `cap extends @MinusNull T` anyway.
+        // This is good enough in lenient mode -- or at least it seems to be so far :) -- and
+        // lenient mode is what we care more about.
+        //
+        // Ideally we'll solve this someday by using our own representation of the type variable
+        // that was generated by capture conversion, a representation that can include annotations
+        // for both T and Object because it doesn't need to match the underlying javac type.
+        //
+        // `substituteWithoutCopyingTypeArguments` avoids calling our `substituteTypeVariable`
+        // implementation, but we appear to need to call it in order to see the right bound for the
+        // type variable. So we call plain `substitute` and use the result of that in our own code.
+        // (We continue to let the rest of the code use the result of
+        // `substituteWithoutCopyingTypeArguments`, as before.)
+        //
+        // (And no, the overall problem discussed in the comment above this one would *not* be
+        // solved by changing the rest of the code to likewise use `substitute` :))
+        AnnotatedTypeMirror hackTypeVarUpperBound =
+                typeVarSubstitutor.substitute(
+                        typeVarToAnnotatedTypeArg, typeVariable.getUpperBound());
+        AnnotationMirror[] top = new AnnotationMirror[1];
+        AnnotationMirror[] bottom = new AnnotationMirror[1];
+        // We'd like to generate a Map<..., AnnotationMirror> that may contain null values. However,
+        // even the JDK's Collectors.toMap rejects nulls (JDK-8148463). So we have to wrap the
+        // values in Optional. And then we might as well use an ImmutableMap.
+        ImmutableMap<Parametricity, Optional<AnnotationMirror>> map =
+                concat(
+                                unwrapIntersections(hackTypeVarUpperBound).stream(),
+                                unwrapIntersections(wildcard.getExtendsBound()).stream())
+                        .peek(
+                                t -> {
+                                    // TODO WMD: what annotation is this looking for?
+                                    AnnotationMirror a = t.getAnnotations().first();
+                                    if (a != null) {
+                                        top[0] = qualHierarchy.getTopAnnotation(a);
+                                        bottom[0] = qualHierarchy.getBottomAnnotation(a);
+                                    }
+                                    // System.err.println("noticing " + t + " with " +
+                                    // t.getAnnotations());
+                                })
+                        .collect(
+                                toImmutableMap(
+                                        t -> parametricityFrom(t.getUnderlyingType()),
+                                        t -> t.getAnnotations().stream().collect(toOptional()),
+                                        (a, b) -> min(a, b, optionalAnnotationComparator)));
+
+        // Below, we avoid using the full string "com.google.jspecify.nullness" because it would be
+        // shaded/relocated by our build to refer to a nonexistent
+        // "org.checkerframework.com.google.jspecify.nullness" package.
+        //
+        // TODO(cpovirk): Improve our build's rewriting rules to avoid that?
+        //
+        // What we do instead is *arguably* better: We operate generically on the top and bottom
+        // annotations. However, the *logic* here still really only makes sense in terms of our
+        // specific nullness annotations. It's not actually a type-system-agnostic implementation of
+        // capture conversion.
+        Optional<AnnotationMirror> upperBoundFromNonTypeVariable = map.get(new Parametricity(null));
+        if (upperBoundFromNonTypeVariable != null
+                && upperBoundFromNonTypeVariable
+                        .filter(a -> !areSameByName(a, top[0]))
+                        .isPresent()) {
+            unwrapIntersections(upperBound).forEach(t -> t.replaceAnnotation(bottom[0]));
+            // System.err.println("set to minus null because that was the best we could do");
+        } else {
+            for (AnnotatedTypeMirror t : unwrapIntersections(upperBound)) {
+                // System.err.println("was " + t);
+                t.clearAnnotations();
+                map.get(parametricityFrom(t.getUnderlyingType())).ifPresent(t::addAnnotation);
+                // System.err.println("maybe adding " +
+                // map.get(parametricityFrom(t.getUnderlyingType())));
+            }
+        }
+
         if (upperBound.getKind() == TypeKind.INTERSECTION
                 && capturedTypeVar.getUpperBound().getKind() != TypeKind.INTERSECTION) {
             // There is a bug in javac such that the upper bound of the captured type variable is
@@ -5548,6 +5681,32 @@ public class AnnotatedTypeFactory implements AnnotationProvider {
                         this, typeVariable.getLowerBound(), wildcard.getSuperBound());
         capturedTypeVar.setLowerBound(lowerBound);
 
+        // JLS 5.1.10 suggests that we should always be able to use the wildcard's bound directly.
+        // However, CF allows for specifying lower bounds for type parameters, so it needs to call
+        // leastUpperBound on the wildcard and type parameter bounds. (The CF comment says "there's
+        // nothing to *substitute*" (for the null bound, which can't contain type-variable usages),
+        // but it still needs to respect any annotations on that null bound.)
+        //
+        // As usual, we want to avoid calling leastUpperBound because of our unusual rules for type
+        // variables. Fortunately, it seems that we can just... not call it, instead passing the
+        // wildcard's bound directly.
+
+        // TODO WMD: there is a setLowerBound call above now, let's see whether that works.
+        // capturedTypeVar.setLowerBound(wildcard.getSuperBound());
+
+        // cpovirk: It might make sense to remove this section. However, it doesn't seem to make
+        // much difference at the moment. Now, removing the section does allow us to issue a couple
+        // warnings in NotNullMarkedUseOfWildcardAsTypeArgument that we don't currently. But:
+        //
+        // - We don't care very much about warnings (in contrast to errors).
+        //
+        // - The warning would probably exist already if not for the hackiness above. That's not to
+        // say that we couldn't still choose to try to issue it. But it suggests that such a change
+        // wouldn't necessarily be making things fundamentally more correct. It may instead be
+        // piling hacks upon hacks.
+        //
+        // Anyway, here's what the original CF comment says:
+        //
         // Add as a primary annotation any qualifiers that are the same on the upper and lower
         // bound.
         AnnotationMirrorSet p =
@@ -5556,6 +5715,57 @@ public class AnnotatedTypeFactory implements AnnotationProvider {
         capturedTypeVar.replaceAnnotations(p);
 
         capturedTypeVarSubstitutor.substitute(capturedTypeVar, capturedTypeVarToAnnotatedTypeVar);
+    }
+
+    /**
+     * Orders annotations higher in the hierarchy as "greater" and a lack of annotations as "less"
+     * than all annotations.
+     */
+    private final Comparator<Optional<AnnotationMirror>> optionalAnnotationComparator =
+            emptiesFirst(
+                    (a, b) ->
+                            areSameByName(a, b)
+                                    ? 0
+                                    : areSameByName(qualHierarchy.greatestLowerBound(a, b), a)
+                                            ? -1
+                                            : 1);
+
+    private static List<AnnotatedTypeMirror> unwrapIntersections(AnnotatedTypeMirror t) {
+        return t.getKind() == TypeKind.INTERSECTION
+                ? ((AnnotatedIntersectionType) t).getBounds()
+                : singletonList(t);
+    }
+
+    private Parametricity parametricityFrom(TypeMirror t) {
+        return t.getKind() == TypeKind.TYPEVAR
+                ? new Parametricity((TypeVariable) t)
+                : new Parametricity(null);
+    }
+
+    private final class Parametricity {
+        private final TypeVariable typeVariable;
+
+        Parametricity(TypeVariable typeVariable) {
+            this.typeVariable = typeVariable;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof Parametricity) {
+                Parametricity other = (Parametricity) obj;
+                if (typeVariable == null || other.typeVariable == null) {
+                    return typeVariable == other.typeVariable;
+                }
+                return types.isSameType(typeVariable, other.typeVariable);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return 1; // Don't trust hashCode, just as we don't trust equals (preferring
+            // isSameType).
+        }
     }
 
     /**

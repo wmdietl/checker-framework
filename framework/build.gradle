@@ -106,7 +106,7 @@ task cloneTypetoolsJdk() {
                     '-q',
                     '--depth',
                     '1',
-                    'https://github.com/eisop/jdk.git',
+                    'https://github.com/jspecify/jdk.git',
                     'jdk'
                 ]
             }
@@ -132,7 +132,7 @@ task copyAndMinimizeAnnotatedJdkFiles(dependsOn: cloneTypetoolsJdk, group: 'Buil
             if (!fvd.file.isDirectory() && fvd.file.name.matches('.*\\.java')
                     && !fvd.file.path.contains('org/checkerframework')) {
                 fvd.getFile().readLines().any { line ->
-                    if (line.contains('@AnnotatedFor') || line.contains('org.checkerframework')) {
+                    if (line.contains('@AnnotatedFor') || line.contains('org.checkerframework') || line.contains("org.jspecify")) {
                         annotatedForFiles.add(fvd.file.absolutePath)
                         return true;
                     }

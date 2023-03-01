@@ -1,3 +1,11 @@
+This is a temporary fork of https://github.com/eisop/checker-framework in
+which we will collaborate on possible changes to the EISOP Framework to
+support https://github.com/jspecify/nullness-checker-for-checker-framework
+
+This is not an officially supported product of any of the participant
+organizations.
+
+
 # The Checker Framework:  pluggable type-checking for Java
 
 Please see the Checker Framework manual
