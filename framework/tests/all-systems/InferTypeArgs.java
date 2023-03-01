@@ -67,16 +67,16 @@ class CFAbstractValue<V extends CFAbstractValue<V>> {}
 class CFAbstractAnalysis<V extends CFAbstractValue<V>> {}
 
 class GenericAnnotatedTypeFactory<
-    Value extends CFAbstractValue<Value>, FlowAnalysis extends CFAbstractAnalysis<Value>> {
+        Value extends CFAbstractValue<Value>, FlowAnalysis extends CFAbstractAnalysis<Value>> {
 
-  @SuppressWarnings("immutability:type.argument")
-  protected FlowAnalysis createFlowAnalysis() {
-    FlowAnalysis result = invokeConstructorFor();
-    return result;
-  }
+    @SuppressWarnings("immutability:type.argument")
+    protected FlowAnalysis createFlowAnalysis() {
+        FlowAnalysis result = invokeConstructorFor();
+        return result;
+    }
 
-  @SuppressWarnings({"nullness:return", "lock:return", "immutabilitysub:type.argument"})
-  public static <T> T invokeConstructorFor() {
-    return null;
-  }
+    @SuppressWarnings({"nullness:return", "lock:return", "immutabilitysub:type.argument"})
+    public static <T> T invokeConstructorFor() {
+        return null;
+    }
 }

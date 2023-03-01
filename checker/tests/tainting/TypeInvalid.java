@@ -9,52 +9,52 @@ import org.checkerframework.checker.tainting.qual.Tainted;
 import org.checkerframework.checker.tainting.qual.Untainted;
 
 abstract class TypeInvalid {
-  // :: error: (conflicting.annos)
-  static @Untainted @Tainted class Inner {}
-  // Duplication forbidden
-  // :: error: (conflicting.annos)
-  void bad(@Tainted @Untainted TypeInvalid c) {
     // :: error: (conflicting.annos)
-    Object o = new @Tainted @Untainted Object();
+    static @Untainted @Tainted class Inner {}
+    // Duplication forbidden
     // :: error: (conflicting.annos)
-    o = new @Tainted @Untainted Object();
+    void bad(@Tainted @Untainted TypeInvalid c) {
+        // :: error: (conflicting.annos)
+        Object o = new @Tainted @Untainted Object();
+        // :: error: (conflicting.annos)
+        o = new @Tainted @Untainted Object();
+        // :: error: (conflicting.annos)
+        o = o.equals(new @Tainted @Untainted Object());
+        // :: error: (conflicting.annos)
+        o = (Object) new @Tainted @Untainted Object();
+        // :: error: (conflicting.annos)
+        o = (@Tainted @Untainted TypeInvalid) o;
+        // :: error: (conflicting.annos)
+        o = (new @Tainted @Untainted Object()) instanceof Object;
+        // :: error: (conflicting.annos)
+        // :: warning: (instanceof.unsafe)
+        o = o instanceof @Tainted @Untainted TypeInvalid;
+    }
+
     // :: error: (conflicting.annos)
-    o = o.equals(new @Tainted @Untainted Object());
+    @Tainted @Untainted Object bar() {
+        return null;
+    }
+
     // :: error: (conflicting.annos)
-    o = (Object) new @Tainted @Untainted Object();
+    abstract @Tainted @Untainted Object absbar();
+
+    void voidmethod() {}
+
+    TypeInvalid() {}
+
     // :: error: (conflicting.annos)
-    o = (@Tainted @Untainted TypeInvalid) o;
+    @Tainted @Untainted TypeInvalid(int p) {}
+
     // :: error: (conflicting.annos)
-    o = (new @Tainted @Untainted Object()) instanceof Object;
+    void recv(@Tainted @Untainted TypeInvalid this) {}
+
     // :: error: (conflicting.annos)
-    // :: warning: (instanceof.unsafe)
-    o = o instanceof @Tainted @Untainted TypeInvalid;
-  }
+    @Tainted @Untainted Object field;
 
-  // :: error: (conflicting.annos)
-  @Tainted @Untainted Object bar() {
-    return null;
-  }
+    // TODO: Note the error marker positions for the errors on fields
+    // and method return types. Maybe these should be improved.
 
-  // :: error: (conflicting.annos)
-  abstract @Tainted @Untainted Object absbar();
-
-  void voidmethod() {}
-
-  TypeInvalid() {}
-
-  // :: error: (conflicting.annos)
-  @Tainted @Untainted TypeInvalid(int p) {}
-
-  // :: error: (conflicting.annos)
-  void recv(@Tainted @Untainted TypeInvalid this) {}
-
-  // :: error: (conflicting.annos)
-  @Tainted @Untainted Object field;
-
-  // TODO: Note the error marker positions for the errors on fields
-  // and method return types. Maybe these should be improved.
-
-  // :: error: (conflicting.annos)
-  void athro() throws @Tainted @Untainted Exception {}
+    // :: error: (conflicting.annos)
+    void athro() throws @Tainted @Untainted Exception {}
 }
