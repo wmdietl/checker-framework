@@ -8,7 +8,6 @@ import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.code.Type.WildcardType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,6 +23,7 @@ import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -31,9 +31,11 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.signature.qual.CanonicalName;
 import org.checkerframework.framework.type.AnnotatedTypeFactory;
@@ -47,10 +49,12 @@ import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedWildcard
 import org.checkerframework.framework.type.AsSuperVisitor;
 import org.checkerframework.framework.type.QualifierHierarchy;
 import org.checkerframework.framework.type.SyntheticArrays;
+import org.checkerframework.javacutil.AnnotationMirrorSet;
 import org.checkerframework.javacutil.AnnotationUtils;
 import org.checkerframework.javacutil.BugInCF;
 import org.checkerframework.javacutil.ElementUtils;
 import org.checkerframework.javacutil.Pair;
+import org.checkerframework.javacutil.TreeUtils;
 import org.checkerframework.javacutil.TypesUtils;
 import org.plumelib.util.CollectionsPlume;
 import org.plumelib.util.StringsPlume;
@@ -65,7 +69,8 @@ public class AnnotatedTypes {
     throw new AssertionError("Class AnnotatedTypes cannot be instantiated.");
   }
 
-  private static AsSuperVisitor asSuperVisitor;
+  /** Implements {@code asSuper}. */
+  private static @MonotonicNonNull AsSuperVisitor asSuperVisitor;
 
   /**
    * Copies annotations from {@code type} to a copy of {@code superType} where the type variables of
@@ -291,7 +296,7 @@ public class AnnotatedTypes {
       }
       if (enclosingType == null) {
         // TODO: https://github.com/typetools/checker-framework/issues/724
-        // testcase javacheck -processor nullness  src/java/util/AbstractMap.java
+        // testcase javacheck -processor nullness src/java/util/AbstractMap.java
         //                SourceChecker checker =  atypeFactory.getChecker().getChecker();
         //                String msg = (String.format("OuterAsSuper did not find outer
         // class. type: %s superType: %s", type, superType));
@@ -333,8 +338,8 @@ public class AnnotatedTypes {
    * @param t the receiver type
    * @param elem the element that should be viewed as member of t
    * @param type unsubstituted type of member
-   * @return the type of member as member of of, with initial type memberType; can be an alias to
-   *     memberType
+   * @return the type of member as member of {@code t}, with initial type memberType; can be an
+   *     alias to memberType
    */
   public static AnnotatedExecutableType asMemberOf(
       Types types,
@@ -556,7 +561,7 @@ public class AnnotatedTypes {
     }
 
     for (int i = 0; i < ownerParams.size(); ++i) {
-      mappings.put(ownerParams.get(i).getUnderlyingType(), baseParams.get(i));
+      mappings.put(ownerParams.get(i).getUnderlyingType(), baseParams.get(i).asUse());
     }
   }
 
@@ -832,9 +837,9 @@ public class AnnotatedTypes {
           glbJava.getKind(), glbJava, type1, type2);
     }
     QualifierHierarchy qualifierHierarchy = atypeFactory.getQualifierHierarchy();
-    Set<AnnotationMirror> set1 =
+    AnnotationMirrorSet set1 =
         AnnotatedTypes.findEffectiveLowerBoundAnnotations(qualifierHierarchy, type1);
-    Set<AnnotationMirror> set2 =
+    AnnotationMirrorSet set2 =
         AnnotatedTypes.findEffectiveLowerBoundAnnotations(qualifierHierarchy, type2);
     Set<? extends AnnotationMirror> glbAnno = qualifierHierarchy.greatestLowerBounds(set1, set2);
 
@@ -906,7 +911,7 @@ public class AnnotatedTypes {
         if (subtype.getKind() != TypeKind.TYPEVAR) {
           throw new BugInCF("Missing primary annotations: subtype: %s", subtype);
         }
-        Set<AnnotationMirror> lb = findEffectiveLowerBoundAnnotations(qualifierHierarchy, subtype);
+        AnnotationMirrorSet lb = findEffectiveLowerBoundAnnotations(qualifierHierarchy, subtype);
         AnnotationMirror lbAnno = qualifierHierarchy.findAnnotationInHierarchy(lb, top);
         if (lbAnno != null && !qualifierHierarchy.isSubtype(lbAnno, superAnno)) {
           // The superAnno is lower than the lower bound annotation, so add it.
@@ -933,13 +938,63 @@ public class AnnotatedTypes {
    * @param method the method's type
    * @param args the arguments to the method invocation
    * @return the types that the method invocation arguments need to be subtype of
+   * @deprecated Use {@link #adaptParameters(AnnotatedTypeFactory,
+   *     AnnotatedTypeMirror.AnnotatedExecutableType, List)} instead
    */
+  @Deprecated
   public static List<AnnotatedTypeMirror> expandVarArgsParameters(
       AnnotatedTypeFactory atypeFactory,
       AnnotatedExecutableType method,
       List<? extends ExpressionTree> args) {
+    return adaptParameters(atypeFactory, method, args);
+  }
+
+  /**
+   * Returns the method parameters for the invoked method (or constructor), with the same number of
+   * arguments as passed to the invocation tree.
+   *
+   * <p>This expands the parameters if the call uses varargs or contracts the parameters if the call
+   * is to an anonymous class that extends a class with an enclosing type. If the call is neither of
+   * these, then the parameters are returned unchanged.
+   *
+   * @param atypeFactory the type factory to use for fetching annotated types
+   * @param method the method or constructor's type
+   * @param args the arguments to the method or constructor invocation
+   * @return a list of the types that the invocation arguments need to be subtype of; has the same
+   *     length as {@code args}
+   */
+  public static List<AnnotatedTypeMirror> adaptParameters(
+      AnnotatedTypeFactory atypeFactory,
+      AnnotatedExecutableType method,
+      List<? extends ExpressionTree> args) {
     List<AnnotatedTypeMirror> parameters = method.getParameterTypes();
+
+    // Handle anonymous constructors that extend a class with an enclosing type.
+    if (method.getElement().getKind() == ElementKind.CONSTRUCTOR
+        && method.getElement().getEnclosingElement().getSimpleName().contentEquals("")) {
+      DeclaredType t =
+          TypesUtils.getSuperClassOrInterface(
+              method.getElement().getEnclosingElement().asType(), atypeFactory.types);
+      if (t.getEnclosingType() != null) {
+        if (args.isEmpty() && !parameters.isEmpty()) {
+          parameters = parameters.subList(1, parameters.size());
+        } else if (!parameters.isEmpty()) {
+          if (atypeFactory.types.isSameType(
+              t.getEnclosingType(), parameters.get(0).getUnderlyingType())) {
+            if (!atypeFactory.types.isSameType(
+                TreeUtils.typeOf(args.get(0)), parameters.get(0).getUnderlyingType())) {
+              parameters = parameters.subList(1, parameters.size());
+            }
+          }
+        }
+      }
+    }
+
+    // Handle vararg methods.
     if (!method.getElement().isVarArgs()) {
+      return parameters;
+    }
+    if (parameters.size() == 0) {
       return parameters;
     }
 
@@ -1137,7 +1192,7 @@ public class AnnotatedTypes {
   }
 
   /** java.lang.annotation.Annotation.class canonical name. */
-  private static @CanonicalName String annotationClassName =
+  private static final @CanonicalName String annotationClassName =
       java.lang.annotation.Annotation.class.getCanonicalName();
 
   /**
@@ -1204,8 +1259,8 @@ public class AnnotatedTypes {
    * @return true if the typeVar1 and typeVar2 are two uses of the same type variable
    */
   @SuppressWarnings(
-      "interning:not.interned" // This is an equals method but @EqualsMethod can't be used because
-  // this method has 3 arguments.
+      "interning:not.interned" // This is an equals method but @EqualsMethod can't be used
+  // because this method has 3 arguments.
   )
   public static boolean haveSameDeclaration(
       Types types, final AnnotatedTypeVariable typeVar1, final AnnotatedTypeVariable typeVar2) {
@@ -1249,10 +1304,10 @@ public class AnnotatedTypes {
       final TypeElement type1Class = (TypeElement) type1Executable.getEnclosingElement();
       final TypeElement type2Class = (TypeElement) type2Executable.getEnclosingElement();
 
-      boolean methodIsOverriden =
+      boolean methodIsOverridden =
           elements.overrides(type1Executable, type2Executable, type1Class)
               || elements.overrides(type2Executable, type1Executable, type2Class);
-      if (methodIsOverriden) {
+      if (methodIsOverridden) {
         boolean haveSameIndex =
             type1Executable.getTypeParameters().indexOf(type1ParamElem)
                 == type2Executable.getTypeParameters().indexOf(type2ParamElem);
@@ -1342,9 +1397,11 @@ public class AnnotatedTypes {
    * This method returns the effective annotation on the lower bound of a type, or on the type
    * itself if the type has no lower bound (it is not a type variable, wildcard, or intersection).
    *
+   * @param qualifierHierarchy the qualifier hierarchy
+   * @param toSearch the type whose lower bound to examine
    * @return the set of effective annotation mirrors in all hierarchies
    */
-  public static Set<AnnotationMirror> findEffectiveLowerBoundAnnotations(
+  public static AnnotationMirrorSet findEffectiveLowerBoundAnnotations(
       final QualifierHierarchy qualifierHierarchy, final AnnotatedTypeMirror toSearch) {
     AnnotatedTypeMirror source = toSearch;
     TypeKind kind = source.getKind();
@@ -1361,7 +1418,7 @@ public class AnnotatedTypes {
 
         case INTERSECTION:
           // if there are multiple conflicting annotations, choose the lowest
-          final Set<AnnotationMirror> glb =
+          final AnnotationMirrorSet glb =
               glbOfBounds((AnnotatedIntersectionType) source, qualifierHierarchy);
           return glb;
 
@@ -1386,9 +1443,11 @@ public class AnnotatedTypes {
    * it finds a concrete type from which it can pull an annotation. This occurs for every hierarchy
    * in QualifierHierarchy.
    *
+   * @param qualifierHierarchy the qualifier hierarchy
+   * @param toSearch the type whose effective annotations to determine
    * @return the set of effective annotation mirrors in all hierarchies
    */
-  public static Set<AnnotationMirror> findEffectiveAnnotations(
+  public static AnnotationMirrorSet findEffectiveAnnotations(
       final QualifierHierarchy qualifierHierarchy, final AnnotatedTypeMirror toSearch) {
     AnnotatedTypeMirror source = toSearch;
     TypeKind kind = source.getKind();
@@ -1405,7 +1464,7 @@ public class AnnotatedTypes {
 
         case INTERSECTION:
           // if there are multiple conflicting annotations, choose the lowest
-          final Set<AnnotationMirror> glb =
+          final AnnotationMirrorSet glb =
               glbOfBounds((AnnotatedIntersectionType) source, qualifierHierarchy);
           return glb;
 
@@ -1446,9 +1505,9 @@ public class AnnotatedTypes {
    * @param qualifierHierarchy the qualifier used to get the hierarchies in which to glb
    * @return a set of annotations representing the glb of the intersection's bounds
    */
-  public static Set<AnnotationMirror> glbOfBounds(
+  public static AnnotationMirrorSet glbOfBounds(
       final AnnotatedIntersectionType isect, final QualifierHierarchy qualifierHierarchy) {
-    Set<AnnotationMirror> result = AnnotationUtils.createAnnotationSet();
+    AnnotationMirrorSet result = new AnnotationMirrorSet();
     for (final AnnotationMirror top : qualifierHierarchy.getTopAnnotations()) {
       final AnnotationMirror glbAnno = glbOfBoundsInHierarchy(isect, top, qualifierHierarchy);
       if (glbAnno != null) {
@@ -1469,21 +1528,81 @@ public class AnnotatedTypes {
    * is to be consistent in checking the values of the bounds.
    */
 
+  // For Wildcards, isSuperBound() and isExtendsBound() will return true if isUnbound() does.
+  // But don't use isUnbound(), because as of Java 18, it returns true for "? extends Object".
+
+  /**
+   * This method identifies wildcard types that are unbound.
+   *
+   * @param wildcard the type to check
+   * @return true if the given card is an unbounded wildcard
+   */
+  /*public static boolean hasNoExplicitBound(final AnnotatedTypeMirror wildcard) {
+    return ((Type.WildcardType) wildcard.getUnderlyingType()).kind == BoundKind.UNBOUND;
+  }*/
+
+  /**
+   * Returns true if wildcard type is explicitly super bounded.
+   *
+   * @param wildcardType the wildcard type to test
+   * @return true if wildcard type is explicitly super bounded
+   * @deprecated Use {@link #hasExplicitSuperBound(AnnotatedTypeMirror)}
+   */
+  @Deprecated
   public static boolean isExplicitlySuperBounded(final AnnotatedWildcardType wildcardType) {
-    return wildcardType.getUnderlyingType().getSuperBound() != null;
+    return hasExplicitSuperBound(wildcardType);
   }
 
-  /** Returns true if wildcard type was explicitly unbounded. */
+  /**
+   * Returns true if wildcard type has an explicit super bound.
+   *
+   * @param wildcard the wildcard type to test
+   * @return true if wildcard type is explicitly super bounded
+   */
+  /*public static boolean hasExplicitSuperBound(final AnnotatedTypeMirror wildcard) {
+    return ((Type.WildcardType) wildcard.getUnderlyingType()).isSuperBound()
+        && ((Type.WildcardType) wildcard.getUnderlyingType()).kind != BoundKind.UNBOUND;
+  }*/
+
+  /**
+   * Returns true if wildcard type is explicitly extends bounded.
+   *
+   * @param wildcardType the wildcard type to test
+   * @return true if wildcard type is explicitly extends bounded
+   * @deprecated Use {@link #hasExplicitExtendsBound(AnnotatedTypeMirror)}.
+   */
+  @Deprecated
   public static boolean isExplicitlyExtendsBounded(final AnnotatedWildcardType wildcardType) {
-    return wildcardType.getUnderlyingType().getExtendsBound() != null;
+    return hasExplicitExtendsBound(wildcardType);
   }
 
-  /** Returns true if this type is super bounded or unbounded. */
+  /**
+   * Returns true if wildcard type has an explicit extends bound.
+   *
+   * @param wildcardType the wildcard type to test
+   * @return true if wildcard type is explicitly extends bounded
+   */
+  /*public static boolean hasExplicitExtendsBound(final AnnotatedTypeMirror wildcardType) {
+    return ((Type.WildcardType) wildcardType.getUnderlyingType()).isExtendsBound()
+        && ((Type.WildcardType) wildcardType.getUnderlyingType()).kind != BoundKind.UNBOUND;
+  }*/
+
+  /**
+   * Returns true if this type is super bounded or unbounded.
+   *
+   * @param wildcardType the wildcard type to test
+   * @return true if this type is super bounded or unbounded
+   */
   public static boolean isUnboundedOrSuperBounded(final AnnotatedWildcardType wildcardType) {
     return wildcardType.getUnderlyingType().getExtendsBound() == null;
   }
 
-  /** Returns true if this type is extends bounded or unbounded. */
+  /**
+   * Returns true if this type is extends bounded or unbounded.
+   *
+   * @param wildcardType the wildcard type to test
+   * @return true if this type is extends bounded or unbounded
+   */
   public static boolean isUnboundedOrExtendsBounded(final AnnotatedWildcardType wildcardType) {
     return wildcardType.getUnderlyingType().getSuperBound() == null;
   }
@@ -1505,7 +1624,7 @@ public class AnnotatedTypes {
     // TODO: There will be a nicer way to access this in 308 soon.
     List<Attribute.TypeCompound> decall =
         ((Symbol) constructor.getElement()).getRawTypeAttributes();
-    Set<AnnotationMirror> decret = AnnotationUtils.createAnnotationSet();
+    AnnotationMirrorSet decret = new AnnotationMirrorSet();
     for (Attribute.TypeCompound da : decall) {
       if (da.position.type == com.sun.tools.javac.code.TargetType.METHOD_RETURN) {
         decret.add(da);
@@ -1513,7 +1632,7 @@ public class AnnotatedTypes {
     }
 
     // Collect all polymorphic qualifiers; we should substitute them.
-    Set<AnnotationMirror> polys = AnnotationUtils.createAnnotationSet();
+    AnnotationMirrorSet polys = new AnnotationMirrorSet();
     for (AnnotationMirror anno : returnType.getAnnotations()) {
       if (atypeFactory.getQualifierHierarchy().isPolymorphicQualifier(anno)) {
         polys.add(anno);

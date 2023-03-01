@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeKind;
@@ -23,6 +24,7 @@ import org.checkerframework.checker.signedness.qual.PolySigned;
 import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.checker.signedness.qual.SignedPositive;
 import org.checkerframework.checker.signedness.qual.SignedPositiveFromUnsigned;
+import org.checkerframework.checker.signedness.qual.SignednessBottom;
 import org.checkerframework.checker.signedness.qual.SignednessGlb;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
@@ -38,10 +40,13 @@ import org.checkerframework.framework.type.AnnotatedTypeMirror;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedDeclaredType;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedExecutableType;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedTypeVariable;
+import org.checkerframework.framework.type.poly.DefaultQualifierPolymorphism;
+import org.checkerframework.framework.type.poly.QualifierPolymorphism;
 import org.checkerframework.framework.type.treeannotator.ListTreeAnnotator;
 import org.checkerframework.framework.type.treeannotator.PropagationTreeAnnotator;
 import org.checkerframework.framework.type.treeannotator.TreeAnnotator;
 import org.checkerframework.javacutil.AnnotationBuilder;
+import org.checkerframework.javacutil.AnnotationMirrorSet;
 import org.checkerframework.javacutil.AnnotationUtils;
 import org.checkerframework.javacutil.Pair;
 import org.checkerframework.javacutil.TreePathUtil;
@@ -67,6 +72,9 @@ public class SignednessAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
   /** The @SignedPositiveFromUnsigned annotation. */
   protected final AnnotationMirror SIGNED_POSITIVE_FROM_UNSIGNED =
       AnnotationBuilder.fromClass(elements, SignedPositiveFromUnsigned.class);
+  /** The @SignednessBottom annotation. */
+  protected final AnnotationMirror SIGNEDNESS_BOTTOM =
+      AnnotationBuilder.fromClass(elements, SignednessBottom.class);
   /** The @PolySigned annotation. */
   protected final AnnotationMirror POLY_SIGNED =
       AnnotationBuilder.fromClass(elements, PolySigned.class);
@@ -77,6 +85,16 @@ public class SignednessAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
   /** The @Positive annotation of the Index Checker, as represented by the Value Checker. */
   private final AnnotationMirror INT_RANGE_FROM_POSITIVE =
       AnnotationBuilder.fromClass(elements, IntRangeFromPositive.class);
+
+  /** The Serializable type mirror. */
+  private final TypeMirror serializableTM =
+      elements.getTypeElement(Serializable.class.getCanonicalName()).asType();
+  /** The Comparable type mirror. */
+  private final TypeMirror comparableTM =
+      elements.getTypeElement(Comparable.class.getCanonicalName()).asType();
+  /** The Number type mirror. */
+  private final TypeMirror numberTM =
+      elements.getTypeElement(Number.class.getCanonicalName()).asType();
 
   /**
    * Create a SignednessAnnotatedTypeFactory.
@@ -129,12 +147,15 @@ public class SignednessAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
 
   /**
    * Refines an integer expression to @SignednessGlb if its value is within the signed positive
-   * range (i.e. its MSB is zero).
+   * range (i.e. its MSB is zero). Does not refine the type of cast expressions.
    *
    * @param tree an AST node, whose type may be refined
    * @param type the type of the tree
    */
   private void addSignednessGlbAnnotation(Tree tree, AnnotatedTypeMirror type) {
+    if (tree.getKind() == Tree.Kind.TYPE_CAST) {
+      return;
+    }
     TypeMirror javaType = type.getUnderlyingType();
     TypeKind javaTypeKind = javaType.getKind();
     if (tree.getKind() != Tree.Kind.VARIABLE) {
@@ -143,15 +164,6 @@ public class SignednessAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
           || javaTypeKind == TypeKind.SHORT
           || javaTypeKind == TypeKind.INT
           || javaTypeKind == TypeKind.LONG) {
-        // To avoid a crash when running the InitializedFields Checker with the Signedness Checker,
-        // special case the literal 0 here rather than using the Value Checker.
-        if (tree instanceof LiteralTree) {
-          Object value = ((LiteralTree) tree).getValue();
-          if (value instanceof Number && ((Number) value).longValue() == 0) {
-            type.replaceAnnotation(SIGNEDNESS_GLB);
-            return;
-          }
-        }
         ValueAnnotatedTypeFactory valueFactory = getTypeFactoryOfSubchecker(ValueChecker.class);
         AnnotatedTypeMirror valueATM = valueFactory.getAnnotatedType(tree);
         // These annotations are trusted rather than checked.  Maybe have an option to
@@ -196,11 +208,11 @@ public class SignednessAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
   }
 
   @Override
-  public Set<AnnotationMirror> getWidenedAnnotations(
-      Set<AnnotationMirror> annos, TypeKind typeKind, TypeKind widenedTypeKind) {
+  public AnnotationMirrorSet getWidenedAnnotations(
+      AnnotationMirrorSet annos, TypeKind typeKind, TypeKind widenedTypeKind) {
     assert annos.size() == 1;
 
-    Set<AnnotationMirror> result = AnnotationUtils.createAnnotationSet();
+    AnnotationMirrorSet result = new AnnotationMirrorSet();
     if (TypeKindUtils.isFloatingPoint(widenedTypeKind)) {
       result.add(SIGNED);
       return result;
@@ -218,11 +230,11 @@ public class SignednessAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
   }
 
   @Override
-  public Set<AnnotationMirror> getNarrowedAnnotations(
-      Set<AnnotationMirror> annos, TypeKind typeKind, TypeKind narrowedTypeKind) {
+  public AnnotationMirrorSet getNarrowedAnnotations(
+      AnnotationMirrorSet annos, TypeKind typeKind, TypeKind narrowedTypeKind) {
     assert annos.size() == 1;
 
-    Set<AnnotationMirror> result = AnnotationUtils.createAnnotationSet();
+    AnnotationMirrorSet result = new AnnotationMirrorSet();
 
     if (narrowedTypeKind == TypeKind.CHAR) {
       result.add(SIGNED);
@@ -323,13 +335,11 @@ public class SignednessAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
     @Override
     public Void visitTypeCast(TypeCastTree tree, AnnotatedTypeMirror type) {
       // Don't change the annotation on a cast with an explicit annotation.
-      if (type.getAnnotations().isEmpty()) {
-        if (isNotNumberOrChar(type)) {
-          AnnotatedTypeMirror exprType = atypeFactory.getAnnotatedType(tree.getExpression());
-          if ((type.getKind() != TypeKind.TYPEVAR || exprType.getKind() != TypeKind.TYPEVAR)
-              && !AnnotationUtils.containsSame(exprType.getEffectiveAnnotations(), UNSIGNED)) {
-            type.addAnnotation(SIGNED);
-          }
+      if (type.getAnnotations().isEmpty() && !maybeIntegral(type)) {
+        AnnotatedTypeMirror exprType = atypeFactory.getAnnotatedType(tree.getExpression());
+        if ((type.getKind() != TypeKind.TYPEVAR || exprType.getKind() != TypeKind.TYPEVAR)
+            && !AnnotationUtils.containsSame(exprType.getEffectiveAnnotations(), UNSIGNED)) {
+          type.addAnnotation(SIGNED);
         }
       }
       return null;
@@ -337,33 +347,42 @@ public class SignednessAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
   }
 
   /**
-   * Returns true if {@code type} underlying type isn't a number or a char nor is it a super type of
-   * one.
+   * Returns true if {@code type}'s underlying type might be integral: it is a number, char, or a
+   * supertype of them.
    *
    * @param type a type
-   * @return true if {@code type} underlying type isn't a number or a char nor is it a super type of
-   *     one
+   * @return true if {@code type}'s underlying type might be integral
    */
-  public boolean isNotNumberOrChar(AnnotatedTypeMirror type) {
+  public boolean maybeIntegral(AnnotatedTypeMirror type) {
 
-    TypeMirror serializableTM =
-        elements.getTypeElement(Serializable.class.getCanonicalName()).asType();
-    TypeMirror comparableTM = elements.getTypeElement(Comparable.class.getCanonicalName()).asType();
-    TypeMirror numberTM = elements.getTypeElement(Number.class.getCanonicalName()).asType();
-    if (type.getKind().isPrimitive()) {
-      return false;
+    TypeKind kind = type.getKind();
+
+    switch (kind) {
+      case BOOLEAN:
+        return false;
+      case BYTE:
+      case SHORT:
+      case INT:
+      case LONG:
+      case CHAR:
+        return true;
+      case FLOAT:
+      case DOUBLE:
+        return false;
+
+      case DECLARED:
+      case TYPEVAR:
+      case WILDCARD:
+        TypeMirror erasedType = types.erasure(type.getUnderlyingType());
+        return (TypesUtils.isBoxedPrimitive(erasedType)
+            || TypesUtils.isObject(erasedType)
+            || TypesUtils.isErasedSubtype(numberTM, erasedType, types)
+            || TypesUtils.isErasedSubtype(serializableTM, erasedType, types)
+            || TypesUtils.isErasedSubtype(comparableTM, erasedType, types));
+
+      default:
+        return false;
     }
-    if (type.getKind() == TypeKind.DECLARED
-        || type.getKind() == TypeKind.TYPEVAR
-        || type.getKind() == TypeKind.WILDCARD) {
-      TypeMirror erasedType = types.erasure(type.getUnderlyingType());
-      return !(TypesUtils.isBoxedPrimitive(erasedType)
-          || TypesUtils.isObject(erasedType)
-          || TypesUtils.isErasedSubtype(numberTM, erasedType, types)
-          || TypesUtils.isErasedSubtype(serializableTM, erasedType, types)
-          || TypesUtils.isErasedSubtype(comparableTM, erasedType, types));
-    }
-    return true;
   }
 
   @Override
@@ -397,11 +416,11 @@ public class SignednessAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
   /**
    * Returns true iff the given tree node is a mask operation (&amp; or |).
    *
-   * @param node a tree to test
+   * @param tree a tree to test
    * @return true iff node is a mask operation (&amp; or |)
    */
-  private boolean isMask(Tree node) {
-    Tree.Kind kind = node.getKind();
+  private boolean isMask(Tree tree) {
+    Tree.Kind kind = tree.getKind();
 
     return kind == Tree.Kind.AND || kind == Tree.Kind.OR;
   }
@@ -410,15 +429,15 @@ public class SignednessAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
   /**
    * Returns the type of a primitive cast, or null the argument is not a cast to a primitive.
    *
-   * @param node a tree that might be a cast to a primitive
+   * @param tree a tree that might be a cast to a primitive
    * @return type of a primitive cast, or null if not a cast to a primitive
    */
-  private PrimitiveTypeTree primitiveTypeCast(Tree node) {
-    if (node.getKind() != Tree.Kind.TYPE_CAST) {
+  private PrimitiveTypeTree primitiveTypeCast(Tree tree) {
+    if (tree.getKind() != Tree.Kind.TYPE_CAST) {
       return null;
     }
 
-    TypeCastTree cast = (TypeCastTree) node;
+    TypeCastTree cast = (TypeCastTree) tree;
     Tree castType = cast.getType();
 
     Tree underlyingType;
@@ -671,5 +690,58 @@ public class SignednessAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
       return false;
     }
     return true;
+  }
+
+  /**
+   * Requires that, when two formal parameter types are annotated with {@code @PolySigned}, the two
+   * arguments must have the same signedness type annotation.
+   */
+  // Not static because it references SIGNEDNESS_BOTTOM.
+  private class SignednessQualifierPolymorphism extends DefaultQualifierPolymorphism {
+    /**
+     * Creates a {@link SignednessQualifierPolymorphism}.
+     *
+     * @param env the processing environment
+     * @param factory the factory for the current checker
+     */
+    public SignednessQualifierPolymorphism(
+        ProcessingEnvironment env, AnnotatedTypeFactory factory) {
+      super(env, factory);
+    }
+
+    /**
+     * Combines the two annotations. If they are comparable, return the lub. If they are
+     * incomparable, return @SignednessBottom.
+     *
+     * @param polyQual the polymorphic qualifier
+     * @param a1 the first annotation to compare
+     * @param a2 the second annotation to compare
+     * @return the lub, unless the annotations are incomparable
+     */
+    @Override
+    protected AnnotationMirror combine(
+        AnnotationMirror polyQual, AnnotationMirror a1, AnnotationMirror a2) {
+      if (a1 == null) {
+        return a2;
+      } else if (a2 == null) {
+        return a1;
+      } else if (AnnotationUtils.areSame(a1, a2)) {
+        return a1;
+      } else if (qualHierarchy.isSubtype(a1, a2)) {
+        return a2;
+      } else if (qualHierarchy.isSubtype(a2, a1)) {
+        return a1;
+      } else
+        // The two annotations are incomparable
+        // TODO: Issue a warning at the proper code location.
+        // TODO: Returning bottom leads to obscure error messages.  It would probably be better
+        // to issue a warning in this method, then return lub as usual.
+        return SIGNEDNESS_BOTTOM;
+    }
+  }
+
+  @Override
+  protected QualifierPolymorphism createQualifierPolymorphism() {
+    return new SignednessQualifierPolymorphism(processingEnv, this);
   }
 }

@@ -1,6 +1,5 @@
 package org.checkerframework.framework.type.typeannotator;
 
-import com.sun.tools.javac.code.Type.WildcardType;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Set;
@@ -14,6 +13,7 @@ import org.checkerframework.framework.type.AnnotatedTypeMirror;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedDeclaredType;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedTypeVariable;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedWildcardType;
+import org.checkerframework.framework.util.AnnotatedTypes;
 import org.checkerframework.javacutil.BugInCF;
 import org.checkerframework.javacutil.TypesUtils;
 import org.plumelib.util.StringsPlume;
@@ -32,12 +32,19 @@ import org.plumelib.util.StringsPlume;
  */
 public class PropagationTypeAnnotator extends TypeAnnotator {
 
-  // The PropagationTypeAnnotator is called recursively via
-  // TypeAnnotatorUtil.eraseBoundsThenAnnotate.
-  // This flag prevents infinite recursion.
+  /**
+   * The PropagationTypeAnnotator is called recursively via
+   * TypeAnnotatorUtil.eraseBoundsThenAnnotate. This flag prevents infinite recursion.
+   */
   private boolean pause = false;
-  private ArrayDeque<AnnotatedDeclaredType> parents = new ArrayDeque<>();
+  /** The parents. */
+  private final ArrayDeque<AnnotatedDeclaredType> parents = new ArrayDeque<>();
 
+  /**
+   * Creates a new PropagationTypeAnnotator.
+   *
+   * @param typeFactory the type factory
+   */
   public PropagationTypeAnnotator(AnnotatedTypeFactory typeFactory) {
     super(typeFactory);
   }
@@ -107,19 +114,18 @@ public class PropagationTypeAnnotator extends TypeAnnotator {
    * Rather than defaulting the missing bounds of a wildcard, find the bound annotations on the type
    * parameter it replaced. Place those annotations on the wildcard.
    *
-   * @param wildcardAtm type to annotate
+   * @param wildcard type to annotate
    */
   @Override
-  public Void visitWildcard(AnnotatedWildcardType wildcardAtm, Void aVoid) {
-    if (visitedNodes.containsKey(wildcardAtm) || pause) {
+  public Void visitWildcard(AnnotatedWildcardType wildcard, Void aVoid) {
+    if (visitedNodes.containsKey(wildcard) || pause) {
       return null;
     }
-    visitedNodes.put(wildcardAtm, null);
+    visitedNodes.put(wildcard, null);
 
-    final WildcardType wildcard = (WildcardType) wildcardAtm.getUnderlyingType();
-    Element typeParamElement = TypesUtils.wildcardToTypeParam(wildcard);
+    Element typeParamElement = TypesUtils.wildcardToTypeParam(wildcard.getUnderlyingType());
     if (typeParamElement == null && !parents.isEmpty()) {
-      typeParamElement = getTypeParameterElement(wildcardAtm, parents.peekFirst());
+      typeParamElement = getTypeParameterElement(wildcard, parents.peekFirst());
     }
 
     if (typeParamElement != null) {
@@ -137,19 +143,27 @@ public class PropagationTypeAnnotator extends TypeAnnotator {
        * isUnbound() to return true for `? extends Object`. We want to distinguish that from `?`:
        * https://jspecify.dev/spec#unbounded-wildcard
        */
-      if (wildcard.getExtendsBound() == null && wildcard.getSuperBound() == null) {
-        propagateExtendsBound(wildcardAtm, typeParam, tops);
-        propagateSuperBound(wildcardAtm, typeParam, tops);
-
-      } else if (wildcard.isExtendsBound()) {
-        propagateSuperBound(wildcardAtm, typeParam, tops);
-
-      } else { // is super bound
-        propagateExtendsBound(wildcardAtm, typeParam, tops);
+      /* TODO
+            if (wildcard.getExtendsBound() == null && wildcard.getSuperBound() == null) {
+              propagateExtendsBound(wildcardAtm, typeParam, tops);
+              propagateSuperBound(wildcardAtm, typeParam, tops);
+      */
+      if (AnnotatedTypes.hasNoExplicitBound(wildcard)) {
+        propagateExtendsBound(wildcard, typeParam, tops);
+        propagateSuperBound(wildcard, typeParam, tops);
+      } else if (AnnotatedTypes.hasExplicitExtendsBound(wildcard)) {
+        propagateSuperBound(wildcard, typeParam, tops);
+      } else if (AnnotatedTypes.hasExplicitSuperBound(wildcard)) {
+        propagateExtendsBound(wildcard, typeParam, tops);
+      } else {
+        // If this is thrown, then it means that there's a bug in one of the
+        // AnnotatedTypes.hasNoExplicit*Bound methods.  Probably something changed in the javac
+        // implementation.
+        throw new BugInCF("Wildcard is neither unbound nor does it have an explicit bound.");
       }
     }
-    scan(wildcardAtm.getExtendsBound(), null);
-    scan(wildcardAtm.getSuperBound(), null);
+    scan(wildcard.getExtendsBound(), null);
+    scan(wildcard.getSuperBound(), null);
     return null;
   }
 

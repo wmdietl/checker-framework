@@ -48,7 +48,7 @@ public class CalledMethodsAnnotatedTypeFactory extends AccumulationAnnotatedType
    * The builder frameworks (such as Lombok and AutoValue) supported by this instance of the Called
    * Methods Checker.
    */
-  private Collection<BuilderFrameworkSupport> builderFrameworkSupports;
+  private final Collection<BuilderFrameworkSupport> builderFrameworkSupports;
 
   /**
    * Whether to use the Value Checker as a subchecker to reduce false positives when analyzing calls
@@ -65,11 +65,11 @@ public class CalledMethodsAnnotatedTypeFactory extends AccumulationAnnotatedType
       TreeUtils.getMethod("java.util.Collections", "singletonList", 1, getProcessingEnv());
 
   /** The {@link CalledMethods#value} element/argument. */
-  /* package-private */ final ExecutableElement calledMethodsValueElement =
+  /*package-private*/ final ExecutableElement calledMethodsValueElement =
       TreeUtils.getMethod(CalledMethods.class, "value", 0, processingEnv);
 
   /** The {@link EnsuresCalledMethodsVarArgs#value} element/argument. */
-  /* package-private */ final ExecutableElement ensuresCalledMethodsVarArgsValueElement =
+  /*package-private*/ final ExecutableElement ensuresCalledMethodsVarArgsValueElement =
       TreeUtils.getMethod(EnsuresCalledMethodsVarArgs.class, "value", 0, processingEnv);
 
   /**
@@ -238,8 +238,8 @@ public class CalledMethodsAnnotatedTypeFactory extends AccumulationAnnotatedType
       filterTree = TreeUtils.getReceiverTree(filterTreeAsMethodInvocation.getMethodSelect());
     }
     // The loop has reached the beginning of a fluent sequence of method calls.  If the ultimate
-    // receiver at the beginning of that fluent sequence is a call to the Filter() constructor, then
-    // use the first argument to the Filter constructor, which is the name of the filter.
+    // receiver at the beginning of that fluent sequence is a call to the Filter() constructor,
+    // then use the first argument to the Filter constructor, which is the name of the filter.
     if (filterTree == null) {
       return null;
     }
@@ -380,7 +380,7 @@ public class CalledMethodsAnnotatedTypeFactory extends AccumulationAnnotatedType
    *
    * @return a collection of builder frameworks that are enabled in this run of the checker
    */
-  /* package-private */ Collection<BuilderFrameworkSupport> getBuilderFrameworkSupports() {
+  /*package-private*/ Collection<BuilderFrameworkSupport> getBuilderFrameworkSupports() {
     return builderFrameworkSupports;
   }
 
@@ -413,7 +413,7 @@ public class CalledMethodsAnnotatedTypeFactory extends AccumulationAnnotatedType
   private AnnotationMirror ensuresCMAnno(String expression, List<String> calledMethods) {
     AnnotationBuilder builder = new AnnotationBuilder(processingEnv, EnsuresCalledMethods.class);
     builder.setValue("value", new String[] {expression});
-    builder.setValue("methods", calledMethods.toArray(new String[0]));
+    builder.setValue("methods", calledMethods.toArray(new String[calledMethods.size()]));
     AnnotationMirror am = builder.build();
     return am;
   }

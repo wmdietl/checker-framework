@@ -19,7 +19,9 @@ import org.checkerframework.javacutil.AnnotationUtils;
  */
 public class Default implements Comparable<Default> {
   // please remember to add any fields to the hashcode calculation
+  /** The default annotation mirror. */
   public final AnnotationMirror anno;
+  /** The default location, either a TypeUseLocation or AdditionalTypeUseLocation. */
   public final Enum<?> location;
 
   public Default(final AnnotationMirror anno, final Enum<?> location) {
