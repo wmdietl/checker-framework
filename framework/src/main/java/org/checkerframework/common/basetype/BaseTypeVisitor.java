@@ -1574,7 +1574,6 @@ public class BaseTypeVisitor<Factory extends GenericAnnotatedTypeFactory<?, ?, ?
                 checker.reportWarning(tree, "redundant.anno", defaultAtm);
             }
         }
-        return super.visitVariable(tree, p);
     }
 
     /**

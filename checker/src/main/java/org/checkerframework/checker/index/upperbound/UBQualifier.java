@@ -1465,9 +1465,6 @@ public abstract class UBQualifier {
         /** This class is a singleton. */
         private UpperBoundBottomQualifier() {}
 
-        /** This class is a singleton. */
-        private UpperBoundBottomQualifier() {}
-
         @Override
         public boolean isBottom() {
             return true;

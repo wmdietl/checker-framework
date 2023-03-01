@@ -1,7 +1,5 @@
 package org.checkerframework.framework.util.defaults;
 
-import static org.checkerframework.framework.util.defaults.QualifierDefaults.AdditionalTypeUseLocation.UNBOUNDED_WILDCARD_UPPER_BOUND;
-
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
@@ -42,6 +40,7 @@ import org.plumelib.util.StringsPlume;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -352,6 +351,10 @@ public class QualifierDefaults {
         }
     }
 
+    public enum AdditionalTypeUseLocation {
+        UNBOUNDED_WILDCARD_UPPER_BOUND,
+    }
+
     /**
      * Sets the default annotations for a certain Element.
      *
@@ -414,14 +417,13 @@ public class QualifierDefaults {
     }
 
     private void checkDuplicates(
-            DefaultSet previousDefaults, AnnotationMirror newAnno, TypeUseLocation newLoc) {
-        if (conflictsWithExistingDefaults(previousDefaults, newAnno, newLoc)) {
-            throw new BugInCF(
-                    "Only one qualifier from a hierarchy can be the default. Existing: "
-                            + previousDefaults
-                            + " and new: "
-                            // TODO: expose applyToSubpackages
-                            + new Default(newAnno, newLoc, true));
+            DefaultSet previousDefaults,
+            @SuppressWarnings("unused") AnnotationMirror newAnno,
+            Enum<?> newLoc) {
+        for (Iterator<Default> i = previousDefaults.iterator(); i.hasNext(); ) {
+            if (i.next().location == newLoc) {
+                i.remove();
+            }
         }
     }
 
@@ -1015,7 +1017,7 @@ public class QualifierDefaults {
 
                 // Some defaults only apply to the top level type.
                 boolean isTopLevelType = t == type;
-                if (location == UNBOUNDED_WILDCARD_UPPER_BOUND) {
+                if (location == AdditionalTypeUseLocation.UNBOUNDED_WILDCARD_UPPER_BOUND) {
                     if (boundType == BoundType.UNBOUNDED && isWildcardBound && isUpperBound) {
                         addAnnotation(t, qual);
                     }
@@ -1449,7 +1451,7 @@ public class QualifierDefaults {
          * https://jspecify.dev/spec#unbounded-wildcard
          */
 
-        final WildcardType wildcard = annotatedWildcard.getUnderlyingType();
+        final WildcardType wildcard = (WildcardType) annotatedWildcard.getUnderlyingType();
 
         final BoundType boundType;
         if (wildcard.kind == BoundKind.UNBOUND && wildcard.bound != null) {

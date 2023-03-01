@@ -4,6 +4,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.framework.qual.TypeUseLocation;
 import org.checkerframework.javacutil.AnnotationUtils;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -20,7 +21,7 @@ public class Default implements Comparable<Default> {
     /** The default annotation mirror. */
     public final AnnotationMirror anno;
     /** The type use location. */
-    public final TypeUseLocation location;
+    public final Enum<?> location;
     /** Whether the default should be inherited by subpackages. */
     public final boolean applyToSubpackages;
 
@@ -32,9 +33,7 @@ public class Default implements Comparable<Default> {
      * @param applyToSubpackages whether the default should be inherited by subpackages
      */
     public Default(
-            final AnnotationMirror anno,
-            final TypeUseLocation location,
-            final boolean applyToSubpackages) {
+            final AnnotationMirror anno, final Enum<?> location, final boolean applyToSubpackages) {
         this.anno = anno;
         this.location = location;
         this.applyToSubpackages = applyToSubpackages;
@@ -95,5 +94,6 @@ public class Default implements Comparable<Default> {
      */
     @SuppressWarnings("unchecked")
     private static final Comparator<Enum<?>> TYPE_USE_LOCATION_COMPARATOR =
-            comparing((Enum<?> e) -> e instanceof TypeUseLocation).thenComparing(e -> (Enum) e);
+            Comparator.comparing((Enum<?> e) -> e instanceof TypeUseLocation)
+                    .thenComparing(e -> (Enum) e);
 }
