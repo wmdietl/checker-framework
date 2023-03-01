@@ -1,5 +1,5 @@
 // https://github.com/eisop/checker-framework/issues/300
-// Impure method can make the method return value nullable.
+// Impure method can make the method return value nullable
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.*;

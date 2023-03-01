@@ -266,7 +266,8 @@ public class TypeOutputtingChecker extends BaseTypeChecker {
             @Override
             public AnnotationMirror getPolymorphicAnnotation(AnnotationMirror start) {
                 throw new BugInCF(
-                        "GeneralQualifierHierarchy.getPolymorphicAnnotation() shouldn't be called.");
+                        "GeneralQualifierHierarchy.getPolymorphicAnnotation() shouldn't be"
+                                + " called.");
             }
 
             @Override

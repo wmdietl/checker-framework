@@ -402,7 +402,7 @@ public class ValueAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
     }
 
     /** The classes of field invariant annotations. */
-    private Set<Class<? extends Annotation>> fieldInvariantDeclarationAnnotations =
+    private final Set<Class<? extends Annotation>> fieldInvariantDeclarationAnnotations =
             computeFieldInvariantDeclarationAnnotations();
 
     @Override
@@ -561,7 +561,7 @@ public class ValueAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
      * @param anno annotation mirror from which to get values
      * @return the values in {@code anno} casted to longs
      */
-    /* package-private*/ List<Long> getArrayLenOrIntValue(AnnotationMirror anno) {
+    /*package-private*/ List<Long> getArrayLenOrIntValue(AnnotationMirror anno) {
         if (AnnotationUtils.areSameByName(anno, ARRAYLEN_NAME)) {
             return CollectionsPlume.mapList(Integer::longValue, getArrayLength(anno));
         } else {
@@ -834,12 +834,7 @@ public class ValueAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
         }
     }
 
-    /**
-     * Convert an {@code @IntVal} annotation to a {@code @DoubleVal} annotation.
-     *
-     * @param intValAnno an {@code @IntVal} annotation
-     * @return a corresponding {@code @DoubleVal} annotation
-     */
+    /** Convert an {@code @IntVal} annotation to a {@code @DoubleVal} annotation. */
     /*package-private*/ AnnotationMirror convertIntValToDoubleVal(AnnotationMirror intValAnno) {
         List<Long> intValues = getIntValues(intValAnno);
         return createDoubleValAnnotation(convertLongListToDoubleList(intValues));

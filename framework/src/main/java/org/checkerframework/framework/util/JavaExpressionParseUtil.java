@@ -183,7 +183,8 @@ public class JavaExpressionParseUtil {
             throw constructJavaExpressionParseError(
                     expression,
                     String.format(
-                            "a class name cannot terminate a Java expression string, where result=%s [%s]",
+                            "a class name cannot terminate a Java expression string, where"
+                                    + " result=%s [%s]",
                             result, result.getClass()));
         }
         return result;
@@ -499,7 +500,8 @@ public class JavaExpressionParseUtil {
                 throw new ParseRuntimeException(
                         constructJavaExpressionParseError(
                                 "#0",
-                                "Use \"this\" for the receiver or \"#1\" for the first formal parameter"));
+                                "Use \"this\" for the receiver or \"#1\" for the first formal"
+                                        + " parameter"));
             }
             if (idx > parameters.size()) {
                 throw new ParseRuntimeException(
@@ -680,7 +682,8 @@ public class JavaExpressionParseUtil {
                 if (!(receiverExpr instanceof ThisReference)) {
                     String msg =
                             String.format(
-                                    "%s is declared in an outer type of the type of the receiver expression, %s.",
+                                    "%s is declared in an outer type of the type of the receiver"
+                                            + " expression, %s.",
                                     identifier, receiverExpr);
                     throw new ParseRuntimeException(
                             constructJavaExpressionParseError(identifier, msg));
@@ -768,7 +771,8 @@ public class JavaExpressionParseUtil {
                     throw new ParseRuntimeException(
                             constructJavaExpressionParseError(
                                     expr.toString(),
-                                    "a non-static method call cannot have a class name as a receiver"));
+                                    "a non-static method call cannot have a class name as a"
+                                            + " receiver"));
                 }
                 TypeMirror methodType =
                         TypesUtils.substituteMethodReturnType(

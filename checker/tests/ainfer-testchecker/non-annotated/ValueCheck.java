@@ -18,9 +18,9 @@ public class ValueCheck {
 
     void test() {
         int x = getAinferSibling1withValue5();
-        // :: warning: (argument)
+        // :: warning: argument.type.incompatible
         requireAinferSibling1(x);
-        // :: warning: (argument)
+        // :: warning: argument.type.incompatible
         requireIntVal5(x);
     }
 }

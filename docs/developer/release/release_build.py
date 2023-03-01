@@ -325,6 +325,7 @@ def build_checker_framework_release(
 
     # copy the remaining checker-framework website files to checker_framework_interm_dir
     ant_props = (
+        # Adding a comment to maybe help black formatting
         "-Dchecker=%s -Ddest.dir=%s -Dmanual.name=%s -Ddataflow.manual.name=%s -Dchecker.webpage=%s"
         % (
             checker_dir,

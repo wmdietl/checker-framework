@@ -68,7 +68,7 @@ public class BackwardAnalysisImpl<
      *
      * @param transferFunction the transfer function
      */
-    public BackwardAnalysisImpl(@Nullable T transferFunction) {
+    public BackwardAnalysisImpl(T transferFunction) {
         this();
         this.transferFunction = transferFunction;
     }
@@ -213,7 +213,8 @@ public class BackwardAnalysisImpl<
         if (worklist.depthFirstOrder.get(regularExitBlock) == null
                 && worklist.depthFirstOrder.get(exceptionExitBlock) == null) {
             throw new BugInCF(
-                    "regularExitBlock and exceptionExitBlock should never both be null at the same time.");
+                    "regularExitBlock and exceptionExitBlock should never both be null at the same"
+                            + " time.");
         }
         UnderlyingAST underlyingAST = cfg.getUnderlyingAST();
         List<ReturnNode> returnNodes = cfg.getReturnNodes();
@@ -250,7 +251,8 @@ public class BackwardAnalysisImpl<
             boolean addToWorklistAgain) {
         if (flowRule != FlowRule.EACH_TO_EACH) {
             throw new BugInCF(
-                    "Backward analysis always propagates EACH to EACH, because there is no control flow.");
+                    "Backward analysis always propagates EACH to EACH, because there is no control"
+                            + " flow.");
         }
 
         addStoreAfter(pred, node, currentInput.getRegularStore(), addToWorklistAgain);
@@ -310,6 +312,7 @@ public class BackwardAnalysisImpl<
      * @return the exception type leading to a control flow edge from {@code pred} to the block for
      *     {@code node}, if it exists; {@code null} otherwise
      */
+    @SuppressWarnings("interning:not.interned") // Block equality
     private @Nullable TypeMirror getSuccExceptionType(Block pred, @Nullable Node node) {
         if (!(pred instanceof ExceptionBlock) || node == null) {
             return null;
@@ -322,7 +325,7 @@ public class BackwardAnalysisImpl<
                 ((ExceptionBlock) pred).getExceptionalSuccessors();
         for (Map.Entry<TypeMirror, Set<Block>> excTypeEntry : exceptionalSuccessors.entrySet()) {
             for (Block excSuccBlock : excTypeEntry.getValue()) {
-                if (excSuccBlock.getUid() == block.getUid()) {
+                if (excSuccBlock == block) {
                     return excTypeEntry.getKey();
                 }
             }

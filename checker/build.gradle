@@ -4,6 +4,7 @@ plugins {
     // https://github.com/n0mer/gradle-git-properties ; target is: generateGitProperties
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
 }
+
 sourceSets {
     main {
         resources {
@@ -13,7 +14,6 @@ sourceSets {
     }
     testannotations
 }
-
 
 sourcesJar {
     // The resources duplicate content from the src directory.
@@ -29,16 +29,20 @@ configurations {
 }
 
 dependencies {
-    implementation project(':javacutil')
-    implementation project(':dataflow')
-    implementation project(':framework')
-    // AFU is an "includedBuild" imported in checker-framework/settings.gradle, so the version number doesn't matter.
-    // https://docs.gradle.org/current/userguide/composite_builds.html#settings_defined_composite
-    implementation('org.checkerframework:annotation-file-utilities:*') {
-        exclude group: 'com.google.errorprone', module: 'javac'
-    }
-    implementation project(':checker-qual')
-    implementation project(':checker-util')
+    // Use "api" instead of "implementation" to re-export sub-projects, making
+    // sure "minimize()" does not remove those classes.
+    api project(':framework')
+
+    /* NO-AFU
+     // AFU is an "includedBuild" imported in checker-framework/settings.gradle, so the version number doesn't matter.
+     // https://docs.gradle.org/current/userguide/composite_builds.html#settings_defined_composite
+     implementation('org.checkerframework:annotation-file-utilities:*') {
+     exclude group: 'com.google.errorprone', module: 'javac'
+     }
+     */
+
+    api project(':checker-qual')
+    api project(':checker-util')
 
     // External dependencies:
     // If you add an external dependency, you must shadow its packages.
@@ -55,19 +59,26 @@ dependencies {
     shadow project(':checker-util')
 
     // Called Methods Checker AutoValue + Lombok support
-    testImplementation 'com.google.auto.value:auto-value-annotations:1.7.4'
-    testImplementation 'com.google.auto.value:auto-value:1.7.4'
+    testImplementation 'com.google.auto.value:auto-value-annotations:1.10.1'
+    testImplementation 'com.google.auto.value:auto-value:1.10.1'
     testImplementation 'com.ryanharter.auto.value:auto-value-parcel:0.2.9'
-    testImplementation 'org.projectlombok:lombok:1.18.24'
+    testImplementation 'org.projectlombok:lombok:1.18.26'
     // Called Methods Checker support for detecting misuses of AWS APIs
     testImplementation 'com.amazonaws:aws-java-sdk-ec2'
     testImplementation 'com.amazonaws:aws-java-sdk-kms'
     // The AWS SDK is used for testing the Called Methods Checker.
     testImplementation platform('com.amazonaws:aws-java-sdk-bom:1.12.293')
     // For the Resource Leak Checker's support for JavaEE.
-    testImplementation 'javax.servlet:javax.servlet-api:3.1.0'
+    testImplementation 'javax.servlet:javax.servlet-api:4.0.1'
     // For the Resource Leak Checker's support for IOUtils.
     testImplementation 'commons-io:commons-io:2.11.0'
+
+    // Required for checker/tests/index-initializedfields/RequireJavadoc.java
+    if (JavaVersion.current() == JavaVersion.VERSION_1_8) {
+        testImplementation 'org.plumelib:options:1.0.6'
+    } else {
+        testImplementation 'org.plumelib:options:2.0.2'
+    }
 
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     testImplementation project(':framework-test')
@@ -186,6 +197,7 @@ shadowJar {
     description 'Creates checker-VERSION-all.jar and copies it to dist/checker.jar.'
     // To see what files are incorporated into the shadow jar file:
     // doFirst { println sourceSets.main.runtimeClasspath.asPath }
+
     doLast{
         copy {
             from archiveFile.get()
@@ -193,6 +205,8 @@ shadowJar {
             rename 'checker.*', 'checker.jar'
         }
     }
+
+    minimize()
 }
 
 artifacts {
@@ -233,14 +247,14 @@ checkCompilerMessages {
 task nullnessExtraTests(type: Exec, dependsOn: assembleForJavac, group: 'Verification') {
     description 'Run extra tests for the Nullness Checker.'
     executable 'make'
-    environment JAVAC: "${projectDir}/bin/javac", JAVAP: 'javap'
+    environment JAVAC: "${projectDir}/bin/javac -AnoJreVersionCheck", JAVAP: 'javap'
     args = ['-C', 'tests/nullness-extra/']
 }
 
 task commandLineTests(type: Exec, dependsOn: assembleForJavac, group: 'Verification') {
     description 'Run tests that need a special command line.'
     executable 'make'
-    environment JAVAC: "${projectDir}/bin/javac"
+    environment JAVAC: "${projectDir}/bin/javac -AnoJreVersionCheck"
     args = ['-C', 'tests/command-line/']
 }
 
@@ -256,7 +270,7 @@ task tutorialTests(dependsOn: assembleForJavac, group: 'Verification') {
 task exampleTests(type: Exec, dependsOn: assembleForJavac, group: 'Verification') {
     description 'Run tests for the example programs.'
     executable 'make'
-    environment JAVAC: "${projectDir}/bin/javac"
+    environment JAVAC: "${projectDir}/bin/javac -AnoJreVersionCheck"
     args = ['-C', '../docs/examples']
 }
 
@@ -273,7 +287,7 @@ task demosTests(dependsOn: assembleForJavac, group: 'Verification') {
                         'clone',
                         '--depth',
                         '1',
-                        'https://github.com/typetools/checker-framework.demos.git'
+                        'https://github.com/eisop/checker-framework.demos.git'
                     ]
                 }
             } else {
@@ -282,7 +296,7 @@ task demosTests(dependsOn: assembleForJavac, group: 'Verification') {
                     executable 'git'
                     args = [
                         'pull',
-                        'https://github.com/typetools/checker-framework.demos.git'
+                        'https://github.com/eisop/checker-framework.demos.git'
                     ]
                     ignoreExitValue = true
                 }
@@ -309,7 +323,7 @@ task allCalledMethodsTests(type: Test, group: 'Verification') {
 }
 
 // These are tests that should only be run with JDK 11+.
-task jtregJdk11Tests(group: 'Verification') {
+task jtregJdk11Tests(dependsOn: ':downloadJtreg', group: 'Verification') {
     description 'Run the jtreg tests made for JDK 11+.'
     dependsOn('compileJava')
     dependsOn('compileTestJava')
@@ -348,8 +362,6 @@ task jtregJdk11Tests(group: 'Verification') {
                 '.'
             ]
         }
-
-
     }
 }
 
@@ -629,7 +641,7 @@ task ainferTestCheckerGenerateJaifs(type: Test) {
             // Note that "/" works on Windows as well as on Linux.
             args = [
                 '-cp',
-                "${sourceSets.test.output.asPath}:${checkerQualJarFile}:" + file('tests/build/testclasses')
+                "${sourceSets.test.output.asPath}:${project(':checker-qual').tasks.jar.archiveFile}:" + file('tests/build/testclasses')
             ]
             args += ['-i']
             for (File jaif : jaifs) {
@@ -848,7 +860,7 @@ task ainferNullnessGenerateJaifs(type: Test) {
             // Note that "/" works on Windows as well as on Linux.
             args = [
                 '-cp',
-                "${sourceSets.test.output.asPath}:${checkerQualJarFile}:" + file('tests/build/testclasses')
+                "${sourceSets.test.output.asPath}:${project(':checker-qual').tasks.jar.archiveFile}:" + file('tests/build/testclasses')
             ]
             args += ['-i']
             for (File jaif : jaifs) {
@@ -938,6 +950,7 @@ task wpiManyTest(group: 'Verification') {
                 throw e
             }
         }
+
         // collect the logs from running WPI
         def typecheckFiles = fileTree(typecheckFilesDir).matching {
             include '**/*-typecheck.out'
@@ -1002,8 +1015,6 @@ task wpiManyTest(group: 'Verification') {
                         || line.startsWith('warning: [path]')
                         // Ignore bootstrap classpath warning:
                         || line.startsWith('warning: [options] bootstrap')
-                        // Ignore warnings about illegal access:
-                        || line.contains('Option --illegal-access is deprecated')
                         // Ignore the warnings about --add-opens arguments to the JVM
                         || line.contains('warning: [options] --add-opens has no effect at compile time')
                         // Ignore the summary line that reports the total number of warnings (which can be single or plural).
@@ -1063,6 +1074,7 @@ final checkerPom(publication) {
         }
     }
 }
+
 publishing {
     publications {
         checker(MavenPublication) {
@@ -1074,6 +1086,7 @@ publishing {
         }
     }
 }
+
 signing {
     sign publishing.publications.checker
 }

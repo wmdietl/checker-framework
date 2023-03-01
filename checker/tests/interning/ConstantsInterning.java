@@ -27,7 +27,7 @@ public class ConstantsInterning {
         // :: error: (assignment)
         is = is + is;
         is = Constants2.E;
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         is = (String) F;
     }
 }

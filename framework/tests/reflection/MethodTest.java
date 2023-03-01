@@ -60,10 +60,7 @@ public class MethodTest {
         try {
             Class<?> c = Class.forName("MethodTest$SuperClass");
             Method m = c.getMethod(str, new Class[] {});
-            // TODO: Should not fail -> enhance Value checker
-            // and remove the expected error
 
-            // :: error: (assignment)
             @TestReflectSibling1
             Object a = m.invoke(superClass, (@TestReflectBottom Object[]) null);
         } catch (Exception ignore) {
@@ -235,7 +232,7 @@ public class MethodTest {
             }
             @TestReflectBottom
             Object o =
-                    // :: error: (assignment)
+                    // :: error: (assignment.type.incompatible)
                     m.invoke(
                             new SuperClass(), new @TestReflectBottom Object @TestReflectBottom [0]);
         } catch (Exception ignore) {
@@ -251,7 +248,7 @@ public class MethodTest {
                     c.getMethod(
                             "convertTestReflectSibling2ToTestReflectSibling1",
                             new Class[] {Integer.class});
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             Object o = m.invoke(null, sibling1);
         } catch (Exception ignore) {
         }
@@ -262,7 +259,7 @@ public class MethodTest {
         try {
             Class<?> c = Class.forName(str);
             Method m = c.getMethod("getA", new Class[] {Integer.class});
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             @TestReflectSibling1 Object o = m.invoke(subClass, (@TestReflectBottom Object[]) null);
         } catch (Exception ignore) {
         }

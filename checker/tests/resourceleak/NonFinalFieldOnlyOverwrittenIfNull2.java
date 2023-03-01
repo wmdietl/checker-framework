@@ -31,7 +31,7 @@ class NonFinalFieldOnlyOverwrittenIfNull2 {
     @CreatesMustCallFor
     void set_error(String fn, boolean b) throws FileNotFoundException {
         if (b) {
-            // :: error: (required.method.not.called)
+            // :: error: required.method.not.called
             is = new FileInputStream(fn);
         }
     }
@@ -59,7 +59,7 @@ class NonFinalFieldOnlyOverwrittenIfNull2 {
     }
 
     public static void test_leak() throws Exception {
-        // :: error: (required.method.not.called)
+        // :: error: required.method.not.called
         NonFinalFieldOnlyOverwrittenIfNull2 n = new NonFinalFieldOnlyOverwrittenIfNull2();
         n.set("foo.txt");
         n.close();

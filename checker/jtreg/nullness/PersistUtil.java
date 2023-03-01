@@ -52,6 +52,7 @@ public class PersistUtil {
         int rc =
                 com.sun.tools.javac.Main.compile(
                         new String[] {
+                            "-AnoJreVersionCheck",
                             "-g",
                             "-processor",
                             "org.checkerframework.checker.nullness.NullnessChecker",

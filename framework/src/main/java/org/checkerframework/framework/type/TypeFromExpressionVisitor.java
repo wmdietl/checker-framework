@@ -37,6 +37,7 @@ import org.checkerframework.javacutil.BugInCF;
 import org.checkerframework.javacutil.ElementUtils;
 import org.checkerframework.javacutil.SwitchExpressionScanner;
 import org.checkerframework.javacutil.SwitchExpressionScanner.FunctionalSwitchExpressionScanner;
+import org.checkerframework.javacutil.SystemUtil;
 import org.checkerframework.javacutil.TreeUtils;
 import org.checkerframework.javacutil.TypesUtils;
 
@@ -75,10 +76,11 @@ import javax.lang.model.type.TypeMirror;
  *   <li>{@code IntersectionTypeTree}
  * </ul>
  */
+/*package-private*/
 class TypeFromExpressionVisitor extends TypeFromTreeVisitor {
 
     /** Creates a new TypeFromTreeVisitor. */
-    TypeFromExpressionVisitor() {
+    /*package-private*/ TypeFromExpressionVisitor() {
         // nothing to do
     }
 
@@ -183,9 +185,11 @@ class TypeFromExpressionVisitor extends TypeFromTreeVisitor {
         return AnnotatedTypes.leastUpperBound(f, trueType, falseType, alub);
     }
 
+    // TODO: remove method and instead use JCP to add version-specific methods
+    // Switch expressions first appeared in 12, standard in 14, so don't use 17.
     @Override
     public AnnotatedTypeMirror defaultAction(Tree tree, AnnotatedTypeFactory f) {
-        if (tree.getKind().name().equals("SWITCH_EXPRESSION")) {
+        if (SystemUtil.jreVersion >= 14 && tree.getKind().name().equals("SWITCH_EXPRESSION")) {
             return visitSwitchExpressionTree17(tree, f);
         }
         return super.defaultAction(tree, f);
@@ -372,7 +376,7 @@ class TypeFromExpressionVisitor extends TypeFromTreeVisitor {
         // Clear the annotations on the return type, so that the explicit annotations can be added
         // first, then the annotations from the return type are added as needed.
         AnnotationMirrorSet fromReturn = new AnnotationMirrorSet(returnType.getAnnotations());
-        returnType.clearPrimaryAnnotations();
+        returnType.clearAnnotations();
         returnType.addAnnotations(f.getExplicitNewClassAnnos(tree));
         returnType.addMissingAnnotations(fromReturn);
         return returnType;

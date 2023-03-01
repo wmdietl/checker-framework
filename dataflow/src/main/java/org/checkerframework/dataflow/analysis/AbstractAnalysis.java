@@ -170,7 +170,8 @@ public abstract class AbstractAnalysis<
     public AnalysisResult<V, S> getResult() {
         if (isRunning) {
             throw new BugInCF(
-                    "AbstractAnalysis::getResult() shouldn't be called when the analysis is running.");
+                    "AbstractAnalysis::getResult() shouldn't be called when the analysis is"
+                            + " running.");
         }
         return new AnalysisResult<>(
                 nodeValues,
@@ -352,7 +353,6 @@ public abstract class AbstractAnalysis<
         }
         transferInput.node = node;
         setCurrentNode(node);
-        @SuppressWarnings("nullness") // CF bug: "INFERENCE FAILED"
         TransferResult<V, S> transferResult = node.accept(transferFunction, transferInput);
         setCurrentNode(null);
         if (node instanceof AssignmentNode) {

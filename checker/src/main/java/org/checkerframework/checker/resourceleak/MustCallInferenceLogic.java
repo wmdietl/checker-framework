@@ -1,7 +1,6 @@
 package org.checkerframework.checker.resourceleak;
 
 import org.checkerframework.checker.mustcall.qual.Owning;
-import org.checkerframework.common.wholeprograminference.WholeProgramInference;
 import org.checkerframework.dataflow.cfg.ControlFlowGraph;
 import org.checkerframework.dataflow.cfg.block.Block;
 import org.checkerframework.dataflow.cfg.block.ConditionalBlock;
@@ -135,11 +134,13 @@ public class MustCallInferenceLogic {
             // If b is a special block, it must be the regular exit, since we do not propagate to
             // exceptional successors.
             if (b.getType() == Block.BlockType.SPECIAL_BLOCK) {
-                WholeProgramInference wpi = typeFactory.getWholeProgramInference();
-                assert wpi != null : "MustCallInference is running without WPI.";
-                for (VariableElement fieldElt : owningFields) {
-                    wpi.addFieldDeclarationAnnotation(fieldElt, OWNING);
-                }
+                /* NO-AFU actual whole class unused
+                       WholeProgramInference wpi = typeFactory.getWholeProgramInference();
+                       assert wpi != null : "MustCallInference is running without WPI.";
+                       for (VariableElement fieldElt : owningFields) {
+                         wpi.addFieldDeclarationAnnotation(fieldElt, OWNING);
+                       }
+                */
             }
 
             if (visited.add(b)) {

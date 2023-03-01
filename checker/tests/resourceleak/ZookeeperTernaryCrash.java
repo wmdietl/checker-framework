@@ -14,11 +14,11 @@ final class ZookeeperTernaryCrash {
             }
             final List<SubjectName> result = new ArrayList<SubjectName>();
             for (List<?> entry : entries) {
-                // The need to add this annotation is annoying, but it's better than the
+                // the need to add this annotation is annoying, but it's better than the
                 // alternative, which would be to prevent boxed primitives from having must-call
-                // types at all.
+                // types at all
                 final Integer type =
-                        // :: warning: (cast.unsafe)
+                        // :: warning: cast.unsafe
                         entry.size() >= 2 ? (@MustCall({}) Integer) entry.get(0) : null;
                 if (type != null) {
                     if (type == SubjectName.DNS || type == SubjectName.IP) {

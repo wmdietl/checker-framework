@@ -63,18 +63,10 @@ def execute(command_args, halt_if_fail=True, capture_output=False, working_dir=N
 
 # ---------------------------------------------------------------------------------
 
-# The location the test site is built in
-DEV_SITE_URL = "https://checkerframework.org/dev"
-DEV_SITE_DIR = "/cse/www2/types/checker-framework/dev"
-
-# The location the test site is pushed to when it is ready
-LIVE_SITE_URL = "https://checkerframework.org"
-LIVE_SITE_DIR = "/cse/www2/types/checker-framework"
-
 # Per-user directory for the temporary files created by the release process
 # ("USER = os.getlogin()" does not work; see http://bugs.python.org/issue584566.
 # Another alternative is: USER = os.getenv('USER').)
-TMP_DIR = "/scratch/" + pwd.getpwuid(os.geteuid())[0] + "/cf-release"
+TMP_DIR = "/tmp/" + pwd.getpwuid(os.geteuid())[0] + "/cf-release"
 
 # Location this and other release scripts are contained in
 SCRIPTS_DIR = TMP_DIR + "/checker-framework/docs/developer/release"
@@ -93,12 +85,12 @@ INTERM_CHECKER_REPO = os.path.join(INTERM_REPO_ROOT, "checker-framework")
 INTERM_ANNO_REPO = os.path.join(INTERM_REPO_ROOT, "annotation-tools")
 
 # The central repositories for Checker Framework related projects
-LIVE_ANNO_REPO = "git@github.com:typetools/annotation-tools.git"
-LIVE_CHECKER_REPO = "git@github.com:typetools/checker-framework.git"
-PLUME_SCRIPTS_REPO = "https://github.com/plume-lib/plume-scripts"
-CHECKLINK_REPO = "https://github.com/plume-lib/checklink"
+LIVE_ANNO_REPO = "git@github.com:eisop/annotation-tools.git"
+LIVE_CHECKER_REPO = "git@github.com:eisop/checker-framework.git"
+PLUME_SCRIPTS_REPO = "https://github.com/eisop-plume-lib/plume-scripts"
+CHECKLINK_REPO = "https://github.com/eisop-plume-lib/checklink"
 PLUME_BIB_REPO = "https://github.com/mernst/plume-bib"
-STUBPARSER_REPO = "https://github.com/typetools/stubparser"
+STUBPARSER_REPO = "https://github.com/eisop/stubparser"
 
 # Location of the project directories in which we will build the actual projects.
 # When we build these projects are pushed to the INTERM repositories.
@@ -137,6 +129,16 @@ LIVE_TO_INTERM_REPOS = (
     (LIVE_ANNO_REPO, INTERM_ANNO_REPO),
 )
 
+# TODO: publish to GitHub
+
+# The location the test site is built in
+DEV_SITE_URL = "https://eisop.github.io/cf/dev"
+DEV_SITE_DIR = TMP_DIR + "/web-cf-dev"
+
+# The location the test site is pushed to when it is ready
+LIVE_SITE_URL = "https://eisop.github.io/cf"
+LIVE_SITE_DIR = TMP_DIR + "/web-cf"
+
 AFU_LIVE_SITE = os.path.join(LIVE_SITE_DIR, "annotation-file-utilities")
 AFU_LIVE_RELEASES_DIR = os.path.join(AFU_LIVE_SITE, "releases")
 
@@ -145,17 +147,14 @@ CHECKER_LIVE_API_DIR = os.path.join(LIVE_SITE_DIR, "api")
 
 os.environ["PARENT_DIR"] = BUILD_DIR
 os.environ["CHECKERFRAMEWORK"] = CHECKER_FRAMEWORK
-perl_libs = TMP_DIR + "/homes/gws/mernst/bin/src/perl:/usr/share/perl5/"
 # Environment variables for tools needed during the build
 os.environ["PLUME_SCRIPTS"] = PLUME_SCRIPTS
 os.environ["CHECKLINK"] = CHECKLINK
 os.environ["BIBINPUTS"] = ".:" + PLUME_BIB
-os.environ["TEXINPUTS"] = ".:/homes/gws/mernst/tex/sty:/homes/gws/mernst/tex:..:"
-os.environ["PERLLIB"] = getAndAppend("PERLLIB", ":") + perl_libs
-os.environ["PERL5LIB"] = getAndAppend("PERL5LIB", ":") + perl_libs
+os.environ["TEXINPUTS"] = ".:..:"
 # Still needed for santiy checks
-os.environ["JAVA_8_HOME"] = "/usr/lib/jvm/java-1.8.0-openjdk/"
-os.environ["JAVA_17_HOME"] = "/usr/lib/jvm/java-17-openjdk/"
+os.environ["JAVA_8_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64/"
+os.environ["JAVA_17_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64/"
 os.environ["JAVA_HOME"] = os.environ["JAVA_17_HOME"]
 
 EDITOR = os.getenv("EDITOR")

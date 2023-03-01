@@ -39,7 +39,7 @@ public class Postcondition {
     }
 
     @EnsuresQualifier(expression = "f1", qualifier = ValueTypeAnno.class)
-    // :: error: (contracts.postcondition)
+    // :: error: (contracts.postcondition.not.satisfied)
     void valueF1() {}
 
     @EnsuresQualifier(expression = "---", qualifier = ValueTypeAnno.class)
@@ -150,7 +150,7 @@ public class Postcondition {
         @EnsuresQualifier(expression = "f1", qualifier = Odd.class),
         @EnsuresQualifier(expression = "f2", qualifier = ValueTypeAnno.class)
     })
-    // :: error: (contracts.postcondition)
+    // :: error: (contracts.postcondition.not.satisfied)
     void oddValueF1_invalid(@ValueTypeAnno String p1) {}
 
     @EnsuresQualifier.List({
@@ -161,9 +161,9 @@ public class Postcondition {
 
     // basic postcondition test
     void tnm1(@Odd String p1, @ValueTypeAnno String p2) {
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @Odd String l1 = f1;
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @ValueTypeAnno String l2 = f2;
         oddValueF1(p2);
         @Odd String l3 = f1;
@@ -300,15 +300,15 @@ public class Postcondition {
         condsOddF1(true, p2);
         // :: error: (assignment)
         @Odd String l1 = f1;
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @ValueTypeAnno String l2 = f1;
         if (condsOddF1(false, p2)) {
             @Odd String l3 = f1;
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             @ValueTypeAnno String l4 = f1;
         } else {
             @ValueTypeAnno String l5 = f1;
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             @Odd String l6 = f1;
         }
     }

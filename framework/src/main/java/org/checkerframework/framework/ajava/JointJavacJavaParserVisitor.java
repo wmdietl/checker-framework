@@ -775,17 +775,15 @@ public abstract class JointJavacJavaParserVisitor extends SimpleTreeVisitor<Void
                 StatementTree javacInitializer = javacInitializers.next();
                 if (javacInitializer.getKind() == Kind.EXPRESSION_STATEMENT) {
                     // JavaParser doesn't wrap other kinds of expressions in an expression
-                    // statement,
-                    // but javac does. For example, suppose that the initializer is "index++", as in
-                    // the test all-systems/LightWeightCache.java.
+                    // statement, but javac does. For example, suppose that the initializer is
+                    // "index++", as in the test all-systems/LightWeightCache.java.
                     ((ExpressionStatementTree) javacInitializer)
                             .getExpression()
                             .accept(this, initializer);
                 } else {
                     // This is likely to lead to a crash, if it ever happens: javacInitializer
                     // is a StatementTree of some kind, but initializer is a raw expression (not
-                    // wrapped in a
-                    // statement).
+                    // wrapped in a statement).
                     javacInitializer.accept(this, initializer);
                 }
             }
@@ -2299,7 +2297,8 @@ public abstract class JointJavacJavaParserVisitor extends SimpleTreeVisitor<Void
      * @param javacTrees list of trees
      * @param javaParserNodes list of corresponding JavaParser nodes
      */
-    private void visitLists(List<? extends Tree> javacTrees, List<? extends Node> javaParserNodes) {
+    protected void visitLists(
+            List<? extends Tree> javacTrees, List<? extends Node> javaParserNodes) {
         if (javacTrees.size() != javaParserNodes.size()) {
             throw new BugInCF(
                     "%s.visitLists(%s [size %d], %s [size %d])",
@@ -2322,7 +2321,7 @@ public abstract class JointJavacJavaParserVisitor extends SimpleTreeVisitor<Void
      * @param javacTree a javac tree or null
      * @param javaParserNode an optional JavaParser node, which might not be present
      */
-    private void visitOptional(Tree javacTree, Optional<? extends Node> javaParserNode) {
+    protected void visitOptional(Tree javacTree, Optional<? extends Node> javaParserNode) {
         assert javacTree != null == javaParserNode.isPresent()
                 : String.format("visitOptional(%s, %s)", javacTree, javaParserNode);
         if (javacTree != null) {

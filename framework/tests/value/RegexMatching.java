@@ -116,7 +116,7 @@ public class RegexMatching {
     }
 
     void stringToRegex1(@StringVal({"(a)"}) String a) {
-        // :: error: (assignment)
+        // :: error: assignment.type.incompatible
         @MatchesRegex("(a)") String a2 = a;
     }
 
@@ -130,7 +130,7 @@ public class RegexMatching {
 
     void regexToString(@MatchesRegex("^a$") String a) {
         // TODO: This is a false positive.  In the future, eliminate it.
-        // :: error: (assignment)
+        // :: error: assignment.type.incompatible
         @StringVal({"a"}) String a2 = a;
     }
 }

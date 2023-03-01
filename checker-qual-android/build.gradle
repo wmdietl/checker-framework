@@ -7,9 +7,10 @@ task copySources(type: Copy) {
         // Delete the directory in case a previously copied file should no longer be in checker-qual
         delete file(layout.buildDirectory.dir("generated/sources/main/java"))
     }
-    from files(project(':checker-qual').sourceSets.main.java)
+    from files('../checker-qual/src/main')
     include '**/*.java'
     exclude '**/SignednessUtilExtra.java'
+    into file('src/main')
 
     // Types annotated with runtime annotations are always kept in the main dex by the default Android Gradle plugin.
     // Using the standard Checker Framework annotations can lead to main dex overflows;
@@ -22,12 +23,28 @@ task copySources(type: Copy) {
     fileMode(0555)
 }
 
-sourceSets {
-    main {
-        java {
-            srcDir(copySources)
+sourcesJar.dependsOn(copySources)
+
+/**
+ * Types annotated with runtime annotations are always kept in the main dex by the default Android Gradle plugin.
+ * Using the standard Checker Framework annotations can lead to main dex overflows;
+ * users of the Checker Framework may find themselves unable to build their Android apps.
+ * By contrast, class-retention annotations are stripped out before packaging by all build systems as a convention.
+ */
+task replaceAnnotations {
+    doLast {
+        fileTree(dir: 'src', include: '**/*.java').each {
+            it.text = it.text.replaceAll('RetentionPolicy.RUNTIME', 'RetentionPolicy.CLASS')
         }
     }
+}
+
+replaceAnnotations.dependsOn copySources
+
+compileJava.dependsOn replaceAnnotations
+
+clean {
+    delete file('src')
 }
 
 apply from: rootProject.file('gradle-mvn-push.gradle')
@@ -55,6 +72,7 @@ final checkerQualAndroidPom(publication) {
         }
     }
 }
+
 publishing {
     publications {
         checkerQualAndroid(MavenPublication) {
@@ -62,6 +80,7 @@ publishing {
         }
     }
 }
+
 signing {
     sign publishing.publications.checkerQualAndroid
 }

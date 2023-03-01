@@ -9,7 +9,7 @@ echo "SHELLOPTS=${SHELLOPTS}"
 # Optional argument $1 is the group.
 GROUPARG=$1
 echo "GROUPARG=$GROUPARG"
-# These are all the Java projects at https://github.com/plume-lib , as of Dec 2022.
+# These are all the Java projects at https://github.com/eisop-plume-lib as of Dec 2022.
 if [[ "${GROUPARG}" == "bcel-util" ]]; then PACKAGES=("${GROUPARG}"); fi
 if [[ "${GROUPARG}" == "bibtex-clean" ]]; then PACKAGES=("${GROUPARG}"); fi
 if [[ "${GROUPARG}" == "html-pretty-print" ]]; then PACKAGES=("${GROUPARG}"); fi
@@ -46,7 +46,7 @@ for PACKAGE in "${PACKAGES[@]}"; do
   echo "PACKAGE=${PACKAGE}"
   PACKAGEDIR="/tmp/${PACKAGE}"
   rm -rf "${PACKAGEDIR}"
-  "$SCRIPTDIR/.plume-scripts/git-clone-related" plume-lib "${PACKAGE}" "${PACKAGEDIR}"
+  "$SCRIPTDIR/.plume-scripts/git-clone-related" eisop-plume-lib "${PACKAGE}" "${PACKAGEDIR}"
   # Uses "compileJava" target instead of "assemble" to avoid the javadoc error "Error fetching URL:
   # https://docs.oracle.com/en/java/javase/17/docs/api/" due to network problems.
   echo "About to call ./gradlew --console=plain -PcfLocal compileJava"

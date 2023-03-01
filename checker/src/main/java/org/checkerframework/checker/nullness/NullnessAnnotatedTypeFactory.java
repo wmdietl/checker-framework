@@ -16,27 +16,23 @@ import com.sun.source.tree.TypeCastTree;
 import com.sun.source.tree.UnaryTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
-import com.sun.tools.javac.code.Symbol.ClassSymbol;
-import com.sun.tools.javac.code.Symbol.VarSymbol;
 
 import org.checkerframework.checker.initialization.InitializationAnnotatedTypeFactory;
 import org.checkerframework.checker.initialization.qual.FBCBottom;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.checker.signature.qual.FullyQualifiedName;
 import org.checkerframework.common.basetype.BaseTypeChecker;
-import org.checkerframework.dataflow.analysis.Analysis;
-import org.checkerframework.dataflow.analysis.Analysis.BeforeOrAfter;
 import org.checkerframework.dataflow.cfg.node.Node;
 import org.checkerframework.dataflow.util.NodeUtils;
 import org.checkerframework.framework.flow.CFAbstractAnalysis;
+import org.checkerframework.framework.qual.DefaultQualifier;
+import org.checkerframework.framework.qual.TypeUseLocation;
 import org.checkerframework.framework.type.AnnotatedTypeFactory;
 import org.checkerframework.framework.type.AnnotatedTypeFormatter;
 import org.checkerframework.framework.type.AnnotatedTypeMirror;
@@ -61,7 +57,6 @@ import org.checkerframework.javacutil.AnnotationBuilder;
 import org.checkerframework.javacutil.AnnotationMirrorSet;
 import org.checkerframework.javacutil.AnnotationUtils;
 import org.checkerframework.javacutil.Pair;
-import org.checkerframework.javacutil.TreePathUtil;
 import org.checkerframework.javacutil.TreeUtils;
 import org.checkerframework.javacutil.TypeSystemError;
 import org.checkerframework.javacutil.TypesUtils;
@@ -78,7 +73,6 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 
@@ -121,7 +115,12 @@ public class NullnessAnnotatedTypeFactory
     // ../../../../../../../../docs/manual/nullness-checker.tex
     // and make a pull request for variables NONNULL_ANNOTATIONS and BASE_COPYABLE_ANNOTATIONS in
     // https://github.com/rzwitserloot/lombok/blob/master/src/core/lombok/core/handlers/HandlerUtil.java .
+    // Avoid changes to the string constants by ShadowJar relocate by using "start".toString() +
+    // "rest".
+    // Keep the original string constant in a comment to allow searching for it.
     /** Aliases for {@code @Nonnull}. */
+    @SuppressWarnings(
+            "signature:assignment.type.incompatible") // Class names intentionally obfuscated
     private static final List<@FullyQualifiedName String> NONNULL_ALIASES =
             Arrays.asList(
                     // https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/annotation/NonNull.java
@@ -139,9 +138,11 @@ public class NullnessAnnotatedTypeFactory
                     // https://android.googlesource.com/platform/sdk/+/66fcecc/common/src/com/android/annotations/NonNull.java
                     "com.android.annotations.NonNull",
                     // https://github.com/firebase/firebase-android-sdk/blob/master/firebase-database/src/main/java/com/google/firebase/database/annotations/NotNull.java
-                    "com.google.firebase.database.annotations.NotNull",
+                    // "com.google.firebase.database.annotations.NotNull",
+                    "com.go".toString() + "ogle.firebase.database.annotations.NotNull",
                     // https://github.com/firebase/firebase-admin-java/blob/master/src/main/java/com/google/firebase/internal/NonNull.java
-                    "com.google.firebase.internal.NonNull",
+                    // "com.google.firebase.internal.NonNull",
+                    "com.go".toString() + "ogle.firebase.internal.NonNull",
                     // https://github.com/mongodb/mongo-java-driver/blob/master/driver-core/src/main/com/mongodb/lang/NonNull.java
                     "com.mongodb.lang.NonNull",
                     // https://github.com/eclipse-ee4j/jaxb-istack-commons/blob/master/istack-commons/runtime/src/main/java/com/sun/istack/NotNull.java
@@ -175,7 +176,6 @@ public class NullnessAnnotatedTypeFactory
                     "net.bytebuddy.agent.utility.nullability.NeverNull",
                     // https://github.com/raphw/byte-buddy/blob/master/byte-buddy-dep/src/main/java/net/bytebuddy/utility/nullability/NeverNull.java
                     "net.bytebuddy.utility.nullability.NeverNull",
-                    // Removed in ANTLR 4.6.
                     // https://github.com/antlr/antlr4/blob/master/runtime/Java/src/org/antlr/v4/runtime/misc/NotNull.java
                     "org.antlr.v4.runtime.misc.NotNull",
                     // https://search.maven.org/artifact/org.checkerframework/checker-compat-qual/2.5.5/jar
@@ -211,6 +211,8 @@ public class NullnessAnnotatedTypeFactory
     // ../../../../../../../../docs/manual/nullness-checker.tex .
     // See more comments with NONNULL_ALIASES above.
     /** Aliases for {@code @Nullable}. */
+    @SuppressWarnings(
+            "signature:assignment.type.incompatible") // Class names intentionally obfuscated
     private static final List<@FullyQualifiedName String> NULLABLE_ALIASES =
             Arrays.asList(
                     // https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/annotation/Nullable.java
@@ -230,15 +232,23 @@ public class NullnessAnnotatedTypeFactory
                     // https://github.com/lpantano/java_seqbuster/blob/master/AdRec/src/adrec/com/beust/jcommander/internal/Nullable.java
                     "com.beust.jcommander.internal.Nullable",
                     // https://github.com/cloudendpoints/endpoints-java/blob/master/endpoints-framework/src/main/java/com/google/api/server/spi/config/Nullable.java
-                    "com.google.api.server.spi.config.Nullable",
+                    // "com.google.api.server.spi.config.Nullable",
+                    "com.go".toString() + "ogle.api.server.spi.config.Nullable",
                     // https://github.com/firebase/firebase-android-sdk/blob/master/firebase-database/src/main/java/com/google/firebase/database/annotations/Nullable.java
-                    "com.google.firebase.database.annotations.Nullable",
+                    // "com.google.firebase.database.annotations.Nullable",
+                    "com.go".toString() + "ogle.firebase.database.annotations.Nullable",
                     // https://github.com/firebase/firebase-admin-java/blob/master/src/main/java/com/google/firebase/internal/Nullable.java
-                    "com.google.firebase.internal.Nullable",
+                    // "com.google.firebase.internal.Nullable",
+                    "com.go".toString() + "ogle.firebase.internal.Nullable",
                     // https://gerrit.googlesource.com/gerrit/+/refs/heads/master/java/com/google/gerrit/common/Nullable.java
-                    "com.google.gerrit.common.Nullable",
-                    "com.google.protobuf.Internal.ProtoMethodAcceptsNullParameter",
-                    "com.google.protobuf.Internal.ProtoMethodMayReturnNull",
+                    // "com.google.gerrit.common.Nullable",
+                    "com.go".toString() + "ogle.gerrit.common.Nullable",
+                    //
+                    // "com.google.protobuf.Internal.ProtoMethodAcceptsNullParameter",
+                    "com.go".toString() + "ogle.protobuf.Internal.ProtoMethodAcceptsNullParameter",
+                    //
+                    // "com.google.protobuf.Internal.ProtoMethodMayReturnNull",
+                    "com.go".toString() + "ogle.protobuf.Internal.ProtoMethodMayReturnNull",
                     // https://github.com/mongodb/mongo-java-driver/blob/master/driver-core/src/main/com/mongodb/lang/Nullable.java
                     "com.mongodb.lang.Nullable",
                     // https://github.com/eclipse-ee4j/jaxb-istack-commons/blob/master/istack-commons/runtime/src/main/java/com/sun/istack/Nullable.java
@@ -288,11 +298,14 @@ public class NullnessAnnotatedTypeFactory
                     // https://github.com/raphw/byte-buddy/blob/master/byte-buddy-dep/src/main/java/net/bytebuddy/utility/nullability/UnknownNull.java
                     "net.bytebuddy.utility.nullability.UnknownNull",
                     // https://github.com/apache/avro/blob/master/lang/java/avro/src/main/java/org/apache/avro/reflect/Nullable.java
-                    "org.apache.avro.reflect.Nullable",
+                    // "org.apache.avro.reflect.Nullable",
+                    "org.apa".toString() + "che.avro.reflect.Nullable",
                     // https://github.com/apache/cxf/blob/master/rt/frontend/jaxrs/src/main/java/org/apache/cxf/jaxrs/ext/Nullable.java
-                    "org.apache.cxf.jaxrs.ext.Nullable",
+                    // "org.apache.cxf.jaxrs.ext.Nullable",
+                    "org.apa".toString() + "che.cxf.jaxrs.ext.Nullable",
                     // https://github.com/gatein/gatein-shindig/blob/master/java/common/src/main/java/org/apache/shindig/common/Nullable.java
-                    "org.apache.shindig.common.Nullable",
+                    // "org.apache.shindig.common.Nullable",
+                    "org.apa".toString() + "che.shindig.common.Nullable",
                     // https://search.maven.org/search?q=a:checker-compat-qual
                     "org.checkerframework.checker.nullness.compatqual.NullableDecl",
                     "org.checkerframework.checker.nullness.compatqual.NullableType",
@@ -331,8 +344,12 @@ public class NullnessAnnotatedTypeFactory
     // ../../../../../../../../docs/manual/nullness-checker.tex .
     // See more comments with NONNULL_ALIASES above.
     /** Aliases for {@code @PolyNull}. */
+    @SuppressWarnings(
+            "signature:assignment.type.incompatible") // Class names intentionally obfuscated
     private static final List<@FullyQualifiedName String> POLYNULL_ALIASES =
-            Arrays.asList("com.google.protobuf.Internal.ProtoPassThroughNullness");
+            Arrays.asList(
+                    // "com.google.protobuf.Internal.ProtoPassThroughNullness",
+                    "com.go".toString() + "ogle.protobuf.Internal.ProtoPassThroughNullness");
 
     /**
      * Creates a NullnessAnnotatedTypeFactory.
@@ -364,6 +381,27 @@ public class NullnessAnnotatedTypeFactory
         addAliasedTypeAnnotation(
                 "org.checkerframework.checker.nullness.compatqual.MonotonicNonNullType",
                 MONOTONIC_NONNULL);
+
+        if (checker.getBooleanOption("jspecifyNullMarkedAlias", true)) {
+            AnnotationMirror nullMarkedDefaultQual =
+                    new AnnotationBuilder(processingEnv, DefaultQualifier.class)
+                            .setValue("value", NonNull.class)
+                            .setValue(
+                                    "locations",
+                                    new TypeUseLocation[] {TypeUseLocation.UPPER_BOUND})
+                            .setValue("applyToSubpackages", false)
+                            .build();
+            addAliasedDeclAnnotation(
+                    "org.jspecify.annotations.NullMarked",
+                    DefaultQualifier.class.getCanonicalName(),
+                    nullMarkedDefaultQual);
+
+            // 2022-11-17: Deprecated old package location, remove after some grace period
+            addAliasedDeclAnnotation(
+                    "org.jspecify.nullness.NullMarked",
+                    DefaultQualifier.class.getCanonicalName(),
+                    nullMarkedDefaultQual);
+        }
 
         boolean permitClearProperty =
                 checker.getLintOption(
@@ -918,6 +956,7 @@ public class NullnessAnnotatedTypeFactory
         return true;
     }
 
+    /* NO-AFU
     // If
     //  1. rhs is @Nullable
     //  2. lhs is a field of this
@@ -925,19 +964,18 @@ public class NullnessAnnotatedTypeFactory
     // then change rhs to @MonotonicNonNull.
     @Override
     public void wpiAdjustForUpdateField(
-            Tree lhsTree, Element element, String fieldName, AnnotatedTypeMirror rhsATM) {
-        // Synthetic variable names contain "#". Ignore them.
-        if (!rhsATM.hasAnnotation(Nullable.class) || fieldName.contains("#")) {
-            return;
-        }
-        TreePath lhsPath = getPath(lhsTree);
-        TypeElement enclosingClassOfLhs =
-                TreeUtils.elementFromDeclaration(TreePathUtil.enclosingClass(lhsPath));
-        ClassSymbol enclosingClassOfField = ((VarSymbol) element).enclClass();
-        if (enclosingClassOfLhs.equals(enclosingClassOfField)
-                && TreePathUtil.inConstructor(lhsPath)) {
-            rhsATM.replaceAnnotation(MONOTONIC_NONNULL);
-        }
+        Tree lhsTree, Element element, String fieldName, AnnotatedTypeMirror rhsATM) {
+      // Synthetic variable names contain "#". Ignore them.
+      if (!rhsATM.hasAnnotation(Nullable.class) || fieldName.contains("#")) {
+        return;
+      }
+      TreePath lhsPath = getPath(lhsTree);
+      TypeElement enclosingClassOfLhs =
+          TreeUtils.elementFromDeclaration(TreePathUtil.enclosingClass(lhsPath));
+      ClassSymbol enclosingClassOfField = ((VarSymbol) element).enclClass();
+      if (enclosingClassOfLhs.equals(enclosingClassOfField) && TreePathUtil.inConstructor(lhsPath)) {
+        rhsATM.replaceAnnotation(MONOTONIC_NONNULL);
+      }
     }
 
     // If
@@ -952,10 +990,10 @@ public class NullnessAnnotatedTypeFactory
 
     @Override
     public boolean wpiShouldInferTypesForReceivers() {
-        // All receivers must be non-null, or the dereference involved in
-        // the method call would fail (and cause an NPE). So, WPI should not
-        // infer non-null or nullable annotations on method receiver parameters.
-        return false;
+      // All receivers must be non-null, or the dereference involved in
+      // the method call would fail (and cause an NPE). So, WPI should not
+      // infer non-null or nullable annotations on method receiver parameters.
+      return false;
     }
 
     // This implementation overrides the superclass implementation to:
@@ -963,17 +1001,33 @@ public class NullnessAnnotatedTypeFactory
     //  * output @RequiresNonNull rather than @RequiresQualifier.
     @Override
     protected @Nullable AnnotationMirror createRequiresOrEnsuresQualifier(
-            String expression,
-            AnnotationMirror qualifier,
-            AnnotatedTypeMirror declaredType,
-            Analysis.BeforeOrAfter preOrPost,
-            @Nullable List<AnnotationMirror> preconds) {
-        // TODO: This does not handle the possibility that the user set a different default
-        // annotation.
-        if (!(declaredType.hasAnnotation(NULLABLE)
-                || declaredType.hasAnnotation(POLYNULL)
-                || declaredType.hasAnnotation(MONOTONIC_NONNULL))) {
-            return null;
+        String expression,
+        AnnotationMirror qualifier,
+        AnnotatedTypeMirror declaredType,
+        Analysis.BeforeOrAfter preOrPost,
+        @Nullable List<AnnotationMirror> preconds) {
+      // TODO: This does not handle the possibility that the user set a different default
+      // annotation.
+      if (!(declaredType.hasAnnotation(NULLABLE)
+          || declaredType.hasAnnotation(POLYNULL)
+          || declaredType.hasAnnotation(MONOTONIC_NONNULL))) {
+        return null;
+      }
+
+      if (preOrPost == BeforeOrAfter.AFTER
+          && declaredType.hasAnnotation(MONOTONIC_NONNULL)
+          && preconds.contains(requiresNonNullAnno(expression))) {
+        // The postcondition is implied by the precondition and the field being
+        // @MonotonicNonNull.
+        return null;
+      }
+
+      if (AnnotationUtils.areSameByName(
+          qualifier, "org.checkerframework.checker.nullness.qual.NonNull")) {
+        if (preOrPost == BeforeOrAfter.BEFORE) {
+          return requiresNonNullAnno(expression);
+        } else {
+          return ensuresNonNullAnno(expression);
         }
 
         if (preOrPost == BeforeOrAfter.AFTER
@@ -995,32 +1049,37 @@ public class NullnessAnnotatedTypeFactory
         return super.createRequiresOrEnsuresQualifier(
                 expression, qualifier, declaredType, preOrPost, preconds);
     }
+    */
 
-    /**
+    /* NO-AFU
      * Returns a {@code RequiresNonNull("...")} annotation for the given expression.
      *
      * @param expression an expression
      * @return a {@code RequiresNonNull("...")} annotation for the given expression
      */
+    /* NO-AFU
     private AnnotationMirror requiresNonNullAnno(String expression) {
         AnnotationBuilder builder = new AnnotationBuilder(processingEnv, RequiresNonNull.class);
         builder.setValue("value", new String[] {expression});
         AnnotationMirror am = builder.build();
         return am;
     }
+    */
 
-    /**
+    /* NO-AFU
      * Returns a {@code EnsuresNonNull("...")} annotation for the given expression.
      *
      * @param expression an expression
      * @return a {@code EnsuresNonNull("...")} annotation for the given expression
      */
+    /* NO-AFU
     private AnnotationMirror ensuresNonNullAnno(String expression) {
         AnnotationBuilder builder = new AnnotationBuilder(processingEnv, EnsuresNonNull.class);
         builder.setValue("value", new String[] {expression});
         AnnotationMirror am = builder.build();
         return am;
     }
+    */
 
     /**
      * Returns true if {@code node} is an invocation of Map.get.

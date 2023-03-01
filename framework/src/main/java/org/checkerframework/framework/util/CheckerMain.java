@@ -433,6 +433,7 @@ public class CheckerMain {
         if (SystemUtil.jreVersion == 8) {
             args.add("-Xbootclasspath/p:" + String.join(File.pathSeparator, runtimeClasspath));
         } else {
+            // See comments in build.gradle
             args.addAll(
                     // Keep this list in sync with the lists in checker-framework/build.gradle in
                     // compilerArgsForRunningCFs, the sections with labels
@@ -703,14 +704,16 @@ public class CheckerMain {
             throw new IllegalStateException(
                     "This class has been loaded remotely via the "
                             + protocol
-                            + " protocol. Only loading from a jar on the local file system is supported.");
+                            + " protocol. Only loading from a jar on the local file system is"
+                            + " supported.");
         }
 
         int idx = uri.indexOf('!');
         // Sanity check
         if (idx == -1) {
             throw new IllegalStateException(
-                    "You appear to have loaded this class from a local jar file, but URI has no \"!\": "
+                    "You appear to have loaded this class from a local jar file, but URI has no"
+                            + " \"!\": "
                             + uri);
         }
 

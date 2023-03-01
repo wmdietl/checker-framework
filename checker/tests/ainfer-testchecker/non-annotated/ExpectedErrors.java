@@ -25,9 +25,9 @@ public class ExpectedErrors {
     }
 
     void testFields() {
-        // :: warning: (argument)
+        // :: warning: (argument.type.incompatible)
         expectsAinferSibling1(privateDeclaredField);
-        // :: warning: (argument)
+        // :: warning: (argument.type.incompatible)
         expectsAinferSibling1(publicDeclaredField);
     }
 
@@ -37,9 +37,9 @@ public class ExpectedErrors {
 
     // The refinement cannot happen and an assignemnt type incompatible error occurs.
     void assignFieldsToAinferTop() {
-        // :: warning: (assignment)
+        // :: warning: (assignment.type.incompatible)
         privateDeclaredField2 = getAinferTop();
-        // :: warning: (assignment)
+        // :: warning: (assignment.type.incompatible)
         publicDeclaredField2 = getAinferTop();
     }
 
@@ -71,16 +71,16 @@ public class ExpectedErrors {
     }
 
     void testLUBFields1() {
-        // :: warning: (argument)
+        // :: warning: (argument.type.incompatible)
         expectsAinferSibling1(lubPrivateField);
-        // :: warning: (argument)
+        // :: warning: (argument.type.incompatible)
         expectsAinferSibling1(lubPublicField);
     }
 
     void testLUBFields2() {
-        // :: warning: (argument)
+        // :: warning: (argument.type.incompatible)
         expectsAinferSibling2(lubPrivateField);
-        // :: warning: (argument)
+        // :: warning: (argument.type.incompatible)
         expectsAinferSibling2(lubPublicField);
     }
 
@@ -96,13 +96,13 @@ public class ExpectedErrors {
 
     public @AinferSibling1 int getAinferSibling1Wrong() {
         int x = lubTest();
-        // :: warning: (return)
+        // :: warning: (return.type.incompatible)
         return x;
     }
 
     public @AinferSibling2 int getAinferSibling2Wrong() {
         int x = lubTest();
-        // :: warning: (return)
+        // :: warning: (return.type.incompatible)
         return x;
     }
 
@@ -141,7 +141,7 @@ public class ExpectedErrors {
     }
 
     void setBoolean(Object o, boolean b) {
-        // :: warning: (assignment)
+        // :: warning: (assignment.type.incompatible)
         @AinferBottom Object bot = o;
     }
 
@@ -162,15 +162,15 @@ public class ExpectedErrors {
         }
 
         public void suppressWarningsValidation() {
-            // :: warning: (argument)
+            // :: warning: (argument.type.incompatible)
             expectsAinferSibling1(i);
-            // :: warning: (argument)
+            // :: warning: (argument.type.incompatible)
             expectsAinferSibling1(i2);
-            // :: warning: (argument)
+            // :: warning: (argument.type.incompatible)
             expectsAinferSibling1(SuppressWarningsInner.i);
-            // :: warning: (argument)
+            // :: warning: (argument.type.incompatible)
             expectsAinferSibling1(SuppressWarningsInner.i2);
-            // :: warning: (argument)
+            // :: warning: (argument.type.incompatible)
             expectsAinferSibling1(suppressWarningsMethodReturn());
 
             suppressWarningsMethodParams(getAinferSibling1());
@@ -211,9 +211,9 @@ public class ExpectedErrors {
 
         // Testing the refinement above.
         void testFields() {
-            // :: warning: (argument)
+            // :: warning: (argument.type.incompatible)
             expectsBottom(privateField);
-            // :: warning: (argument)
+            // :: warning: (argument.type.incompatible)
             expectsBottom(publicField);
         }
     }
@@ -228,16 +228,16 @@ public class ExpectedErrors {
         }
 
         void test() {
-            // :: warning: (argument)
+            // :: warning: (argument.type.incompatible)
             expectsAinferSibling1(field);
-            // :: warning: (argument)
+            // :: warning: (argument.type.incompatible)
             expectsAinferSibling1(field2);
         }
     }
 
     class AssignParam {
         public void f(@AinferBottom Object param) {
-            // :: warning: (assignment)
+            // :: warning: assignment.type.incompatible
             param = ((@AinferTop Object) null);
         }
     }

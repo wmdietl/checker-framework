@@ -30,7 +30,7 @@ class ConnectingServerSockets {
     }
 
     static @MustCall({}) ServerSocket makeUnconnected() throws Exception {
-        // :: error: (return)
+        // :: error: (return.type.incompatible)
         return new ServerSocket();
     }
 

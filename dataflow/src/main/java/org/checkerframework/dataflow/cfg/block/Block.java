@@ -11,7 +11,7 @@ import java.util.List;
 public interface Block extends UniqueId {
 
     /** The types of basic blocks. */
-    public static enum BlockType {
+    enum BlockType {
 
         /** A regular basic block. */
         REGULAR_BLOCK,

@@ -17,7 +17,7 @@ class CreatesMustCallForSimpler {
     void a() {}
 
     static @MustCall({}) CreatesMustCallForSimpler makeNoMC() {
-        // :: error: (return)
+        // :: error: (return.type.incompatible)
         return new CreatesMustCallForSimpler();
     }
 

@@ -67,7 +67,9 @@ public abstract class SwitchExpressionScanner<R, P> extends TreeScanner<R, P> {
      *     #combineResults(Object, Object)}
      */
     public R scanSwitchExpression(Tree switchExpression, P p) {
-        assert switchExpression.getKind().name().equals("SWITCH_EXPRESSION");
+        // TODO: use JCP to add version-specific behavior
+        assert SystemUtil.jreVersion >= 14
+                && switchExpression.getKind().name().equals("SWITCH_EXPRESSION");
         List<? extends CaseTree> caseTrees =
                 TreeUtils.switchExpressionTreeGetCases(switchExpression);
         R result = null;
@@ -118,6 +120,7 @@ public abstract class SwitchExpressionScanner<R, P> extends TreeScanner<R, P> {
      */
     protected class YieldVisitor extends TreeScanner<@Nullable R, P> {
 
+        // TODO: use JCP to add version-specific behavior
         @Override
         public @Nullable R scan(Tree tree, P p) {
             if (tree == null) {

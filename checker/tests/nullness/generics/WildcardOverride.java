@@ -18,7 +18,7 @@ public class WildcardOverride implements ToOverride<Object> {
 }
 
 interface ToOverride2<T> {
-    // :: error: (bound)
+    // :: error: (bound.type.incompatible)
     public abstract int transform(List<@NonNull ? super T> function);
 }
 

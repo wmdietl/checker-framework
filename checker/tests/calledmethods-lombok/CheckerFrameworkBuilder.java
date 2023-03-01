@@ -27,7 +27,7 @@ public class CheckerFrameworkBuilder {
 
     public static void testOldCalledMethodsBad(
             @org.checkerframework.checker.calledmethods.qual.CalledMethods({"y"}) CheckerFrameworkBuilderBuilder pb) {
-        // :: error: (finalizer.invocation)
+        // :: error: finalizer.invocation.invalid
         pb.build(); // pb requires y, z
     }
 

@@ -116,9 +116,9 @@ public abstract class CFAbstractStore<V extends CFAbstractValue<V>, S extends CF
     private final boolean assumeSideEffectFree;
 
     /** The unique ID for the next-created object. */
-    static final AtomicLong nextUid = new AtomicLong(0);
+    private static final AtomicLong nextUid = new AtomicLong(0);
     /** The unique ID of this object. */
-    final transient long uid = nextUid.getAndIncrement();
+    private final transient long uid = nextUid.getAndIncrement();
 
     @Override
     public long getUid() {
@@ -148,6 +148,7 @@ public abstract class CFAbstractStore<V extends CFAbstractValue<V>, S extends CF
                 analysis.checker.hasOption("assumeSideEffectFree")
                         || analysis.checker.hasOption("assumePure");
     }
+
     /**
      * Copy constructor.
      *

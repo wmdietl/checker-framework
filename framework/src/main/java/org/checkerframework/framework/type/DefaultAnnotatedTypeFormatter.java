@@ -338,9 +338,6 @@ public class DefaultAnnotatedTypeFormatter implements AnnotatedTypeFormatter {
         public String visitTypeVariable(
                 AnnotatedTypeVariable type, Set<AnnotatedTypeMirror> visiting) {
             StringBuilder sb = new StringBuilder();
-            sb.append(
-                    annoFormatter.formatAnnotationString(
-                            type.getAnnotationsField(), currentPrintInvisibleSetting));
             if (TypesUtils.isCapturedTypeVariable(type.underlyingType)) {
                 String underlyingType = type.underlyingType.toString();
                 // underlyingType has this form: "capture#826 of ? extends java.lang.Object".

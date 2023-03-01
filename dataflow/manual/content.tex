@@ -320,6 +320,25 @@ package org.checkerframework.checker.nullness;
 class NullnessValue extends CFAbstractValue<NullnessValue>
 \end{verbatim}
 
+\subsubsection{UnusedAbstractValue}
+\label{sec:unused_abstract_value_class}
+
+UnusedAbstractValue, as the name suggests, is an AbstractValue that is
+not involved in any computation during dataflow analysis. This class should
+only be used as a type argument in transfer functions. It is implemented because some
+analyses do not need and do not have their own AbstractValue classes.
+
+For example, in LiveVariable analysis (\autoref{sec:live_variable}),
+we need to compute the least upper bound of successors' stores, and
+it is meaningless to further calculate the least upper bound of two
+individual live variables at a smaller granularity.
+Since there is no computation between two AbstractValues, using the UnusedAbstractValue
+is sufficient and we do not have to implement a specific AbstractValue for this analysis.
+
+\begin{verbatim}
+package org.checkerframework.dataflow.analysis;
+public final class UnusedAbstractValue implements AbstractValue<UnusedAbstractValue>
+\end{verbatim}
 
 \subsubsection{Store}
 \label{sec:store_classes}
@@ -770,10 +789,10 @@ All classes are in package \code{org.checkerframework.dataflow.cfg.node}.
         \hline \multicolumn{3}{|c|}{{Continued on next page}} \\ \hline \endfoot
         \endlastfoot
 
-        \nodetype{Node} & The base class of all nodes. & \\
+        \nodetype{Node} & The base class of all nodes & \\
         \midrule
 
-        \nodetype{ValueLiteralNode} & The base class of literal value nodes. & \\
+        \nodetype{ValueLiteralNode} & The base class of literal value nodes & \\
         \nodetype{BooleanLiteralNode} & & \code{true} \\
         \nodetype{CharacterLiteralNode} & & \code{'c'} \\
         \nodetype{DoubleLiteralNode} & & \code{3.14159} \\
@@ -793,13 +812,13 @@ All classes are in package \code{org.checkerframework.dataflow.cfg.node}.
         \nodetype{ThisNode} & Base class of references to \code{this} & \\
         \nodetype{ExplicitThisNode} & Explicit use of \code{this} in an expression & \\
         \nodetype{ImplicitThisNode} & Implicit use of \code{this} in an expression & \\
-        \nodetype{SuperNode} & Explicit use of \code{super} in expression. & \code{super(x, y)} \\
+        \nodetype{SuperNode} & Explicit use of \code{super} in expression & \code{super(x, y)} \\
         \midrule
 
-        \nodetype{MethodInvocationNode} & Note that access and invocation are distinct. & \code{hashCode()} \\
+        \nodetype{MethodInvocationNode} & Note that access and invocation are distinct & \code{hashCode()} \\
         \midrule
 
-        & Expression supertypes. & \\
+        & Expression supertypes & \\
         \nodetype{BinaryOperationNode} & Base class of binary expression nodes & \\
         \nodetype{UnaryOperationNode} & Base class of unary expression nodes & \\
 
@@ -808,9 +827,9 @@ All classes are in package \code{org.checkerframework.dataflow.cfg.node}.
         \nodetype{BitwiseComplementNode} & & \verb|~b| \\
         \nodetype{BitwiseOrNode} & & \code{a | b} \\
         \nodetype{BitwiseXorNode} & & \code{a ^ b} \\
-        \nodetype{ConditionalAndNode} & Short-circuiting. & a \&\& \code{b} \\
+        \nodetype{ConditionalAndNode} & Short-circuiting & a \&\& \code{b} \\
         \nodetype{ConditionalNotNode} & & \code{!a} \\
-        \nodetype{ConditionalOrNode} & Short-circuiting. & \code{a || b} \\
+        \nodetype{ConditionalOrNode} & Short-circuiting & \code{a || b} \\
         \nodetype{FloatingDivisionNode} & & \code{1.0 / 2.0} \\
         \nodetype{FloatingRemainderNode} & & \code{13.0 \% 4.0} \\
         \nodetype{LeftShiftNode} & & \code{x << 3} \\
@@ -842,7 +861,7 @@ All classes are in package \code{org.checkerframework.dataflow.cfg.node}.
         \nodetype{AssignmentNode} & & \code{x = 1} \\
 %        \midrule
 
-        \nodetype{StringConcatenateAssignmentNode} & A compound \code{String} assignment. & \code{s += ".txt"} \\
+        \nodetype{StringConcatenateAssignmentNode} & A compound \code{String} assignment & \code{s += ".txt"} \\
         \midrule
 
         \nodetype{ArrayCreationNode} & & \code{new double[]} \\
@@ -856,10 +875,10 @@ All classes are in package \code{org.checkerframework.dataflow.cfg.node}.
         \nodetype{InstanceOfNode} & & \code{x instanceof Float} \\
         \midrule
 
-        & Conversion nodes. & \\
-        \nodetype{NarrowingConversionNode} & Implicit conversion. & \\
-        \nodetype{StringConversionNode} & Might be implicit. & \code{obj.toString()} \\
-        \nodetype{WideningConversionNode} & Implicit conversion. & \\
+        & Conversion nodes & \\
+        \nodetype{NarrowingConversionNode} & Implicit conversion & \\
+        \nodetype{StringConversionNode} & Might be implicit & \code{obj.toString()} \\
+        \nodetype{WideningConversionNode} & Implicit conversion & \\
         \midrule
 
         \midrule
@@ -871,18 +890,21 @@ All classes are in package \code{org.checkerframework.dataflow.cfg.node}.
         \nodetype{PrimitiveTypeNode} & & \\
         \midrule
 
-        \nodetype{ClassNameNode} & Identifier referring to Java class or interface. & \code{java.util.HashMap} \\
-        \nodetype{PackageNameNode} & Identifier referring to Java package. & \code{java.util} \\
+        \nodetype{ClassNameNode} & Identifier referring to Java class or interface & \code{java.util.HashMap} \\
+        \nodetype{PackageNameNode} & Identifier referring to Java package & \code{java.util} \\
         \midrule
 
-        \nodetype{ThrowNode} & Throw an exception. & \\
-        \nodetype{ReturnNode} & Return from a method. & \\
+        \nodetype{ThrowNode} & Throw an exception & \\
+        \nodetype{ReturnNode} & Return from a method & \\
         \midrule
 
         \nodetype{AssertionErrorNode} & & \code{assert x != null : "Hey"} \\
         \midrule
 
-        \nodetype{SynchronizedNode} & Start or end of a synchronized code block. & \\
+        \nodetype{ExpressionStatementNode} & An expression that is used as a statement & \code{m();} \\
+        \midrule
+
+        \nodetype{SynchronizedNode} & Start or end of a synchronized code block & \\
         \nodetype{MarkerNode} & No-op node used to annotate a CFG with
         information of the underlying Java source code.  Mostly useful
         for debugging and visualization. An example is indicating the
@@ -940,6 +962,10 @@ Other AST constructs are desugared into the above nodes (see \autoref{sec:desuga
 
 \begin{workinprogress}
 Can \code{StringConversionNode} be implicit?  I think so, but in any event discuss.
+\end{workinprogress}
+
+\begin{workinprogress}
+Why is it \code{AssertionErrorNode} instead of \code{AssertNode}?
 \end{workinprogress}
 
 
@@ -1015,6 +1041,9 @@ because they cannot maintain the distinction between them.  Merging
 just means taking the least upper bound of the two stores and it
 happens automatically by calling \code{TransferInput.getRegularStore}.
 
+Assignments usually merge conditional stores. For the translation of
+conditional operator expressions, a special non-merging assignment
+node is used (see \autoref{sec:cond-exp} below).
 
 \subsubsection{Branches}
 
@@ -1083,6 +1112,20 @@ containing \code{b1 || (b2 || b3)}.
   (\code{||}) with short-circuiting and more precise flow rules.}
 
 
+Conditional operator expressions (using the ternary conditional operator
+\code{? :}, cf. \jlsref{15.25}) use an additional synthetic local
+variable in the CFG. The second (then) and third (else) expressions are
+assigned to this local variable. In contrast to other assignments, this
+assignment does not merge the stores, to allow the propagation of
+conditional stores from these sub-expressions.
+The \code{TernaryExpressionNode} at the merge of the two branches can
+then either be treated like a local variable read or return a
+conditional store.
+
+\flow{CFGConditionalOpExpr}{.33}{.33}{Example of a conditional operator
+  expression (\code{? :}).}
+
+
 \subsubsection{Implicit \code{this} access}
 
 The Java compiler AST uses the same type (\code{IdentifierTree}) for
@@ -1131,6 +1174,7 @@ to be disabled.
 
 \subsubsection{Varargs method invocation}
 \label{sec:varargs}
+
 In Java, varargs in method or constructor invocation is compiled
 as new array creation (cf.\ \jlsref{15.12.4.2}). For example,
 \code{m(1, 2, 3)} will be compiled as \code{m(new int[]\{1, 2, 3\})}
@@ -1143,6 +1187,7 @@ the formal parameter, or if \code{null} is given as the actual varargs argument.
 
 \subsubsection{Default case and fall through for switch statement}
 \label{sec:default-switch}
+
 A switch statement is handled as a chain of \code{CaseNode} and nodes in
 the case. \code{CaseNode} makes a branch by comparing the equality of
 the expression of the switch statement and the expression of the case.
@@ -1158,6 +1203,16 @@ For example, see \autoref{fig:CFGSwitch}. The fake variable named \code{switch#n
 is created and each case node creates the branches.
 
 \flow{CFGSwitch}{.21}{1.45}{Example of a switch statement with case, default and fall through.}
+
+\subsubsection{Switch expressions}
+\label{sec:switch-expr}
+
+A switch expression is translated similarly to a switch statement.
+An additional fake variable \code{switchExpr} is used to store the value
+from the cases. The \code{SwitchExpressionNode} itself can then be
+handled like a read of that variable.
+
+% TODO: add an example
 
 \subsubsection{Handling \code{finally} blocks}
 \label{sec:try-finally}
@@ -1326,6 +1381,13 @@ cases that were better handled by desugaring.
       both an unboxing and a boxing operation on \code{i}.  Desugaring
       all compound assignments greatly reduced the total number of
       node classes.
+
+    \item String concatenation assignments are also desugared. A string
+      concatenation assignment like
+      \begin{verbatim}String s; s += "str";\end{verbatim} is represented as
+      \begin{verbatim}String s; s = s + "str";\end{verbatim} in CFGs.
+      This avoids duplicating the same logic that is necessary in assignment
+      and concatenation nodes, which was error prone.
 
     \end{itemize}
 
@@ -1708,6 +1770,58 @@ update the live variable values in the stores.
 \textbf{Example.} An example is shown in \autoref{fig:LiveSimple}.
 
 \flow{LiveSimple}{.33}{1}{Simple sequential program to illustrate live variable.  Intermediate analysis results are shown.}
+
+\section{Example: Very Busy Expression Analysis}
+
+Very busy expression analysis infers an expression to be very busy if no matter what path is taken,
+the expression is used before any variables occurring in it are redefined.
+This analysis is a backward analysis that intersects abstract states from successors.
+\\
+The main class is \code{org.checkerframework.dataflow.cfg.playground.BusyExpressionPlayground}.
+
+\textbf{Abstract values.} The \code{BusyExprValue} is a very busy expression, represented by a node.
+The node can be any \code{BinaryOperationNode}, such as \code{NumericalAdditionNode}
+and \code{LeftShiftNode}.
+
+\textbf{The store.} The busy expression store \code{BusyExprStore} has a field
+\code{busyExprValueSet} which contains a set of \code{BusyExprValue}s.
+If a node is a \code{BinaryOperationNode}, \code{addUseInExpression(Node)}
+will recursively analyze the subexpressions of the node to determine
+if they are nested \code{BinaryOperationNode}s. We then use \code{putBusyExpr(BusyExprValue)}
+to put the expression in the set. \code{killBusyExpr(Node)} is used when a variable is re-assigned.
+
+\textbf{The transfer function.} The transfer function \code{BusyExprTransfer}
+initializes empty stores at normal and exceptional exit blocks (because this
+is a backward transfer function). The transfer function visits assignment, method invocation,
+and return statement nodes to update the busy expression values in the stores.
+
+\textbf{Example.} An example is shown in \autoref{fig:BusyExprSimple}.
+
+\flow{BusyExprSimple}{.33}{1}{Very Busy Expression Analysis illustration. Intermediate analysis results are shown.}
+
+\section{Example: Reaching Definition Analysis}
+
+The reaching definitions for a given program point are those assignments that
+may have updated the current values of variables.
+This reaching definition analysis is a standard example of a forward analysis.
+
+\textbf{Abstract values.} A class \code{ReachingDefinitionNode} is used as an
+abstract value, which can only wrap \code{AssignmentNode}. The reaching definition analysis
+processes such values in the store.
+
+\textbf{The store.} The reaching definition store \code{ReachingDefinitionStore} has a field
+\code{reachingDefSet} which contains a set of \code{ReachingDefinitionNode}s. The store defines methods
+\code{putDef(ReachingDefinitionValue)} and \code{killDef(Node)} to add
+and kill reaching definitions.
+
+\textbf{The transfer function.} The transfer function visits \code{AssignmentNode} to
+update the information of reaching definitions in the stores. A reaching definition will
+be killed in the store when its left-hand side is same as that of the new generated value, and the new
+generated value will be added into the store.
+
+\textbf{Example.} An example is shown in \autoref{fig:ReachSimple}.
+
+\flow{ReachSimple}{.33}{1}{Simple sequential program to illustrate reaching definitions.  Intermediate analysis results are shown.}
 
 
 \section{Default Analysis}

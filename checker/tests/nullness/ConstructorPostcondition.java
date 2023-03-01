@@ -7,7 +7,7 @@ public class ConstructorPostcondition {
     }
 
     @EnsuresNonNull("#1.f")
-    // :: error: (contracts.postcondition)
+    // :: error: (contracts.postcondition.not.satisfied)
     ConstructorPostcondition(Box b) {}
 
     @EnsuresNonNull("#1.f")

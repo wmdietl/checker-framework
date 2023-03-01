@@ -29,7 +29,7 @@ public class SystemUtil {
 
     /** Do not instantiate. */
     private SystemUtil() {
-        throw new Error("Do not instantiate.");
+        throw new AssertionError("Class SystemUtil cannot be instantiated.");
     }
 
     /** The major version number of the Java runtime (JRE), such as 8, 11, or 17. */
@@ -159,7 +159,8 @@ public class SystemUtil {
      * @param source a list of elements to add
      * @deprecated use CollectionsPlume.adjoinAll
      */
-    @SuppressWarnings("nullness:argument" // true positive:  `dest` might be incompatible
+    @SuppressWarnings(
+            "nullness:argument.type.incompatible" // true positive:  `dest` might be incompatible
     // with null and `source` might contain null.
     )
     @Deprecated // 2023-01-08

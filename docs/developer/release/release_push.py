@@ -352,7 +352,7 @@ def main(argv):
 
     # Runs the link the checker on all websites at:
     # https://checkerframework.org/dev/
-    # The output of the link checker is written to files in the /scratch/$USER/cf-release directory
+    # The output of the link checker is written to files in the /tmp/$USER/cf-release directory
     # whose locations will be output at the command prompt if the link checker reported errors.
 
     # In rare instances (such as when a link is correct but the link checker is
@@ -419,7 +419,7 @@ def main(argv):
             + " * Browse to https://oss.sonatype.org/#stagingRepositories\n"
             + " * Log in using your Sonatype credentials\n"
             + ' * In the search box at upper right, type "checker"\n'
-            + " * In the top pane, click on org.checkerframework-XXXX\n"
+            + " * In the top pane, click on iogithubeisop-XXXX\n"
             + ' * Click "close" at the top\n'
             + " * For the close message, enter:  Checker Framework release "
             + new_cf_version
@@ -475,7 +475,7 @@ def main(argv):
 
     # Runs the link the checker on all websites at:
     # https://checkerframework.org/
-    # The output of the link checker is written to files in the /scratch/$USER/cf-release directory whose locations
+    # The output of the link checker is written to files in the /tmp/$USER/cf-release directory whose locations
     # will be output at the command prompt. Review the link checker output.
 
     # The set of broken links that is displayed by this check will differ from those in push
@@ -525,7 +525,7 @@ def main(argv):
         msg = (
             "Please 'release' the artifacts.\n"
             + "First log into https://oss.sonatype.org using your Sonatype credentials. Go to Staging Repositories and "
-            + "locate the org.checkerframework repository and click on it.\n"
+            + "locate the iogithubeisop-XXXX repository and click on it.\n"
             + "If you have a permissions problem, try logging out and back in.\n"
             + "Finally, click on the Release button at the top of the page. In the dialog box that pops up, "
             + 'leave the "Automatically drop" box checked. For the description, write '
@@ -560,7 +560,7 @@ def main(argv):
             + "\n"
             + "To post the Checker Framework release on GitHub:\n"
             + "\n"
-            + "* Browse to https://github.com/typetools/checker-framework/releases/new?tag=checker-framework-"
+            + "* Browse to https://github.com/eisop/checker-framework/releases/new?tag=checker-framework-"
             + new_cf_version
             + "\n"
             + "* For the release title, enter: Checker Framework "
@@ -574,7 +574,7 @@ def main(argv):
             + "\n"
             + "To post the Annotation File Utilities release on GitHub:\n"
             + "\n"
-            + "* Browse to https://github.com/typetools/annotation-tools/releases/new?tag="
+            + "* Browse to https://github.com/eisop/annotation-tools/releases/new?tag="
             + new_cf_version
             + "\n"
             + "* For the release title, enter: Annotation File Utilities "

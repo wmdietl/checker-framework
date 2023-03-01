@@ -351,7 +351,7 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
     }
 
     /** A class loader for looking up annotations. */
-    private static final ClassLoader classLoader =
+    private static final ClassLoader CLASSLOADER =
             InternalUtils.getClassLoaderForClass(AnnotationUtils.class);
 
     /**
@@ -370,12 +370,13 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                                 .toString();
                 if (!Signatures.isClassGetName(theclassname)) {
                     throw new UserError(
-                            "Malformed class name \"%s\" should be in ClassGetName format in annotation %s",
+                            "Malformed class name \"%s\" should be in ClassGetName format in"
+                                    + " annotation %s",
                             theclassname, ama);
                 }
                 Class<?> valueElement;
                 try {
-                    valueElement = Class.forName(theclassname, true, classLoader);
+                    valueElement = Class.forName(theclassname, true, CLASSLOADER);
                 } catch (ClassNotFoundException e) {
                     String msg =
                             String.format(

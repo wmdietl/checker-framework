@@ -6,8 +6,10 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Attribute;
+import com.sun.tools.javac.code.BoundKind;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Type.WildcardType;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -57,7 +59,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
-import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -245,17 +246,16 @@ public class AnnotatedTypes {
         }
     }
 
-    /*
-     * In the methods below, we check the values of the bounds instead of checking isUnbound(). By
-     * doing so, we stick to the public javax.lang.model API. That said, our real motivation is that
-     * recent JDKs implement isUnbound() to return true for `? extends Object`. We want to distinguish
-     * that from `?`: https://jspecify.dev/spec#unbounded-wildcard
-     */
+    // Do not use `isUnbound()` because as of Java 18, it returns true for "?  extends Object".
 
-    /** This method identifies wildcard types that are unbound. */
+    /**
+     * This method identifies wildcard types that are unbound.
+     *
+     * @param wildcard the type to check
+     * @return true if the given card is an unbounded wildcard
+     */
     public static boolean hasNoExplicitBound(final AnnotatedTypeMirror wildcard) {
-        return ((WildcardType) wildcard.getUnderlyingType()).getExtendsBound() == null
-                && ((WildcardType) wildcard.getUnderlyingType()).getSuperBound() == null;
+        return ((Type.WildcardType) wildcard.getUnderlyingType()).kind == BoundKind.UNBOUND;
     }
 
     /**
@@ -264,7 +264,9 @@ public class AnnotatedTypes {
      * which necessitates this method
      */
     public static boolean hasExplicitSuperBound(final AnnotatedTypeMirror wildcard) {
-        return ((WildcardType) wildcard.getUnderlyingType()).getSuperBound() != null;
+        final Type.WildcardType wildcardType = (Type.WildcardType) wildcard.getUnderlyingType();
+        return wildcardType.isSuperBound()
+                && ((WildcardType) wildcard.getUnderlyingType()).kind != BoundKind.UNBOUND;
     }
 
     /**
@@ -273,7 +275,9 @@ public class AnnotatedTypes {
      * wildcards which necessitates this method
      */
     public static boolean hasExplicitExtendsBound(final AnnotatedTypeMirror wildcard) {
-        return ((WildcardType) wildcard.getUnderlyingType()).getExtendsBound() != null;
+        final Type.WildcardType wildcardType = (Type.WildcardType) wildcard.getUnderlyingType();
+        return wildcardType.isExtendsBound()
+                && ((WildcardType) wildcard.getUnderlyingType()).kind != BoundKind.UNBOUND;
     }
 
     /**
@@ -719,7 +723,7 @@ public class AnnotatedTypes {
 
         // Is the method a generic method?
         if (elt.getTypeParameters().isEmpty()) {
-            return Collections.emptyMap();
+            return new HashMap<>();
         }
 
         List<? extends Tree> targs;
@@ -922,7 +926,7 @@ public class AnnotatedTypes {
             AnnotatedTypeMirror subtype,
             AnnotatedTypeMirror supertype) {
         AnnotatedTypeMirror glb = subtype.deepCopy();
-        glb.clearPrimaryAnnotations();
+        glb.clearAnnotations();
 
         for (AnnotationMirror top : qualifierHierarchy.getTopAnnotations()) {
             AnnotationMirror subAnno = subtype.getAnnotationInHierarchy(top);
@@ -999,6 +1003,10 @@ public class AnnotatedTypes {
             List<? extends ExpressionTree> args) {
         List<AnnotatedTypeMirror> parameters = method.getParameterTypes();
 
+        if (parameters.isEmpty()) {
+            return parameters;
+        }
+
         // Handle anonymous constructors that extend a class with an enclosing type.
         if (method.getElement().getKind() == ElementKind.CONSTRUCTOR
                 && method.getElement().getEnclosingElement().getSimpleName().contentEquals("")) {
@@ -1006,17 +1014,22 @@ public class AnnotatedTypes {
                     TypesUtils.getSuperClassOrInterface(
                             method.getElement().getEnclosingElement().asType(), atypeFactory.types);
             if (t.getEnclosingType() != null) {
-                if (args.isEmpty() && !parameters.isEmpty()) {
+                if (args.isEmpty()) {
+                    // TODO: ugly hack to attempt to fix mismatch
                     parameters = parameters.subList(1, parameters.size());
-                } else if (!parameters.isEmpty()) {
-                    if (atypeFactory.types.isSameType(
-                            t.getEnclosingType(), parameters.get(0).getUnderlyingType())) {
-                        if (!atypeFactory.types.isSameType(
-                                TreeUtils.typeOf(args.get(0)),
-                                parameters.get(0).getUnderlyingType())) {
+                } else {
+                    TypeMirror p0tm = parameters.get(0).getUnderlyingType();
+                    // Is the first parameter either equal to the enclosing type?
+                    if (atypeFactory.types.isSameType(t.getEnclosingType(), p0tm)) {
+                        // Is the first argument the same type as the first parameter?
+                        if (!atypeFactory.types.isSameType(TreeUtils.typeOf(args.get(0)), p0tm)) {
+                            // Remove the first parameter.
                             parameters = parameters.subList(1, parameters.size());
                         }
                     }
+                }
+                if (parameters.isEmpty()) {
+                    return parameters;
                 }
             }
         }
@@ -1125,7 +1138,7 @@ public class AnnotatedTypes {
      * @return a list with the AnnotatedTypeMirror of each tree in trees
      * @deprecated use CollectionsPlume.mapList(atypeFactory::getAnnotatedType, trees) instead.
      */
-    @Deprecated
+    @Deprecated // 2021-11-01
     public static List<AnnotatedTypeMirror> getAnnotatedTypes(
             AnnotatedTypeFactory atypeFactory,
             List<AnnotatedTypeMirror> paramTypes,
@@ -1561,74 +1574,30 @@ public class AnnotatedTypes {
         return result;
     }
 
-    /*
-     * In the methods below, we check the values of the bounds instead of checking isUnbound(). By
-     * doing so, we stick to the public javax.lang.model API. That said, our real motivation is that
-     * recent JDKs implement isUnbound() to return true for `? extends Object`. We want to distinguish
-     * that from `?`: https://jspecify.dev/spec#unbounded-wildcard
-     *
-     * It's possible that some of the methods would still have worked OK, but the safest move for us
-     * is to be consistent in checking the values of the bounds.
-     */
-
     // For Wildcards, isSuperBound() and isExtendsBound() will return true if isUnbound() does.
     // But don't use isUnbound(), because as of Java 18, it returns true for "? extends Object".
-
-    /**
-     * This method identifies wildcard types that are unbound.
-     *
-     * @param wildcard the type to check
-     * @return true if the given card is an unbounded wildcard
-     */
-    /*public static boolean hasNoExplicitBound(final AnnotatedTypeMirror wildcard) {
-      return ((Type.WildcardType) wildcard.getUnderlyingType()).kind == BoundKind.UNBOUND;
-    }*/
 
     /**
      * Returns true if wildcard type is explicitly super bounded.
      *
      * @param wildcardType the wildcard type to test
      * @return true if wildcard type is explicitly super bounded
-     * @deprecated Use {@link #hasExplicitSuperBound(AnnotatedTypeMirror)}
      */
-    @Deprecated
     public static boolean isExplicitlySuperBounded(final AnnotatedWildcardType wildcardType) {
-        return hasExplicitSuperBound(wildcardType);
+        return ((Type.WildcardType) wildcardType.getUnderlyingType()).isSuperBound()
+                && ((Type.WildcardType) wildcardType.getUnderlyingType()).kind != BoundKind.UNBOUND;
     }
-
-    /**
-     * Returns true if wildcard type has an explicit super bound.
-     *
-     * @param wildcard the wildcard type to test
-     * @return true if wildcard type is explicitly super bounded
-     */
-    /*public static boolean hasExplicitSuperBound(final AnnotatedTypeMirror wildcard) {
-      return ((Type.WildcardType) wildcard.getUnderlyingType()).isSuperBound()
-          && ((Type.WildcardType) wildcard.getUnderlyingType()).kind != BoundKind.UNBOUND;
-    }*/
 
     /**
      * Returns true if wildcard type is explicitly extends bounded.
      *
      * @param wildcardType the wildcard type to test
      * @return true if wildcard type is explicitly extends bounded
-     * @deprecated Use {@link #hasExplicitExtendsBound(AnnotatedTypeMirror)}.
      */
-    @Deprecated
     public static boolean isExplicitlyExtendsBounded(final AnnotatedWildcardType wildcardType) {
-        return hasExplicitExtendsBound(wildcardType);
+        return ((Type.WildcardType) wildcardType.getUnderlyingType()).isExtendsBound()
+                && ((Type.WildcardType) wildcardType.getUnderlyingType()).kind != BoundKind.UNBOUND;
     }
-
-    /**
-     * Returns true if wildcard type has an explicit extends bound.
-     *
-     * @param wildcardType the wildcard type to test
-     * @return true if wildcard type is explicitly extends bounded
-     */
-    /*public static boolean hasExplicitExtendsBound(final AnnotatedTypeMirror wildcardType) {
-      return ((Type.WildcardType) wildcardType.getUnderlyingType()).isExtendsBound()
-          && ((Type.WildcardType) wildcardType.getUnderlyingType()).kind != BoundKind.UNBOUND;
-    }*/
 
     /**
      * Returns true if this type is super bounded or unbounded.

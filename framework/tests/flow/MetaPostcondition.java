@@ -88,9 +88,9 @@ public class MetaPostcondition {
 
     // basic postcondition test
     void tnm1(@Odd String p1, @ValueTypeAnno String p2) {
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @Odd String l1 = f1;
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @ValueTypeAnno String l2 = f2;
 
         // :: error: (flowexpr.parse.error.postcondition)

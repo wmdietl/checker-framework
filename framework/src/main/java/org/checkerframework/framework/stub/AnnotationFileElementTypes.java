@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -63,11 +64,8 @@ public class AnnotationFileElementTypes {
     /** Annotations from annotation files (but not from annotated JDK files). */
     private final AnnotationFileAnnotations annotationFileAnnos;
 
-    /**
-     * Whether or not a file is currently being parsed. (If one is being parsed, don't try to parse
-     * another.)
-     */
-    private boolean parsing;
+    /** The number of ongoing parsing tasks. */
+    private int parsingCount;
 
     /** AnnotatedTypeFactory. */
     private final AnnotatedTypeFactory factory;
@@ -99,6 +97,13 @@ public class AnnotationFileElementTypes {
     private final boolean ignorejdkastub;
 
     /**
+     * Stores the fully qualified name of top-level classes (from any type of stub file) that are
+     * currently being parsed. This can stop recursively parsing an annotated JDK class that is
+     * currently being processed, which prevents conflicts of definition and infinite loops.
+     */
+    private final Set<String> processingClasses = new LinkedHashSet<>();
+
+    /**
      * Creates an empty annotation source.
      *
      * @param factory AnnotatedTypeFactory
@@ -106,7 +111,7 @@ public class AnnotationFileElementTypes {
     public AnnotationFileElementTypes(AnnotatedTypeFactory factory) {
         this.factory = factory;
         this.annotationFileAnnos = new AnnotationFileAnnotations();
-        this.parsing = false;
+        this.parsingCount = 0;
         String release = SystemUtil.getReleaseValue(factory.getProcessingEnv());
         this.annotatedJdkVersion =
                 release != null ? release : String.valueOf(SystemUtil.jreVersion);
@@ -123,7 +128,7 @@ public class AnnotationFileElementTypes {
      * @return true if files are currently being parsed; otherwise, false
      */
     public boolean isParsing() {
-        return parsing;
+        return parsingCount > 0;
     }
 
     /**
@@ -149,10 +154,16 @@ public class AnnotationFileElementTypes {
      * annotation is requested from a class in that file.
      */
     public void parseStubFiles() {
-        parsing = true;
+        assert parsingCount == 0;
+        ++parsingCount;
         BaseTypeChecker checker = factory.getChecker();
         if (!ignorejdkastub) {
-            // 1. jdk.astub
+            // 1. Annotated JDK
+            // This preps but does not parse the JDK files (except package-info.java files).
+            // The JDK source code files will be parsed later, on demand.
+            prepJdkStubs();
+
+            // 2. jdk.astub
             // Only look in .jar files, and parse it right away.
             String jdkVersionStub = "jdk" + annotatedJdkVersion + ".astub";
             parseOneStubFile(this.getClass(), "jdk.astub");
@@ -165,14 +176,6 @@ public class AnnotationFileElementTypes {
                 parseOneStubFile(this.getClass(), jdk11Stub);
                 parseOneStubFile(checker.getClass(), jdk11Stub);
             }
-
-            // 2. Annotated JDK
-            // This preps but does not parse the JDK files (except package-info.java files).
-            // The JDK source code files will be parsed later, on demand.
-            prepJdkStubs();
-            // prepping the JDK parses all package-info.java files, which sets the `parsing` field
-            // to false, so re-set it to true.
-            parsing = true;
         }
 
         // 3. Stub files listed in @StubFiles annotation on the checker
@@ -193,7 +196,38 @@ public class AnnotationFileElementTypes {
                     AnnotationFileType.COMMAND_LINE_STUB);
         }
 
-        parsing = false;
+        --parsingCount;
+        assert parsingCount == 0;
+    }
+
+    /**
+     * Parse one .astub file.
+     *
+     * @param checkerClass the location of the resource in the checker.jar file
+     * @param stubFileName the basename of the .astub file
+     */
+    private void parseOneStubFile(Class<?> checkerClass, String stubFileName) {
+        BaseTypeChecker checker = factory.getChecker();
+        ProcessingEnvironment processingEnv = factory.getProcessingEnv();
+        try (InputStream jdkVersionStubIn = checkerClass.getResourceAsStream(stubFileName)) {
+            if (jdkVersionStubIn != null) {
+                AnnotationFileParser.parseStubFile(
+                        checkerClass.getResource(stubFileName).toString(),
+                        jdkVersionStubIn,
+                        factory,
+                        processingEnv,
+                        annotationFileAnnos,
+                        AnnotationFileType.BUILTIN_STUB,
+                        this);
+            }
+        } catch (IOException e) {
+            checker.message(
+                    Kind.NOTE,
+                    "Could not read annotation resource from "
+                            + checkerClass
+                            + ": "
+                            + stubFileName);
+        }
     }
 
     /**
@@ -227,20 +261,19 @@ public class AnnotationFileElementTypes {
 
     /** Parses the ajava files passed through the -Aajava command-line option. */
     public void parseAjavaFiles() {
-        parsing = true;
-        try {
-            // TODO: Error if this is called more than once?
-            SourceChecker checker = factory.getChecker();
-            List<String> ajavaFiles = new ArrayList<>();
-            String ajavaOption = checker.getOption("ajava");
-            if (ajavaOption != null) {
-                Collections.addAll(ajavaFiles, ajavaOption.split(File.pathSeparator));
-            }
-
-            parseAnnotationFiles(ajavaFiles, AnnotationFileType.AJAVA);
-        } finally {
-            parsing = false;
+        assert parsingCount == 0;
+        ++parsingCount;
+        // TODO: Error if this is called more than once?
+        SourceChecker checker = factory.getChecker();
+        List<String> ajavaFiles = new ArrayList<>();
+        String ajavaOption = checker.getOption("ajava");
+        if (ajavaOption != null) {
+            Collections.addAll(ajavaFiles, ajavaOption.split(File.pathSeparator));
         }
+
+        parseAnnotationFiles(ajavaFiles, AnnotationFileType.AJAVA);
+        --parsingCount;
+        assert parsingCount == 0;
     }
 
     /**
@@ -253,17 +286,21 @@ public class AnnotationFileElementTypes {
      * @param root javac tree for the compilation unit stored in {@code ajavaFile}
      */
     public void parseAjavaFileWithTree(String ajavaPath, CompilationUnitTree root) {
-        parsing = true;
+        assert parsingCount == 0;
+        ++parsingCount;
         SourceChecker checker = factory.getChecker();
         ProcessingEnvironment processingEnv = factory.getProcessingEnv();
         try (InputStream in = new FileInputStream(ajavaPath)) {
             AnnotationFileParser.parseAjavaFile(
-                    ajavaPath, in, root, factory, processingEnv, annotationFileAnnos);
+                    ajavaPath, in, root, factory, processingEnv, annotationFileAnnos, this);
         } catch (IOException e) {
             checker.message(Kind.NOTE, "Could not read ajava file: " + ajavaPath);
         } finally {
             parsing = false;
         }
+
+        --parsingCount;
+        assert parsingCount == 0;
     }
 
     /**
@@ -299,7 +336,8 @@ public class AnnotationFileElementTypes {
                                 annotationFileAnnos,
                                 fileType == AnnotationFileType.AJAVA
                                         ? AnnotationFileType.AJAVA_AS_STUB
-                                        : fileType);
+                                        : fileType,
+                                this);
                     } catch (IOException e) {
                         checker.message(
                                 Kind.NOTE,
@@ -317,7 +355,13 @@ public class AnnotationFileElementTypes {
                 try (InputStream in = checker.getClass().getResourceAsStream(path)) {
                     if (in != null) {
                         AnnotationFileParser.parseStubFile(
-                                path, in, factory, processingEnv, annotationFileAnnos, fileType);
+                                path,
+                                in,
+                                factory,
+                                processingEnv,
+                                annotationFileAnnos,
+                                fileType,
+                                this);
                     } else {
                         // Didn't find the file.  Issue a warning.
 
@@ -386,9 +430,6 @@ public class AnnotationFileElementTypes {
      *     not appear in an annotation file.
      */
     public @Nullable AnnotatedTypeMirror getAnnotatedTypeMirror(Element e) {
-        if (isParsing()) {
-            return null;
-        }
         parseEnclosingJdkClass(e);
         AnnotatedTypeMirror type = annotationFileAnnos.atypes.get(e);
         return type == null ? null : type.deepCopy();
@@ -405,26 +446,7 @@ public class AnnotationFileElementTypes {
      *     does not appear in an annotation file.
      * @deprecated use {@link #getDeclAnnotations}
      */
-    @Deprecated // 2021-06-26
-    public AnnotationMirrorSet getDeclAnnotation(Element elt) {
-        return getDeclAnnotations(elt);
-    }
-
-    /**
-     * Returns the set of declaration annotations for {@code e} containing only annotations
-     * explicitly written in an annotation file or the empty set if {@code e} does not appear in an
-     * annotation file.
-     *
-     * @param elt element for which annotations are returned
-     * @return an AnnotatedTypeMirror for {@code e} containing only annotations explicitly written
-     *     in the annotation file and in the element. {@code null} is returned if {@code element}
-     *     does not appear in an annotation file.
-     */
     public AnnotationMirrorSet getDeclAnnotations(Element elt) {
-        if (false) {
-            return AnnotationMirrorSet.emptySet();
-        }
-
         parseEnclosingJdkClass(elt);
         String eltName = ElementUtils.getQualifiedName(elt);
         if (annotationFileAnnos.declAnnos.containsKey(eltName)) {
@@ -643,13 +665,30 @@ public class AnnotationFileElementTypes {
      * @param e element whose outermost enclosing class will be parsed
      */
     private void parseEnclosingJdkClass(Element e) {
-        if (!shouldParseJdk) {
+        if (!shouldParseJdk
+                || e.getKind() == ElementKind.PACKAGE
+                || e.getKind() == ElementKind.MODULE) {
             return;
         }
+
         String className = getOutermostEnclosingClass(e);
         if (className == null || className.isEmpty()) {
+            // TODO: maybe investigate other situations where the enclosing class is missing
+            //            if (e.getKind() != ElementKind.PACKAGE && e.getKind() !=
+            // ElementKind.MODULE) {
+            //                factory.getChecker().reportWarning(e, "unexpected element " + e + " of
+            // kind " + e.getKind());
+            //            }
+
             return;
         }
+
+        if (processingClasses.contains(className)) {
+            // TODO: some declaration annotations in the enclosing class may still
+            //  be missing, we can revisit this part if it's causing issues
+            return;
+        }
+
         if (jdkStubFiles.containsKey(className)) {
             parseJdkStubFile(jdkStubFiles.remove(className));
         } else if (jdkStubFilesJar.containsKey(className)) {
@@ -694,18 +733,19 @@ public class AnnotationFileElementTypes {
      * @param path path to file to parse
      */
     private void parseJdkStubFile(Path path) {
-        parsing = true;
+        ++parsingCount;
         try (FileInputStream jdkStub = new FileInputStream(path.toFile())) {
             AnnotationFileParser.parseJdkFileAsStub(
                     path.toFile().getName(),
                     jdkStub,
                     factory,
                     factory.getProcessingEnv(),
-                    annotationFileAnnos);
+                    annotationFileAnnos,
+                    this);
         } catch (IOException e) {
             throw new BugInCF("cannot open the jdk stub file " + path, e);
         } finally {
-            parsing = false;
+            --parsingCount;
         }
     }
 
@@ -716,7 +756,7 @@ public class AnnotationFileElementTypes {
      */
     private void parseJdkJarEntry(String jarEntryName) {
         JarURLConnection connection = getJarURLConnectionToJdk();
-        parsing = true;
+        ++parsingCount;
         try (JarFile jarFile = connection.getJarFile()) {
             try (InputStream jdkStub = jarFile.getInputStream(jarFile.getJarEntry(jarEntryName))) {
                 AnnotationFileParser.parseJdkFileAsStub(
@@ -724,7 +764,8 @@ public class AnnotationFileElementTypes {
                         jdkStub,
                         factory,
                         factory.getProcessingEnv(),
-                        annotationFileAnnos);
+                        annotationFileAnnos,
+                        this);
             } catch (IOException e) {
                 throw new BugInCF("cannot open the jdk stub file " + jarEntryName, e);
             }
@@ -733,7 +774,7 @@ public class AnnotationFileElementTypes {
         } catch (BugInCF e) {
             throw new BugInCF("Exception while parsing " + jarEntryName + ": " + e.getMessage(), e);
         } finally {
-            parsing = false;
+            --parsingCount;
         }
     }
 
@@ -870,6 +911,33 @@ public class AnnotationFileElementTypes {
             }
         } catch (IOException e) {
             throw new BugInCF("Cannot open the jar file " + resourceURL.getFile(), e);
+        }
+    }
+
+    /**
+     * This method is invoked each time before {@link AnnotationFileParser} processes a top-level
+     * type.
+     *
+     * @param typeName the fully qualified name of the top-level type
+     */
+    void preProcessTopLevelType(String typeName) {
+        boolean added = processingClasses.add(typeName);
+        if (!added) {
+            throw new BugInCF(
+                    "Trying to process type " + typeName + " which is already being processed.");
+        }
+    }
+
+    /**
+     * This method is invoked each time after {@link AnnotationFileParser} processes a top-level
+     * type.
+     *
+     * @param typeName the fully qualified name of the top-level type
+     */
+    void postProcessTopLevelType(String typeName) {
+        boolean removed = processingClasses.remove(typeName);
+        if (!removed) {
+            throw new BugInCF("Cannot find the processing record for type " + typeName);
         }
     }
 }

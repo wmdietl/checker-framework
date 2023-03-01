@@ -7,7 +7,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings({"purity", "contracts.postcondition"}) // Only test parsing
+@SuppressWarnings({"purity", "contracts.postcondition.not.satisfied"}) // Only test parsing
 public class Issue1406 {
 
     public static void main(String[] args) {}

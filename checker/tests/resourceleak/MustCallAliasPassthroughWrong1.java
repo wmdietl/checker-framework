@@ -8,7 +8,7 @@ import org.checkerframework.checker.mustcall.qual.*;
 import java.io.*;
 
 class MustCallAliasPassthroughWrong1 extends FilterInputStream {
-    // :: error: (mustcallalias.out.of.scope)
+    // :: error: mustcallalias.out.of.scope
     @MustCallAlias MustCallAliasPassthroughWrong1(@MustCallAlias InputStream is) {
         super(null);
     }

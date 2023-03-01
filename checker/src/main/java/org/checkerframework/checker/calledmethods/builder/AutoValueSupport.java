@@ -333,7 +333,9 @@ public class AutoValueSupport implements BuilderFrameworkSupport {
      */
     private static final String[] optionalClassNames =
             new String[] {
-                "com.google.common.base.Optional",
+                // Use concatenation to avoid ShadowJar relocate
+                // "com.google.common.base.Optional",
+                "com.go".toString() + "ogle.common.base.Optional",
                 "java.util.Optional",
                 "java.util.OptionalDouble",
                 "java.util.OptionalInt",

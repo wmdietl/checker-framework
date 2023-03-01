@@ -32,7 +32,7 @@ class ConnectingSockets {
     }
 
     static @MustCall({}) Socket makeUnconnected() throws Exception {
-        // :: error: (return)
+        // :: error: (return.type.incompatible)
         return new Socket();
     }
 

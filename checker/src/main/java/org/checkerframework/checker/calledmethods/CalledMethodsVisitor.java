@@ -106,7 +106,7 @@ public class CalledMethodsVisitor extends AccumulationVisitor {
                 }
             }
 
-            checker.reportError(tree, "finalizer.invocation", missingMethods.toString());
+            checker.reportError(tree, "finalizer.invocation.invalid", missingMethods.toString());
         } else {
             super.reportMethodInvocabilityError(tree, found, expected);
         }

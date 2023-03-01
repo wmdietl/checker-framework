@@ -90,9 +90,9 @@ public class NullnessTransfer
     private final boolean assumeKeyFor;
 
     /**
-     * True if invocationPreservesArgumentNullness flag is turned on, meaning that after a method
-     * call or constructor invocation, non-null arguments of the invocation (including the receiver)
-     * are assumed to still be non-null.
+     * True if conservativeArgumentNullnessAfterInvocation flag is turned off, meaning that after a
+     * method call or constructor invocation, arguments of the invocation (including the receiver)
+     * are assumed to be non-null.
      */
     private final boolean nonNullAssumptionAfterInvocation;
 
@@ -130,7 +130,7 @@ public class NullnessTransfer
         nonNullAssumptionAfterInvocation =
                 !analysis.getTypeFactory()
                         .getChecker()
-                        .getBooleanOption("invocationPreservesArgumentNullness", true);
+                        .getBooleanOption("conservativeArgumentNullnessAfterInvocation", false);
     }
 
     /**
@@ -365,11 +365,11 @@ public class NullnessTransfer
     /**
      * {@inheritDoc}
      *
-     * <p>When the invocationPreservesArgumentNullness flag is turned on, the receiver and arguments
-     * that are passed to non-null parameters in a method call or constructor invocation are
-     * unsoundly assumed to be non-null after the invocation.
+     * <p>When the conservativeArgumentNullnessAfterInvocation flag is turned off, the receiver and
+     * arguments that are passed to non-null parameters in a method call or constructor invocation
+     * are unsoundly assumed to be non-null after the invocation.
      *
-     * <p>When the flag is turned off, the analysis is sound: it checks that the method is
+     * <p>When the flag is turned on, the analysis is more conservative by checking the method is
      * SideEffectFree or the receiver is unassignable. Only if either one of the two is true, is the
      * receiver made non-null. Similar logic is applied to the arguments of the invocation.
      *

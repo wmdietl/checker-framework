@@ -71,15 +71,23 @@ import javax.lang.model.type.TypeMirror;
 /** The visitor for the nullness type-system. */
 public class NullnessVisitor
         extends InitializationVisitor<NullnessAnnotatedTypeFactory, NullnessValue, NullnessStore> {
-    // Error message keys
-    // private static final @CompilerMessageKey String ASSIGNMENT_TYPE_INCOMPATIBLE = "assignment";
+    // private static final @CompilerMessageKey String ASSIGNMENT_TYPE_INCOMPATIBLE =
+    // "assignment.type.incompatible";
+    /** Error message key. */
     private static final @CompilerMessageKey String UNBOXING_OF_NULLABLE = "unboxing.of.nullable";
+    /** Error message key. */
     private static final @CompilerMessageKey String LOCKING_NULLABLE = "locking.nullable";
+    /** Error message key. */
     private static final @CompilerMessageKey String THROWING_NULLABLE = "throwing.nullable";
+    /** Error message key. */
     private static final @CompilerMessageKey String ACCESSING_NULLABLE = "accessing.nullable";
+    /** Error message key. */
     private static final @CompilerMessageKey String CONDITION_NULLABLE = "condition.nullable";
+    /** Error message key. */
     private static final @CompilerMessageKey String ITERATING_NULLABLE = "iterating.over.nullable";
+    /** Error message key. */
     private static final @CompilerMessageKey String SWITCHING_NULLABLE = "switching.nullable";
+    /** Error message key. */
     private static final @CompilerMessageKey String DEREFERENCE_OF_NULLABLE =
             "dereference.of.nullable";
 
@@ -294,7 +302,11 @@ public class NullnessVisitor
                 && (checker.getLintOption("soundArrayCreationNullness", false)
                         // temporary, for backward compatibility
                         || checker.getLintOption("forbidnonnullarraycomponents", false))) {
-            checker.reportError(tree, "new.array", componentType.getAnnotations(), type.toString());
+            checker.reportError(
+                    tree,
+                    "new.array.type.invalid",
+                    componentType.getAnnotations(),
+                    type.toString());
         }
 
         return super.visitNewArray(tree, p);
@@ -399,6 +411,7 @@ public class NullnessVisitor
         } else if (assumeAssertionsAreDisabled) {
             doVisitAssert = false;
         } else {
+            // no option given -> visit
             doVisitAssert = true;
         }
 
@@ -742,14 +755,14 @@ public class NullnessVisitor
                         containsSameByName(atypeFactory.getNullnessAnnotations(), a);
                 if (nullnessCheckerAnno && !AnnotationUtils.areSame(NONNULL, a)) {
                     // The type is not non-null => warning
-                    checker.reportWarning(tree, "new.class", type.getAnnotations());
+                    checker.reportWarning(tree, "new.class.type.invalid", type.getAnnotations());
                     // Note that other consistency checks are made by isValid.
                 }
             }
             if (t.toString().contains("@PolyNull")) {
                 // TODO: this is a hack, but PolyNull gets substituted
                 // afterwards
-                checker.reportWarning(tree, "new.class", type.getAnnotations());
+                checker.reportWarning(tree, "new.class.type.invalid", type.getAnnotations());
             }
         }
         // TODO: It might be nicer to introduce a framework-level

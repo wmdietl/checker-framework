@@ -2,17 +2,17 @@ package org.checkerframework.common.wholeprograminference;
 
 import com.google.common.collect.ComparisonChain;
 
-import org.checkerframework.afu.scenelib.Annotation;
-import org.checkerframework.afu.scenelib.el.AClass;
-import org.checkerframework.afu.scenelib.el.AField;
-import org.checkerframework.afu.scenelib.el.AMethod;
-import org.checkerframework.afu.scenelib.el.AScene;
-import org.checkerframework.afu.scenelib.el.ATypeElement;
-import org.checkerframework.afu.scenelib.el.AnnotationDef;
-import org.checkerframework.afu.scenelib.el.DefCollector;
-import org.checkerframework.afu.scenelib.el.DefException;
-import org.checkerframework.afu.scenelib.el.TypePathEntry;
-import org.checkerframework.afu.scenelib.field.AnnotationFieldType;
+import org.checkerframework.afu.scenelib.annotations.Annotation;
+import org.checkerframework.afu.scenelib.annotations.el.AClass;
+import org.checkerframework.afu.scenelib.annotations.el.AField;
+import org.checkerframework.afu.scenelib.annotations.el.AMethod;
+import org.checkerframework.afu.scenelib.annotations.el.AScene;
+import org.checkerframework.afu.scenelib.annotations.el.ATypeElement;
+import org.checkerframework.afu.scenelib.annotations.el.AnnotationDef;
+import org.checkerframework.afu.scenelib.annotations.el.DefCollector;
+import org.checkerframework.afu.scenelib.annotations.el.DefException;
+import org.checkerframework.afu.scenelib.annotations.el.TypePathEntry;
+import org.checkerframework.afu.scenelib.annotations.field.AnnotationFieldType;
 import org.checkerframework.checker.index.qual.SameLen;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.signature.qual.BinaryName;

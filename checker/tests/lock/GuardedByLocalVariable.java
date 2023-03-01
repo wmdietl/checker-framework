@@ -20,7 +20,8 @@ public class GuardedByLocalVariable {
             kk = k;
         }
         {
-            @SuppressWarnings("assignment") // prevent flow-sensitive type refinement
+            @SuppressWarnings(
+                    "assignment.type.incompatible") // prevent flow-sensitive type refinement
             final Map<Object, Integer> m0 = someValue();
             // If the type of kk were legal, this assignment would be illegal because the two
             // instances of "m0" would refer to different variables.

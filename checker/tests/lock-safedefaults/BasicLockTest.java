@@ -39,7 +39,7 @@ public class BasicLockTest {
         // The first way is more durable as cannot.dereference is tied specifically to
         // @GuardedByUnknown (and @GuardedByBottom, but it is unlikely to become the default for
         // return values on unannotated methods).
-        // :: error: (lock.not.held) :: error: (argument)
+        // :: error: (lock.not.held) :: error: (argument.type.incompatible)
         myUnannotatedMethod(o1).field = someValue;
         // The second way is less durable because the default for fields is currently @GuardedBy({})
         // but could be changed to @GuardedByUnknown.

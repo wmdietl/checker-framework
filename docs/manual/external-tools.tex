@@ -118,11 +118,11 @@ configurations {
 \begin{Verbatim}
 dependencies {
     ... existing dependencies...
-    ext.checkerFrameworkVersion = '3.31.0'
-    implementation "org.checkerframework:checker-qual-android:${checkerFrameworkVersion}"
+    ext.checkerFrameworkVersion = '3.28.0-eisop1'
+    implementation "io.github.eisop:checker-qual-android:${checkerFrameworkVersion}"
     // or if you use no annotations in source code the above line could be
-    // compileOnly "org.checkerframework:checker-qual-android:${checkerFrameworkVersion}"
-    annotationProcessor "org.checkerframework:checker:${checkerFrameworkVersion}"
+    // compileOnly "io.github.eisop:checker-qual-android:${checkerFrameworkVersion}"
+    annotationProcessor "io.github.eisop:checker:${checkerFrameworkVersion}"
     errorproneJavac 'com.google.errorprone:javac:9+181-r4173-1'
 }
 \end{Verbatim}
@@ -191,11 +191,11 @@ android {
 \begin{Verbatim}
 dependencies {
     ... existing dependencies...
-    ext.checkerFrameworkVersion = '3.31.0'
-    implementation "org.checkerframework:checker-qual-android:${checkerFrameworkVersion}"
+    ext.checkerFrameworkVersion = '3.28.0-eisop1'
+    implementation "io.github.eisop:checker-qual-android:${checkerFrameworkVersion}"
     // or if you use no annotations in source code the above line could be
-    // compileOnly "org.checkerframework:checker-qual-android:${checkerFrameworkVersion}"
-    annotationProcessor "org.checkerframework:checker:${checkerFrameworkVersion}"
+    // compileOnly "io.github.eisop:checker-qual-android:${checkerFrameworkVersion}"
+    annotationProcessor "io.github.eisop:checker:${checkerFrameworkVersion}"
 }
 \end{Verbatim}
 \end{mysmall}
@@ -551,9 +551,9 @@ Alternately, you can get all of the jars mentioned in this section from Maven Ce
 
 \begin{itemize}
 \item \<javac.jar>: \url{https://search.maven.org/artifact/com.google.errorprone/javac/9%2B181-r4173-1/jar}
-\item \<checker-qual.jar>: \url{https://repo1.maven.org/maven2/org/checkerframework/checker-qual/3.31.0/checker-qual-3.31.0.jar}
-\item \<checker-util.jar>: \url{https://repo1.maven.org/maven2/org/checkerframework/checker-util/3.31.0/checker-util-3.31.0.jar}
-\item \<checker.jar>: \url{https://repo1.maven.org/maven2/org/checkerframework/checker/3.31.0/checker-3.31.0-all.jar}
+\item \<checker-qual.jar>: \url{https://repo1.maven.org/maven2/io/github/eisop/checker-qual/3.28.0-eisop1/checker-qual-3.28.0-eisop1.jar}
+\item \<checker-util.jar>: \url{https://repo1.maven.org/maven2/io/github/eisop/checker-util/3.28.0-eisop1/checker-util-3.28.0-eisop1.jar}
+\item \<checker.jar>: \url{https://repo1.maven.org/maven2/io/github/eisop/checker/3.28.0-eisop1/checker-3.28.0-eisop1-all.jar}
 \end{itemize}
 
 Different arguments to \<javac> are required for JDK 8
@@ -656,7 +656,7 @@ opens the \<jdk.compiler/com.sun.tools.java.comp> package.  This is
 required because the Checker Framework reflectively accesses private members of this package.
 
 \item \<-J--add-exports=...=ALL-UNNAMED> which exports the listed packages.  This is
-required with JDK 17+ because the Checker Framework accesses non-exported members of these packages.
+required with JDK 16+ because the Checker Framework accesses non-exported members of these packages.
 (These are also required with JDK 11 if \<--illegal-access> is set to \<deny>.)
 
 \end{enumerate}
@@ -945,7 +945,7 @@ See the directory \code{docs/examples/MavenExample/} for examples of the use of
 Maven build files.
 This example can be used to verify that
 Maven is correctly downloading the Checker Framework from the
-\href{https://search.maven.org/search?q=org.checkerframework}{Maven
+\href{https://search.maven.org/search?q=io.github.eisop}{Maven
   Central Repository} and executing it.
 
 Please note that the \<-AoutputArgsToFile> command-line option
@@ -978,7 +978,7 @@ the \<-X> command-line argument is passed.
 
     <!-- Annotations from the Checker Framework: nullness, interning, locking, ... -->
     <dependency>
-      <groupId>org.checkerframework</groupId>
+      <groupId>io.github.eisop</groupId>
       <artifactId>checker-qual</artifactId>
       <version>\ReleaseVersion{}</version>
     </dependency>
@@ -988,7 +988,7 @@ the \<-X> command-line argument is passed.
 Periodically update to the most recent version, to obtain the
 latest bug fixes and new features:
 \begin{Verbatim}
-  mvn versions:use-latest-versions -Dincludes="org.checkerframework:*"
+  mvn versions:use-latest-versions -Dincludes="io.github.eisop:*"
 \end{Verbatim}
 
 \item If using JDK 8, use a Maven property to hold the location of the
@@ -1075,7 +1075,7 @@ section, or add it if it is not present.
               </compilerArguments>
               <annotationProcessorPaths>
                 <path>
-                  <groupId>org.checkerframework</groupId>
+                  <groupId>io.github.eisop</groupId>
                   <artifactId>checker</artifactId>
                   <version>\ReleaseVersion{}</version>
                 </path>
@@ -1093,7 +1093,7 @@ section, or add it if it is not present.
       </build>
       <dependencies>
         <dependency>
-          <groupId>org.checkerframework</groupId>
+          <groupId>io.github.eisop</groupId>
           <artifactId>checker</artifactId>
           <version>\ReleaseVersion{}</version>
         </dependency>

@@ -3,10 +3,12 @@ package org.checkerframework.framework.type;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.checkerframework.dataflow.qual.SideEffectFree;
 import org.checkerframework.framework.type.visitor.AnnotatedTypeVisitor;
+import org.checkerframework.framework.util.AnnotatedTypes;
 import org.checkerframework.framework.util.element.ElementAnnotationUtil.ErrorTypeKindException;
 import org.checkerframework.javacutil.AnnotationBuilder;
 import org.checkerframework.javacutil.AnnotationMirrorSet;
@@ -82,7 +84,8 @@ public abstract class AnnotatedTypeMirror {
                 break;
             case ERROR:
                 throw new BugInCF(
-                        "AnnotatedTypeMirror.createType: input is not compilable. Found error type: "
+                        "AnnotatedTypeMirror.createType: input is not compilable. Found error type:"
+                                + " "
                                 + type);
 
             case EXECUTABLE:
@@ -260,8 +263,6 @@ public abstract class AnnotatedTypeMirror {
      *
      * <p>It doesn't account for annotations in deep types (type arguments, array components, etc).
      *
-     * <p>If there is only one hierarchy, you can use {@link #getAnnotation()} instead.
-     *
      * <p>May return null if the receiver is a type variable or a wildcard without a primary
      * annotation, or if the receiver is not yet fully annotated.
      *
@@ -313,8 +314,7 @@ public abstract class AnnotatedTypeMirror {
      * arguments, array components, etc).
      *
      * <p>To get the single annotation in a particular hierarchy, use {@link
-     * #getAnnotationInHierarchy}. If there is only one hierarchy, you can use {@link
-     * #getAnnotation}.
+     * #getAnnotationInHierarchy}.
      *
      * @return a unmodifiable set of the annotations on this
      */
@@ -334,28 +334,6 @@ public abstract class AnnotatedTypeMirror {
      */
     protected final AnnotationMirrorSet getAnnotationsField() {
         return annotations;
-    }
-
-    /**
-     * Returns the single annotation on this type. It does not include annotations in deep types
-     * (type arguments, array components, etc).
-     *
-     * <p>This method requires that there is only a single hierarchy. In that case, it is equivalent
-     * to {@link #getAnnotationInHierarchy}.
-     *
-     * @see #getAnnotations
-     * @return the annotation on this, or null if none (which can only happen if {@code this} is a
-     *     type variable or wildcard)
-     */
-    public final @Nullable AnnotationMirror getAnnotation() {
-        if (annotations.isEmpty()) {
-            // This AnnotatedTypeMirror must be a type variable or wildcard.
-            return null;
-        }
-        if (annotations.size() != 1) {
-            throw new BugInCF("Bad annotation size for getAnnotation(): " + this);
-        }
-        return annotations.iterator().next();
     }
 
     /**
@@ -680,7 +658,7 @@ public abstract class AnnotatedTypeMirror {
     public boolean removeAnnotationByClass(Class<? extends Annotation> a) {
         AnnotationMirror anno = atypeFactory.getAnnotationByClass(annotations, a);
         if (anno != null) {
-            return annotations.remove(anno);
+            return this.removeAnnotation(anno);
         }
         return false;
     }
@@ -942,7 +920,8 @@ public abstract class AnnotatedTypeMirror {
             // MyClass<T extends List<T>>, then the type variable is a declaration, i.e. the first
             // T, but the reference to the type variable is a use, i.e. the second T.  When "this"
             // is converted to a use, then both type variables are uses and should be the same
-            // object.  The code below does this.
+            // object.
+            // The code below does this.
             Map<TypeVariable, AnnotatedTypeMirror> mapping = new HashMap<>(typeArgs.size());
             for (AnnotatedTypeMirror typeArg : result.getTypeArguments()) {
                 AnnotatedTypeVariable typeVar = (AnnotatedTypeVariable) typeArg;
@@ -1147,6 +1126,13 @@ public abstract class AnnotatedTypeMirror {
         private boolean paramTypesComputed = false;
         /** The receiver type. */
         private AnnotatedDeclaredType receiverType;
+        /**
+         * The varargs type is the last element of {@link paramTypes} if the method or constructor
+         * accepts a variable number of arguments and the {@link paramTypes} has not been expanded
+         * yet. This type needs to be stored in the field to avoid being affected by calling {@link
+         * AnnotatedTypes#adaptParameters(AnnotatedTypeFactory, AnnotatedExecutableType, List)}.
+         */
+        private @MonotonicNonNull AnnotatedArrayType varargType = null;
         /** Whether {@link receiverType} has been computed. */
         private boolean receiverTypeComputed = false;
         /** The return type. */
@@ -1191,15 +1177,18 @@ public abstract class AnnotatedTypeMirror {
         }
 
         /**
-         * Sets the parameter types of this executable type, excluding the receiver.
+         * Sets the parameter types of this executable type, excluding the receiver.If paramTypes
+         * has been computed and this type is a varargs method, computes and store {@link
+         * varargType} before calling this method, @see {@link varargType}
          *
-         * @param params the parameter types, excluding the receiver
+         * @param params an unmodifiable list of parameter types to be captured by this method,
+         *     excluding the receiver
          */
-        /*package-private*/ void setParameterTypes(List<? extends AnnotatedTypeMirror> params) {
-            paramTypes =
-                    params.isEmpty()
-                            ? Collections.emptyList()
-                            : Collections.unmodifiableList(new ArrayList<>(params));
+        /*package-private*/ void setParameterTypes(List<AnnotatedTypeMirror> params) {
+            if (paramTypesComputed && isVarArgs() && varargType == null) {
+                throw new BugInCF("Set vararg type before resetting parameter types");
+            }
+            paramTypes = params;
             paramTypesComputed = true;
         }
 
@@ -1213,15 +1202,73 @@ public abstract class AnnotatedTypeMirror {
                 assert paramTypes == null;
                 List<? extends TypeMirror> underlyingParameterTypes =
                         ((ExecutableType) underlyingType).getParameterTypes();
-                List<AnnotatedTypeMirror> newParamTypes =
-                        new ArrayList<>(underlyingParameterTypes.size());
-                for (TypeMirror t : underlyingParameterTypes) {
-                    newParamTypes.add(createType(t, atypeFactory, false));
+                if (underlyingParameterTypes.isEmpty()) {
+                    setParameterTypes(Collections.emptyList());
+                } else {
+                    List<AnnotatedTypeMirror> newParamTypes =
+                            new ArrayList<>(underlyingParameterTypes.size());
+                    for (TypeMirror t : underlyingParameterTypes) {
+                        newParamTypes.add(createType(t, atypeFactory, false));
+                    }
+                    setParameterTypes(Collections.unmodifiableList(newParamTypes));
                 }
                 setParameterTypes(newParamTypes);
             }
             // No need to copy or wrap; it is an unmodifiable list.
             return paramTypes;
+        }
+
+        /**
+         * Sets the vararg type of this executable type.
+         *
+         * @param varargType the vararg type of this executable type
+         */
+        /*package-private*/ void setVarargType(@NonNull AnnotatedArrayType varargType) {
+            this.varargType = varargType;
+        }
+
+        /**
+         * Computes the vararg type of this executable type and stores it in {@link varargType}.
+         *
+         * <p>This method computes {@link varargType} using the {@link paramTypes} of this
+         * executable type. To use the {@link paramTypes} from different executable type, use {@link
+         * #computeVarargType(AnnotatedExecutableType)}.
+         */
+        /*package-private*/ void computeVarargType() {
+            computeVarargType(paramTypes);
+        }
+
+        /**
+         * Computes the vararg type using the passed executable type and stores it in this {@link
+         * varargType}.
+         *
+         * @param annotatedExecutableType an AnnotatedExecutableType
+         */
+        /*package-private*/ void computeVarargType(
+                AnnotatedExecutableType annotatedExecutableType) {
+            computeVarargType(annotatedExecutableType.getParameterTypes());
+        }
+
+        /**
+         * Helper function for {@link #computeVarargType()} and {@link
+         * #computeVarargType(AnnotatedExecutableType)}.
+         *
+         * @param paramTypes the parameter types to determine the vararg type
+         */
+        private void computeVarargType(List<AnnotatedTypeMirror> paramTypes) {
+            if (!isVarArgs()) {
+                return;
+            }
+            varargType = (AnnotatedArrayType) paramTypes.get(paramTypes.size() - 1);
+        }
+
+        /**
+         * Returns the vararg type of this executable type.
+         *
+         * @return the vararg type of this executable type
+         */
+        public @Nullable AnnotatedArrayType getVarargType() {
+            return varargType;
         }
 
         /**
@@ -1319,13 +1366,10 @@ public abstract class AnnotatedTypeMirror {
         /**
          * Sets the thrown types of this executable type.
          *
-         * @param thrownTypes the thrown types
+         * @param thrownTypes an unmodifiable list of thrown types to be captured by this method
          */
-        /*package-private*/ void setThrownTypes(List<? extends AnnotatedTypeMirror> thrownTypes) {
-            this.thrownTypes =
-                    thrownTypes.isEmpty()
-                            ? Collections.emptyList()
-                            : Collections.unmodifiableList(new ArrayList<>(thrownTypes));
+        /*package-private*/ void setThrownTypes(List<AnnotatedTypeMirror> thrownTypes) {
+            this.thrownTypes = thrownTypes;
             thrownTypesComputed = true;
         }
 
@@ -1339,10 +1383,15 @@ public abstract class AnnotatedTypeMirror {
                 assert thrownTypes == null;
                 List<? extends TypeMirror> underlyingThrownTypes =
                         ((ExecutableType) underlyingType).getThrownTypes();
-                List<AnnotatedTypeMirror> newThrownTypes =
-                        new ArrayList<>(underlyingThrownTypes.size());
-                for (TypeMirror t : underlyingThrownTypes) {
-                    newThrownTypes.add(createType(t, atypeFactory, false));
+                if (underlyingThrownTypes.isEmpty()) {
+                    setThrownTypes(Collections.emptyList());
+                } else {
+                    List<AnnotatedTypeMirror> newThrownTypes =
+                            new ArrayList<>(underlyingThrownTypes.size());
+                    for (TypeMirror t : underlyingThrownTypes) {
+                        newThrownTypes.add(createType(t, atypeFactory, false));
+                    }
+                    setThrownTypes(Collections.unmodifiableList(newThrownTypes));
                 }
                 setThrownTypes(newThrownTypes);
             }
@@ -1353,13 +1402,11 @@ public abstract class AnnotatedTypeMirror {
         /**
          * Sets the type variables associated with this executable type.
          *
-         * @param types the type variables of this executable type
+         * @param types an unmodifiable list of type variables of this executable type to be
+         *     captured by this method
          */
         /*package-private*/ void setTypeVariables(List<AnnotatedTypeVariable> types) {
-            typeVarTypes =
-                    types.isEmpty()
-                            ? Collections.emptyList()
-                            : Collections.unmodifiableList(new ArrayList<>(types));
+            typeVarTypes = types;
             typeVarTypesComputed = true;
         }
 
@@ -1373,10 +1420,16 @@ public abstract class AnnotatedTypeMirror {
                 assert typeVarTypes == null;
                 List<? extends TypeVariable> underlyingTypeVariables =
                         ((ExecutableType) underlyingType).getTypeVariables();
-                List<AnnotatedTypeVariable> newTypeVarTypes =
-                        new ArrayList<>(underlyingTypeVariables.size());
-                for (TypeMirror t : underlyingTypeVariables) {
-                    newTypeVarTypes.add((AnnotatedTypeVariable) createType(t, atypeFactory, true));
+                if (underlyingTypeVariables.isEmpty()) {
+                    setTypeVariables(Collections.emptyList());
+                } else {
+                    List<AnnotatedTypeVariable> newTypeVarTypes =
+                            new ArrayList<>(underlyingTypeVariables.size());
+                    for (TypeMirror t : underlyingTypeVariables) {
+                        newTypeVarTypes.add(
+                                (AnnotatedTypeVariable) createType(t, atypeFactory, true));
+                    }
+                    setTypeVariables(Collections.unmodifiableList(newTypeVarTypes));
                 }
                 setTypeVariables(newTypeVarTypes);
             }
@@ -1401,6 +1454,11 @@ public abstract class AnnotatedTypeMirror {
 
             type.setElement(getElement());
             type.setParameterTypes(getParameterTypes());
+            if (getVarargType() != null) {
+                type.setVarargType(getVarargType());
+            } else {
+                type.computeVarargType();
+            }
             type.setReceiverType(getReceiverType());
             type.setReturnType(getReturnType());
             type.setThrownTypes(getThrownTypes());
@@ -1440,6 +1498,11 @@ public abstract class AnnotatedTypeMirror {
                             atypeFactory);
             type.setElement(getElement());
             type.setParameterTypes(erasureList(getParameterTypes()));
+            if (getVarargType() != null) {
+                type.setVarargType(getVarargType().getErased());
+            } else {
+                type.computeVarargType();
+            }
             if (getReceiverType() != null) {
                 type.setReceiverType(getReceiverType().getErased());
             } else {
@@ -1455,10 +1518,15 @@ public abstract class AnnotatedTypeMirror {
          * Returns the erased types corresponding to the given types.
          *
          * @param lst annotated type mirrors
-         * @return erased annotated type mirrors
+         * @return erased annotated type mirrors in an unmodifiable list
          */
-        private List<AnnotatedTypeMirror> erasureList(Iterable<? extends AnnotatedTypeMirror> lst) {
-            return CollectionsPlume.mapList(AnnotatedTypeMirror::getErased, lst);
+        private List<AnnotatedTypeMirror> erasureList(List<? extends AnnotatedTypeMirror> lst) {
+            if (lst.isEmpty()) {
+                return Collections.emptyList();
+            } else {
+                return Collections.unmodifiableList(
+                        CollectionsPlume.mapList(AnnotatedTypeMirror::getErased, lst));
+            }
         }
     }
 
@@ -1560,7 +1628,8 @@ public abstract class AnnotatedTypeMirror {
             String boundDescription, AnnotatedTypeMirror boundType, AnnotatedTypeMirror thisType) {
         if (boundType == null || boundType.isDeclaration()) {
             throw new BugInCF(
-                    "%s bounds should never be null or a declaration.%n  new bound = %s%n  type = %s",
+                    "%s bounds should never be null or a declaration.%n  new bound = %s%n  type ="
+                            + " %s",
                     boundDescription, boundType, thisType);
         }
     }
@@ -1596,6 +1665,18 @@ public abstract class AnnotatedTypeMirror {
         public void addAnnotation(AnnotationMirror a) {
             super.addAnnotation(a);
             fixupBoundAnnotations();
+        }
+
+        @Override
+        public boolean removeAnnotation(AnnotationMirror a) {
+            boolean ret = super.removeAnnotation(a);
+            if (lowerBound != null) {
+                ret |= lowerBound.removeAnnotation(a);
+            }
+            if (upperBound != null) {
+                ret |= upperBound.removeAnnotation(a);
+            }
+            return ret;
         }
 
         /**
@@ -2006,6 +2087,18 @@ public abstract class AnnotatedTypeMirror {
             fixupBoundAnnotations();
         }
 
+        @Override
+        public boolean removeAnnotation(AnnotationMirror a) {
+            boolean ret = super.removeAnnotation(a);
+            if (superBound != null) {
+                ret |= superBound.removeAnnotation(a);
+            }
+            if (extendsBound != null) {
+                ret |= extendsBound.removeAnnotation(a);
+            }
+            return ret;
+        }
+
         /**
          * Sets the super bound of this wildcard.
          *
@@ -2238,6 +2331,17 @@ public abstract class AnnotatedTypeMirror {
             fixupBoundAnnotations();
         }
 
+        @Override
+        public boolean removeAnnotation(AnnotationMirror a) {
+            boolean ret = super.removeAnnotation(a);
+            if (bounds != null) {
+                for (AnnotatedTypeMirror bound : bounds) {
+                    ret |= bound.removeAnnotation(a);
+                }
+            }
+            return ret;
+        }
+
         /**
          * Copies {@link #annotations} to all the bounds, replacing any existing annotations in the
          * same hierarchy.
@@ -2247,9 +2351,7 @@ public abstract class AnnotatedTypeMirror {
                 AnnotationMirrorSet newAnnos = this.getAnnotationsField();
                 if (bounds != null) {
                     for (AnnotatedTypeMirror bound : bounds) {
-                        if (bound.getKind() != TypeKind.TYPEVAR) {
-                            bound.replaceAnnotations(newAnnos);
-                        }
+                        bound.replaceAnnotations(newAnnos);
                     }
                 }
             }

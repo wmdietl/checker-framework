@@ -5,14 +5,27 @@ plugins {
 ext {
     annotatedJdkHome = '../../jdk'
 }
+
 sourceSets {
     main {
+        java {
+            // NO-AFU
+            exclude '**/org/checkerframework/common/wholeprograminference/**'
+            exclude '**/org/checkerframework/framework/stub/AddAnnotatedFor.java'
+            exclude '**/org/checkerframework/framework/stub/ToIndexFileConverter.java'
+        }
+
         resources {
             // Stub files, message.properties, etc.
             srcDirs += [
                 'src/main/java',
                 "${buildDir}/generated/resources"
             ]
+
+            // NO-AFU
+            exclude '**/org/checkerframework/common/wholeprograminference/**'
+            exclude '**/org/checkerframework/framework/stub/AddAnnotatedFor.java'
+            exclude '**/org/checkerframework/framework/stub/ToIndexFileConverter.java'
         }
     }
     testannotations
@@ -23,9 +36,15 @@ sourcesJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+jar {
+    // The resources duplicate content from the src directory.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+
 def versions = [
-    autoValue       : '1.7.4',
-    lombok          : '1.18.24',
+    autoValue       : '1.10.1',
+    lombok          : '1.18.26',
 ]
 
 configurations {
@@ -36,11 +55,16 @@ dependencies {
     api project(':javacutil')
     api project(':dataflow')
     api files("${stubparserJar}")
-    // AFU is an "includedBuild" imported in checker-framework/settings.gradle, so the version number doesn't matter.
-    // https://docs.gradle.org/current/userguide/composite_builds.html#settings_defined_composite
-    api('org.checkerframework:annotation-file-utilities:*') {
-        exclude group: 'com.google.errorprone', module: 'javac'
-    }
+
+    // NO-AFU
+    /*
+     // AFU is an "includedBuild" imported in checker-framework/settings.gradle, so the version number doesn't matter.
+     // https://docs.gradle.org/current/userguide/composite_builds.html#settings_defined_composite
+     api('org.checkerframework:annotation-file-utilities:*') {
+     exclude group: 'com.google.errorprone', module: 'javac'
+     }
+     */
+
     api project(':checker-qual')
 
     // External dependencies:
@@ -48,7 +72,7 @@ dependencies {
     // See the comment in ../build.gradle in the shadowJar block.
     implementation "org.plumelib:plume-util:${plumeUtilVersion}"
     implementation "org.plumelib:reflection-util:${reflectionUtilVersion}"
-    implementation 'io.github.classgraph:classgraph:4.8.149'
+    implementation 'io.github.classgraph:classgraph:4.8.155'
 
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     testImplementation project(':framework-test')
@@ -82,7 +106,7 @@ task cloneTypetoolsJdk() {
                     '-q',
                     '--depth',
                     '1',
-                    'https://github.com/jspecify/jdk.git',
+                    'https://github.com/eisop/jdk.git',
                     'jdk'
                 ]
             }
@@ -108,7 +132,7 @@ task copyAndMinimizeAnnotatedJdkFiles(dependsOn: cloneTypetoolsJdk, group: 'Buil
             if (!fvd.file.isDirectory() && fvd.file.name.matches('.*\\.java')
                     && !fvd.file.path.contains('org/checkerframework')) {
                 fvd.getFile().readLines().any { line ->
-                    if (line.contains('@AnnotatedFor') || line.contains('org.checkerframework') || line.contains("org.jspecify")) {
+                    if (line.contains('@AnnotatedFor') || line.contains('org.checkerframework')) {
                         annotatedForFiles.add(fvd.file.absolutePath)
                         return true;
                     }
@@ -132,6 +156,8 @@ task copyAndMinimizeAnnotatedJdkFiles(dependsOn: cloneTypetoolsJdk, group: 'Buil
         }
     }
 }
+sourcesJar.dependsOn(copyAndMinimizeAnnotatedJdkFiles)
+
 sourcesJar.dependsOn(copyAndMinimizeAnnotatedJdkFiles)
 
 processResources.dependsOn(copyAndMinimizeAnnotatedJdkFiles)
@@ -173,6 +199,8 @@ shadowJar {
     manifest {
         attributes('Automatic-Module-Name': 'org.checkerframework.framework')
     }
+
+    minimize()
 }
 
 createCheckTypeTask(project.name, 'CompilerMessages',

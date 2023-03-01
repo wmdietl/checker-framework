@@ -14,10 +14,10 @@ public class WildcardAnnos {
 
     // The bounds need to have the same annotations because capture conversion
     // converts the type argument to just Object.
-    // :: error: (super.wildcard)
+    // :: error: (type.invalid.super.wildcard)
     @Nullable List<@Nullable ? super @NonNull Object> l3b = null;
 
-    // :: error: (bound)
+    // :: error: (bound.type.incompatible)
     @Nullable List<@NonNull ? super @Nullable String> l4 = null;
 
     @Nullable List<? super @Nullable String> l5 = null;
@@ -30,10 +30,10 @@ public class WildcardAnnos {
 
     // :: error: (conflicting.annos)
     @Nullable List<@Nullable @NonNull ? extends @Nullable Object> l6 = null;
-    // :: error: (conflicting.annos)
+    // :: error: (type.invalid.conflicting.annos)
     @Nullable List<@Nullable @NonNull ? super @NonNull String> l7 = null;
-    // :: error: (conflicting.annos)
+    // :: error: (type.invalid.conflicting.annos)
     @Nullable List<? extends @Nullable @NonNull Object> l8 = null;
-    // :: error: (conflicting.annos)
+    // :: error: (type.invalid.conflicting.annos)
     @Nullable List<? super @Nullable @NonNull String> l9 = null;
 }

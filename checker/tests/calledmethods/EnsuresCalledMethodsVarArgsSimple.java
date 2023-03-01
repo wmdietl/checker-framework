@@ -8,7 +8,7 @@ import java.util.List;
 
 class EnsuresCalledMethodsVarArgsSimple {
 
-    // :: error: (ensuresvarargs.unverified)
+    // :: error: ensuresvarargs.unverified
     @EnsuresCalledMethodsVarArgs("close")
     void closeAll(Socket... sockets) {
         for (Socket s : sockets) {
@@ -19,9 +19,9 @@ class EnsuresCalledMethodsVarArgsSimple {
         }
     }
 
-    // :: error: (ensuresvarargs.unverified)
+    // :: error: ensuresvarargs.unverified
     @EnsuresCalledMethodsVarArgs("close")
-    // :: error: (ensuresvarargs.invalid)
+    // :: error: ensuresvarargs.invalid
     void closeAllNotVA(List<Socket> sockets) {
         for (Socket s : sockets) {
             try {

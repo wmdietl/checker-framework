@@ -12,12 +12,12 @@ public class OverriddenMethodsTest {
                 @AinferSibling1 OverriddenMethodsTestParent this, @AinferSibling2 Object obj) {}
 
         public void qux(Object obj1, Object obj2) {
-            // :: warning: (argument)
+            // :: warning: (argument.type.incompatible)
             foo(obj1, obj2);
         }
 
         public void thud(Object obj1, Object obj2) {
-            // :: warning: (argument)
+            // :: warning: (argument.type.incompatible)
             foo(obj1, obj2);
         }
     }
@@ -25,17 +25,17 @@ public class OverriddenMethodsTest {
     class OverriddenMethodsTestChild extends OverriddenMethodsTestParent {
         @Override
         public void foo(Object obj, Object obj2) {
-            // :: warning: (assignment)
+            // :: warning: (assignment.type.incompatible)
             @AinferSibling1 Object o = obj;
-            // :: warning: (assignment)
+            // :: warning: (assignment.type.incompatible)
             @AinferSibling2 Object o2 = obj2;
         }
 
         @Override
         public void bar(Object obj) {
-            // :: warning: (assignment)
+            // :: warning: (assignment.type.incompatible)
             @AinferSibling1 OverriddenMethodsTestChild child = this;
-            // :: warning: (assignment)
+            // :: warning: (assignment.type.incompatible)
             @AinferSibling2 Object o = obj;
         }
 

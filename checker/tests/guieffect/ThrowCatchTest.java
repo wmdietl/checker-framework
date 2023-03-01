@@ -7,7 +7,7 @@ import java.util.List;
 public class ThrowCatchTest {
     List<? extends @UI Object> ooo;
 
-    // :: error: (annotations.on.use)
+    // :: error: (type.invalid.annotations.on.use)
     List<? extends @UI Inner> iii;
 
     class Inner {}

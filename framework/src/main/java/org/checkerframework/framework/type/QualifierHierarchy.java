@@ -241,7 +241,8 @@ public interface QualifierHierarchy {
         AnnotationMirror widenUpperBound = leastUpperBound(newQualifier, previousQualifier);
         if (widenUpperBound == null) {
             throw new BugInCF(
-                    "Passed two unrelated qualifiers to QualifierHierarchy#widenedUpperBound. %s %s.",
+                    "Passed two unrelated qualifiers to QualifierHierarchy#widenedUpperBound. %s"
+                            + " %s.",
                     newQualifier, previousQualifier);
         }
         return widenUpperBound;
@@ -275,7 +276,8 @@ public interface QualifierHierarchy {
         assertSameSize(qualifiers1, qualifiers2);
         if (qualifiers1.isEmpty()) {
             throw new BugInCF(
-                    "QualifierHierarchy.greatestLowerBounds: tried to determine GLB with empty sets");
+                    "QualifierHierarchy.greatestLowerBounds: tried to determine GLB with empty"
+                            + " sets");
         }
 
         AnnotationMirrorSet result = new AnnotationMirrorSet();
@@ -365,7 +367,7 @@ public interface QualifierHierarchy {
         @SuppressWarnings("nullness:argument")
         boolean mapContainsKey = map.containsKey(key);
         if (mapContainsKey) {
-            @SuppressWarnings("nullness:assignment") // key is a key for map.
+            @SuppressWarnings("nullness:assignment.type.incompatible") // key is a key for map.
             @NonNull AnnotationMirrorSet prevs = map.get(key);
             AnnotationMirror old = findAnnotationInSameHierarchy(prevs, qualifier);
             if (old != null) {

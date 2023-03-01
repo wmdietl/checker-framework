@@ -30,7 +30,7 @@ public class AccumulationVisitor extends BaseTypeVisitor<AccumulationAnnotatedTy
         if (atypeFactory.isPredicate(anno)) {
             String errorMessage = atypeFactory.isValidPredicate(anno);
             if (errorMessage != null) {
-                checker.reportError(tree, "predicate", errorMessage);
+                checker.reportError(tree, "predicate.invalid", errorMessage);
             }
         }
         return super.visitAnnotation(tree, p);

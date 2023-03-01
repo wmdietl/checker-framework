@@ -3,8 +3,6 @@ package org.checkerframework.dataflow.cfg.block;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.plumelib.util.ArraySet;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -18,9 +16,11 @@ public abstract class BlockImpl implements Block {
     protected final Set<BlockImpl> predecessors;
 
     /** The unique ID for the next-created object. */
-    static final AtomicLong nextUid = new AtomicLong(0);
+    private static final AtomicLong nextUid = new AtomicLong(0);
+
     /** The unique ID of this object. */
-    final long uid = nextUid.getAndIncrement();
+    private final long uid = nextUid.getAndIncrement();
+
     /**
      * Returns the unique ID of this object.
      *
@@ -51,7 +51,7 @@ public abstract class BlockImpl implements Block {
     public List<Block> getPredecessors() {
         // Not "Collections.unmodifiableSet(predecessors)" which has nondeterministic iteration
         // order.
-        return new ArrayList<>(predecessors);
+        return new ArraySet<>(predecessors);
     }
 
     public void addPredecessor(BlockImpl pred) {

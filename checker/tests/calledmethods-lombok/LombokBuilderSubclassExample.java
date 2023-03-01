@@ -27,7 +27,8 @@ public class LombokBuilderSubclassExample {
                 @CalledMethods("attribute") LombokBuilderSubclassExampleBuilder this) {
             final LombokBuilderSubclassExample result = super.build();
             // here result.getAttribute() is guaranteed to be non null, so we do not have to check
-            // this ourselves
+            // this
+            // ourselves
 
             if (result.getAttribute() < 0) {
                 throw new IllegalArgumentException("attribute must be >= 0");

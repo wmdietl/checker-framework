@@ -489,8 +489,8 @@ class MustCallConsistencyAnalyzer {
      * @param analysis the analysis from the type factory. Usually this would have protected access,
      *     so this constructor cannot get it directly.
      */
-    /*package-private*/ MustCallConsistencyAnalyzer(
-            ResourceLeakAnnotatedTypeFactory typeFactory, CFAnalysis analysis) {
+    /*package-private*/
+    MustCallConsistencyAnalyzer(ResourceLeakAnnotatedTypeFactory typeFactory, CFAnalysis analysis) {
         this.typeFactory = typeFactory;
         this.checker = (ResourceLeakChecker) typeFactory.getChecker();
         this.analysis = analysis;
@@ -696,7 +696,8 @@ class MustCallConsistencyAnalyzer {
                         // This satisfies case 2 above. Remove all its aliases, then return below.
                         if (toRemove != null) {
                             throw new TypeSystemError(
-                                    "tried to remove multiple sets containing a reset expression at once");
+                                    "tried to remove multiple sets containing a reset expression at"
+                                            + " once");
                         }
                         toRemove = obligation;
                         toAdd = new Obligation(ImmutableSet.of(alias));
@@ -1389,7 +1390,8 @@ class MustCallConsistencyAnalyzer {
                         formatMissingMustCallMethods(mcValues),
                         "field " + lhsElement.getSimpleName().toString(),
                         lhsElement.asType().toString(),
-                        "Field assignment outside method or declaration might overwrite field's current value");
+                        "Field assignment outside method or declaration might overwrite field's"
+                                + " current value");
                 return;
             }
         } else if (permitInitializationLeak && TreeUtils.isConstructor(enclosingMethodTree)) {
@@ -1844,9 +1846,8 @@ class MustCallConsistencyAnalyzer {
                     // without its obligation being resolved some other way.
                     if (obligation.derivedFromMustCallAlias()) {
                         // MustCallAlias annotations only have meaning if the method returns
-                        // normally,
-                        // so issue an error if and only if this exit is happening on a normal exit
-                        // path.
+                        // normally, so issue an error if and only if this exit is happening on a
+                        // normal exit path.
                         if (exceptionType == null) {
                             checker.reportError(
                                     obligation.resourceAliases.asList().get(0).tree,
@@ -1854,9 +1855,8 @@ class MustCallConsistencyAnalyzer {
                                     exitReasonForErrorMessage);
                         }
                         // Whether or not an error is issued, the check is now complete - there is
-                        // no further
-                        // checking to do on a must-call-alias-derived obligation along an
-                        // exceptional path.
+                        // no further checking to do on a must-call-alias-derived obligation along
+                        // an exceptional path.
                         continue;
                     }
 

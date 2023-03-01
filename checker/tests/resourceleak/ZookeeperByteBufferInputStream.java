@@ -11,12 +11,12 @@ import java.io.*;
 import java.nio.ByteBuffer;
 
 @MustCall({})
-// :: error: (inconsistent.mustcall.subtype)
+// :: error: inconsistent.mustcall.subtype
 public class ZookeeperByteBufferInputStream extends InputStream {
 
     ByteBuffer bb;
 
-    // :: error: (super.invocation)
+    // :: error: super.invocation.invalid
     public ZookeeperByteBufferInputStream(ByteBuffer bb) {
         this.bb = bb;
     }

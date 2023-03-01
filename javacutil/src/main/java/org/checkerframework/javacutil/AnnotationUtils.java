@@ -673,7 +673,8 @@ public class AnnotationUtils {
         }
         throw new NoSuchElementException(
                 String.format(
-                        "No element with name \'%s\' in annotation %s; useDefaults=%s, valmap.keySet()=%s",
+                        "No element with name \'%s\' in annotation %s; useDefaults=%s,"
+                                + " valmap.keySet()=%s",
                         elementName, anno, useDefaults, valmap.keySet()));
     }
 
@@ -822,7 +823,8 @@ public class AnnotationUtils {
                                 anno, elementName, expectedType, useDefaults);
                 String err2 =
                         String.format(
-                                "Error in cast:%n  expectedType=%s%n  a=%s [%s]%n  a.getValue()=%s [%s]",
+                                "Error in cast:%n  expectedType=%s%n  a=%s [%s]%n  a.getValue()=%s"
+                                        + " [%s]",
                                 expectedType,
                                 a,
                                 a.getClass(),
@@ -1552,12 +1554,121 @@ public class AnnotationUtils {
      */
     @SideEffectFree
     public static String toStringSimple(AnnotationMirrorSet annos) {
-        DefaultAnnotationFormatter defaultAnnotationFormatter = new DefaultAnnotationFormatter();
         StringJoiner result = new StringJoiner(" ");
         for (AnnotationMirror am : annos) {
-            result.add(defaultAnnotationFormatter.formatAnnotationMirror(am));
+            result.add(toStringSimple(am));
         }
         return result.toString();
+    }
+
+    /**
+     * Returns a string representation of the annotation mirror, using simple (not fully-qualified)
+     * names.
+     *
+     * @param am annotation to format
+     * @return the string representation, using simple (not fully-qualified) names
+     */
+    @SideEffectFree
+    public static String toStringSimple(AnnotationMirror am) {
+        StringBuilder sb = new StringBuilder();
+        toStringSimple(am, sb);
+        return sb.toString();
+    }
+
+    /**
+     * Appends a string representation of the annotation mirror, using simple (not fully-qualified)
+     * names, to the StringBuilder.
+     *
+     * @param am annotation to format
+     * @param sb StringBuilder to which the string representation of am, using simple (not
+     *     fully-qualified) names, is appended
+     */
+    public static void toStringSimple(AnnotationMirror am, StringBuilder sb) {
+        sb.append("@");
+        sb.append(am.getAnnotationType().asElement().getSimpleName());
+        Map<ExecutableElement, AnnotationValue> args = removeDefaultValues(am.getElementValues());
+        if (!args.isEmpty()) {
+            sb.append("(");
+            boolean oneValue = false;
+            if (args.size() == 1) {
+                Map.Entry<ExecutableElement, AnnotationValue> first =
+                        args.entrySet().iterator().next();
+                if (first.getKey().getSimpleName().contentEquals("value")) {
+                    formatAnnotationMirrorArg(first.getValue(), sb);
+                    oneValue = true;
+                }
+            }
+            if (!oneValue) {
+                boolean notfirst = false;
+                for (Map.Entry<ExecutableElement, AnnotationValue> arg : args.entrySet()) {
+                    if (!"{}".equals(arg.getValue().toString())) {
+                        if (notfirst) {
+                            sb.append(", ");
+                        }
+                        notfirst = true;
+                        sb.append(arg.getKey().getSimpleName() + "=");
+                        formatAnnotationMirrorArg(arg.getValue(), sb);
+                    }
+                }
+            }
+            sb.append(")");
+        }
+    }
+
+    /**
+     * Returns a new map that only has the values in {@code elementValues} that are not the same as
+     * the default value.
+     *
+     * @param elementValues a mapping of annotation element to annotation value
+     * @return a new map with only the non-default values of {@code elementValues}
+     */
+    private static Map<ExecutableElement, AnnotationValue> removeDefaultValues(
+            Map<? extends ExecutableElement, ? extends AnnotationValue> elementValues) {
+        // Most annotations have no elements.
+        Map<ExecutableElement, AnnotationValue> nonDefaults = new ArrayMap<>(0);
+        elementValues.forEach(
+                (element, value) -> {
+                    if (element.getDefaultValue() == null
+                            || !Objects.equals(
+                                    value.getValue(), element.getDefaultValue().getValue())) {
+                        nonDefaults.put(element, value);
+                    }
+                });
+        return nonDefaults;
+    }
+
+    /**
+     * A helper method to print AnnotationValues (annotation arguments), without showing full
+     * package names.
+     *
+     * @param av AnnotationValue to print
+     * @param sb StringBuilder to modify
+     */
+    private static void formatAnnotationMirrorArg(AnnotationValue av, StringBuilder sb) {
+        Object val = av.getValue();
+        if (List.class.isAssignableFrom(val.getClass())) {
+            @SuppressWarnings("unchecked")
+            List<AnnotationValue> vallist = (List<AnnotationValue>) val;
+            if (vallist.size() == 1) {
+                formatAnnotationMirrorArg(vallist.get(0), sb);
+            } else {
+                sb.append('{');
+                boolean notfirst = false;
+                for (AnnotationValue nav : vallist) {
+                    if (notfirst) {
+                        sb.append(", ");
+                    }
+                    notfirst = true;
+                    formatAnnotationMirrorArg(nav, sb);
+                }
+                sb.append('}');
+            }
+        } else if (VariableElement.class.isAssignableFrom(val.getClass())) {
+            VariableElement ve = (VariableElement) val;
+            sb.append(ve.getEnclosingElement().getSimpleName() + "." + ve.getSimpleName());
+        } else {
+            sb.append(av.toString());
+        }
     }
 
     /**

@@ -11,16 +11,19 @@ import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Source;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.DiagnosticSource;
 import com.sun.tools.javac.util.JCDiagnostic.DiagnosticPosition;
 import com.sun.tools.javac.util.Log;
+import com.sun.tools.javac.util.Position;
 
 import org.checkerframework.checker.compilermsgs.qual.CompilerMessageKey;
 import org.checkerframework.checker.formatter.qual.FormatMethod;
 import org.checkerframework.checker.interning.qual.InternedDistinct;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.checkerframework.checker.signature.qual.CanonicalName;
 import org.checkerframework.checker.signature.qual.FullyQualifiedName;
 import org.checkerframework.common.basetype.BaseTypeChecker;
@@ -28,6 +31,7 @@ import org.checkerframework.framework.qual.AnnotatedFor;
 import org.checkerframework.framework.type.AnnotatedTypeFactory;
 import org.checkerframework.framework.util.CheckerMain;
 import org.checkerframework.framework.util.OptionConfiguration;
+import org.checkerframework.framework.util.TreePathCacher;
 import org.checkerframework.javacutil.AbstractTypeProcessor;
 import org.checkerframework.javacutil.AnnotationProvider;
 import org.checkerframework.javacutil.AnnotationUtils;
@@ -159,6 +163,9 @@ import io.github.classgraph.ClassGraph;
     // casting to an array or generic type. This will be the new default soon.
     "checkCastElementType",
 
+    // Whether to type check the enclosing expression of an inner class instantiation.
+    "checkEnclosingExpr",
+
     // Whether to use conservative defaults for bytecode and/or source code.
     // This option takes arguments "source" and/or "bytecode".
     // The default is "-source,-bytecode" (eventually this will be changed to "-source,bytecode").
@@ -180,6 +187,10 @@ import io.github.classgraph.ClassGraph;
     // Whether to use a conservative value for type arguments that could not be inferred.
     // See Issue 979.
     "conservativeUninferredTypeArguments",
+
+    // Issues a "redundant.anno" warning if the annotation explicitly written on the type is
+    // the same as the default annotation for this type and location.
+    "warnRedundantAnnotations",
 
     // Whether to ignore all subtype tests for type arguments that
     // were inferred for a raw type. Defaults to true.
@@ -311,6 +322,9 @@ import io.github.classgraph.ClassGraph;
     // org.checkerframework.framework.source.SourceChecker.message(Kind, Object, String, Object...)
     "nomsgtext",
 
+    // Do not perform a JRE version check.
+    "noJreVersionCheck",
+
     /// Format of messages
 
     // Output detailed message in simple-to-parse format, useful
@@ -396,7 +410,6 @@ import io.github.classgraph.ClassGraph;
 
     /// Language Server Protocol(LSP) Support
 
-    // TODO: document `-AlspTypeInfo` in manual, as a debugging option.
     // Output detailed type information for nodes in AST
     // org.checkerframework.framework.type.AnnotatedTypeFactory
     "lspTypeInfo",
@@ -406,9 +419,6 @@ import io.github.classgraph.ClassGraph;
     // Whether to output resource statistics at JVM shutdown
     // org.checkerframework.framework.source.SourceChecker.shutdownHook()
     "resourceStats",
-
-    // Parse all JDK files at startup rather than as needed.
-    "parseAllJdk",
 
     // Run checks that test ajava files.
     //
@@ -553,6 +563,15 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
     /** List of upstream checker names. Includes the current checker. */
     protected @MonotonicNonNull List<@FullyQualifiedName String> upstreamCheckerNames;
 
+    /**
+     * TreePathCacher to share between instances. Initialized in getTreePathCacher (which is also
+     * called from {@link BaseTypeChecker#instantiateSubcheckers(Map)}).
+     */
+    protected TreePathCacher treePathCacher = null;
+
+    /** Default constructor. */
+    protected SourceChecker() {}
+
     /** True if the -Afilenames command-line argument was passed. */
     private boolean printFilenames;
     /** True if the -Awarns command-line argument was passed. */
@@ -577,7 +596,11 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
 
         // Keep in sync with check in checker-framework/build.gradle .
         int jreVersion = SystemUtil.jreVersion;
-        if (jreVersion != 8 && jreVersion != 11 && jreVersion != 17 && jreVersion != 19) {
+        if (!hasOption("noJreVersionCheck")
+                && jreVersion != 8
+                && jreVersion != 11
+                && jreVersion != 17
+                && jreVersion != 19) {
             message(
                     Kind.NOTE,
                     "The Checker Framework is tested with JDK 8, 11, 17, and 19."
@@ -599,7 +622,8 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
                         Pattern.compile(warnUnneededSuppressionsExceptionsString);
             } catch (PatternSyntaxException e) {
                 throw new UserError(
-                        "Argument to -AwarnUnneededSuppressionsExceptions is not a regular expression: "
+                        "Argument to -AwarnUnneededSuppressionsExceptions is not a regular"
+                                + " expression: "
                                 + e.getMessage());
             }
         }
@@ -658,6 +682,11 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
     protected void setRoot(CompilationUnitTree newRoot) {
         this.currentRoot = newRoot;
         visitor.setRoot(currentRoot);
+
+        if (parentChecker == null) {
+            // Only clear the path cache if this is the main checker.
+            treePathCacher.clear();
+        }
     }
 
     /**
@@ -772,6 +801,19 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
             messagesProperties.putAll(getProperties(checker, MSGS_FILE, true));
         }
         return messagesProperties;
+    }
+
+    /**
+     * Get the shared TreePathCacher instance.
+     *
+     * @return the shared TreePathCacher instance.
+     */
+    public TreePathCacher getTreePathCacher() {
+        if (treePathCacher == null) {
+            // In case it wasn't already set in instantiateSubcheckers.
+            treePathCacher = new TreePathCacher();
+        }
+        return treePathCacher;
     }
 
     /**
@@ -1130,6 +1172,7 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
         if (shouldSuppressWarnings(source, messageKey)) {
             return;
         }
+        Object preciseSource = getSourceWithPrecisePosition(source);
 
         if (args != null) {
             for (int i = 0; i < args.length; ++i) {
@@ -1152,7 +1195,7 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
             // The -Adetailedmsgtext command-line option was given, so output
             // a stylized error message for easy parsing by a tool.
             fmtString =
-                    detailedMsgTextPrefix(source, defaultFormat, args)
+                    detailedMsgTextPrefix(preciseSource, defaultFormat, args)
                             + fullMessageOf(messageKey, defaultFormat);
         } else {
             fmtString =
@@ -1174,13 +1217,50 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
             kind = Kind.MANDATORY_WARNING;
         }
 
-        if (source instanceof Element) {
-            messager.printMessage(kind, messageText, (Element) source);
-        } else if (source instanceof Tree) {
-            printOrStoreMessage(kind, messageText, (Tree) source, currentRoot);
+        if (preciseSource instanceof Element) {
+            messager.printMessage(kind, messageText, (Element) preciseSource);
+        } else if (preciseSource instanceof Tree) {
+            printOrStoreMessage(kind, messageText, (Tree) preciseSource, currentRoot);
         } else {
-            throw new BugInCF("invalid position source, class=" + source.getClass());
+            throw new BugInCF("invalid position source, class=" + preciseSource.getClass());
         }
+    }
+
+    /**
+     * This method improves the source position information for message reporting. If the given
+     * {@code source} does not have a precise location, it will try to return an object with a
+     * precise location that encloses the {@code source}; otherwise, it simply returns the {@code
+     * source}.
+     *
+     * <p>Currently, missing position only happens to artificial trees generated by the compiler.
+     * For example, a lambda expression "s -&gt; ..." in the source code can be de-sugared into
+     * "(Type s) -&gt; ..." in the corresponding {@link Tree}, where the "Type" {@link Tree} is an
+     * artificial tree.
+     *
+     * @param source the original source position information; may be an Element, a Tree, or null
+     * @return a source that may have more precise position information
+     */
+    private @PolyNull Object getSourceWithPrecisePosition(@PolyNull Object source) {
+        if (!(source instanceof JCTree)) {
+            return source;
+        }
+
+        JCTree tree = (JCTree) source;
+        if (tree.getPreferredPosition() != Position.NOPOS) {
+            return tree;
+        }
+
+        TreePath path = getTreePathCacher().getPath(currentRoot, tree);
+        if (path == null) {
+            return tree;
+        }
+
+        // find the first parent in AST path that has a precise preferred position
+        while (((JCTree) path.getLeaf()).getPreferredPosition() == Position.NOPOS
+                && path.getParentPath() != null) {
+            path = path.getParentPath();
+        }
+        return path.getLeaf();
     }
 
     /**
@@ -1708,13 +1788,13 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
 
         Map<String, String> activeOpts = new HashMap<>(CollectionsPlume.mapCapacity(options));
 
+        forEveryOption:
         for (Map.Entry<String, String> opt : options.entrySet()) {
             String key = opt.getKey();
             String value = opt.getValue();
 
             String[] split = key.split(OPTION_SEPARATOR);
 
-            splitlengthswitch:
             switch (split.length) {
                 case 1:
                     // No separator, option always active.
@@ -1728,7 +1808,7 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
                                 || clazz.getSimpleName().equals(split[0])) {
                             // Valid class-option pair.
                             activeOpts.put(split[1], value);
-                            break splitlengthswitch;
+                            continue forEveryOption;
                         }
 
                         clazz = clazz.getSuperclass();
@@ -1744,6 +1824,7 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
                     // anyways. javac will warn if no processor supports the option.
                     activeOpts.put(key, value);
             }
+            // Don't add code here, there is a `continue` in the switch above.
         }
         return Collections.unmodifiableMap(activeOpts);
     }
@@ -2094,13 +2175,13 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
      *     otherwise
      */
     public boolean shouldSuppressWarnings(Tree tree, String errKey) {
-
         Collection<String> prefixes = getSuppressWarningsPrefixes();
         if (prefixes.isEmpty()
                 || (prefixes.contains(SUPPRESS_ALL_PREFIX) && prefixes.size() == 1)) {
             throw new BugInCF(
                     "Checker must provide a SuppressWarnings prefix."
-                            + " SourceChecker#getSuppressWarningsPrefixes was not overridden correctly.");
+                            + " SourceChecker#getSuppressWarningsPrefixes was not overridden"
+                            + " correctly.");
         }
 
         if (shouldSuppress(getSuppressWarningsStringsFromOption(), errKey)) {
@@ -2109,9 +2190,7 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
             return true;
         }
 
-        // trees.getPath might be slow, but this is only used in error reporting
-        @Nullable TreePath path = trees.getPath(this.currentRoot, tree);
-
+        @Nullable TreePath path = getTreePathCacher().getPath(currentRoot, tree);
         return shouldSuppressWarnings(path, errKey);
     }
 
@@ -2350,16 +2429,29 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
             }
             // Check if the message key in the warning suppression is part of the message key that
             // the checker is emiting.
-            if (messageKey.equals(messageKeyInSuppressWarningsString)
-                    || messageKey.startsWith(messageKeyInSuppressWarningsString + ".")
-                    || messageKey.endsWith("." + messageKeyInSuppressWarningsString)
-                    || messageKey.contains("." + messageKeyInSuppressWarningsString + ".")) {
+            if (messageKeyMatches(messageKey, messageKeyInSuppressWarningsString)) {
                 return true;
             }
         }
 
         // None of the SuppressWarnings strings suppress this error.
         return false;
+    }
+
+    /**
+     * Does the given messageKey match a messageKey that appears in a SuppressWarnings? Subclasses
+     * should override this method if they need additional logic to compare message keys.
+     *
+     * @param messageKey the message key
+     * @param messageKeyInSuppressWarningsString the message key in a SuppressWarnings
+     * @return true if the arguments match
+     */
+    protected boolean messageKeyMatches(
+            String messageKey, String messageKeyInSuppressWarningsString) {
+        return messageKey.equals(messageKeyInSuppressWarningsString)
+                || messageKey.startsWith(messageKeyInSuppressWarningsString + ".")
+                || messageKey.endsWith("." + messageKeyInSuppressWarningsString)
+                || messageKey.contains("." + messageKeyInSuppressWarningsString + ".");
     }
 
     /**
@@ -2583,7 +2675,8 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
         if (ce.getCause() != null && ce.getCause() instanceof OutOfMemoryError) {
             msg.add(
                     String.format(
-                            "OutOfMemoryError (max memory = %d, total memory = %d, free memory = %d)",
+                            "OutOfMemoryError (max memory = %d, total memory = %d, free memory ="
+                                    + " %d)",
                             Runtime.getRuntime().maxMemory(),
                             Runtime.getRuntime().totalMemory(),
                             Runtime.getRuntime().freeMemory()));
@@ -2597,7 +2690,8 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
             msg.add("; The Checker Framework crashed.  Please report the crash.");
             if (noPrintErrorStack) {
                 msg.add(
-                        " To see the full stack trace, don't invoke the compiler with -AnoPrintErrorStack");
+                        " To see the full stack trace, don't invoke the compiler with"
+                                + " -AnoPrintErrorStack");
             } else {
                 if (this.currentRoot != null && this.currentRoot.getSourceFile() != null) {
                     msg.add("Compilation unit: " + this.currentRoot.getSourceFile().getName());
@@ -2861,6 +2955,6 @@ public abstract class SourceChecker extends AbstractTypeProcessor implements Opt
      * @return path to the current compilation unit
      */
     public TreePath getPathToCompilationUnit() {
-        return TreePath.getPath(currentRoot, currentRoot);
+        return getTreePathCacher().getPath(currentRoot, currentRoot);
     }
 }

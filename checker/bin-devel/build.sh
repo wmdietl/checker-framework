@@ -27,42 +27,38 @@ if [ -d "$PLUME_SCRIPTS" ] ; then
   (cd "$PLUME_SCRIPTS" && git pull -q)
 else
   (cd "$CHECKERFRAMEWORK/checker/bin-devel" && \
-      (git clone --depth 1 -q https://github.com/plume-lib/plume-scripts.git .plume-scripts || \
-       git clone --depth 1 -q https://github.com/plume-lib/plume-scripts.git .plume-scripts))
+      (git clone --depth 1 -q https://github.com/eisop-plume-lib/plume-scripts.git .plume-scripts || \
+       git clone --depth 1 -q https://github.com/eisop-plume-lib/plume-scripts.git .plume-scripts))
 fi
 
 # Clone the annotated JDK into ../jdk .
-"$PLUME_SCRIPTS/git-clone-related" typetools jdk
+"$PLUME_SCRIPTS/git-clone-related" eisop jdk
 
-AFU="${AFU:-../annotation-tools/annotation-file-utilities}"
-# Don't use `AT=${AFU}/..` which causes a git failure.
-AT=$(dirname "${AFU}")
+# NO-AFU
+# AFU="${AFU:-../annotation-tools/annotation-file-utilities}"
+# # Don't use `AT=${AFU}/..` which causes a git failure.
+# AT=$(dirname "${AFU}")
 
-## Build annotation-tools (Annotation File Utilities)
-"$PLUME_SCRIPTS/git-clone-related" typetools annotation-tools "${AT}" -q
-if [ ! -d ../annotation-tools ] ; then
-  ln -s "${AT}" ../annotation-tools
-fi
+# ## Build annotation-tools (Annotation File Utilities)
+# "$PLUME_SCRIPTS/git-clone-related" eisop annotation-tools "${AT}"
+# if [ ! -d ../annotation-tools ] ; then
+#   ln -s "${AT}" ../annotation-tools
+# fi
 
-echo "Checking out the annotation-tools commit at which jspecify last merged from upstream."
-git -C "${AT}" checkout -q 7174291c828e88382758e0d5117f99418970f24f
-
-echo "Running:  (cd ${AT} && ./.build-without-test.sh)"
-(cd "${AT}" && ./.build-without-test.sh)
-echo "... done: (cd ${AT} && ./.build-without-test.sh)"
+# echo "Running:  (cd ${AT} && ./.build-without-test.sh)"
+# (cd "${AT}" && ./.build-without-test.sh)
+# echo "... done: (cd ${AT} && ./.build-without-test.sh)"
 
 
 ## Build stubparser
-"$PLUME_SCRIPTS/git-clone-related" typetools stubparser -q
-
-echo "Checking out the stubparser commit at which jspecify last merged from upstream."
-git -C ../stubparser checkout -q dd2c1d4a8b3c428d554d6fab6aa1b840d4031985
-
+"$PLUME_SCRIPTS/git-clone-related" eisop stubparser
 echo "Running:  (cd ../stubparser/ && ./.build-without-test.sh)"
 (cd ../stubparser/ && ./.build-without-test.sh)
 echo "... done: (cd ../stubparser/ && ./.build-without-test.sh)"
 
-
+# TODO: NullnessNullMarkedTest depends on JSpecify annotations.
+# Find a way to not run that test, to avoid this dependency and
+# instead only use ./test-jspecify.sh.
 ## Build JSpecify, only for the purpose of using its tests.
 "$PLUME_SCRIPTS/git-clone-related" jspecify jspecify -q
 if type -p java; then
@@ -75,10 +71,10 @@ else
 fi
 version=$("$_java" -version 2>&1 | head -1 | cut -d'"' -f2 | sed '/^1\./s///' | cut -d'.' -f1)
 if [[ "$version" -ge 9 ]]; then
-  echo "Running:  (cd ../jspecify/ && ./gradlew build)"
+  echo "Running:  (cd ../jspecify/ && ./gradlew assemble)"
   # If failure, retry in case the failure was due to network lossage.
-  (cd ../jspecify/ && export JDK_JAVA_OPTIONS='--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' && (./gradlew build || (sleep 60 && ./gradlew build)))
-  echo "... done: (cd ../jspecify/ && ./gradlew build)"
+  (cd ../jspecify/ && export JDK_JAVA_OPTIONS='--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' && (./gradlew assemble || (sleep 60 && ./gradlew assemble)))
+  echo "... done: (cd ../jspecify/ && ./gradlew assemble)"
 fi
 
 
@@ -88,7 +84,7 @@ fi
 (./gradlew --write-verification-metadata sha256 help --dry-run ||
      (sleep 60 && ./gradlew --write-verification-metadata sha256 help --dry-run))
 
-echo "running \"./gradlew assemble\" for checker-framework"
-./gradlew assemble --console=plain --warning-mode=all -s -Dorg.gradle.internal.http.socketTimeout=60000 -Dorg.gradle.internal.http.connectionTimeout=60000
+echo "running \"./gradlew assembleForJavac\" for checker-framework"
+./gradlew assembleForJavac --console=plain --warning-mode=all -s -Dorg.gradle.internal.http.socketTimeout=60000 -Dorg.gradle.internal.http.connectionTimeout=60000
 
 echo Exiting checker/bin-devel/build.sh in "$(pwd)"

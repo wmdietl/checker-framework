@@ -34,11 +34,12 @@ public class UnitsVisitor extends BaseTypeVisitor<UnitsAnnotatedTypeFactory> {
                     .isSubtype(
                             exprType.getEffectiveAnnotations(),
                             varType.getEffectiveAnnotations())) {
-                checker.reportError(tree, "compound.assignment", varType, exprType);
+                checker.reportError(
+                        tree, "compound.assignment.type.incompatible", varType, exprType);
             }
         } else if (!exprType.hasAnnotation(UnknownUnits.class)) {
             // Only allow mul/div with unqualified units
-            checker.reportError(tree, "compound.assignment", varType, exprType);
+            checker.reportError(tree, "compound.assignment.type.incompatible", varType, exprType);
         }
 
         return null; // super.visitCompoundAssignment(tree, p);

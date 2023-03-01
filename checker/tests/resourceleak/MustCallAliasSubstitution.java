@@ -9,7 +9,7 @@ import java.net.Socket;
 
 class MustCallAliasSubstitution {
 
-    // :: error: (mustcallalias.out.of.scope)
+    // :: error: mustcallalias.out.of.scope
     static @MustCallAlias Closeable example(@MustCallAlias Closeable p) throws IOException {
         p.close();
         return new Socket("localhost", 5000);

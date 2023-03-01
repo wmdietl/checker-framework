@@ -22,6 +22,7 @@ import org.checkerframework.javacutil.AnnotationMirrorSet;
 import org.checkerframework.javacutil.CollectionUtils;
 import org.checkerframework.javacutil.Pair;
 import org.checkerframework.javacutil.TreePathUtil;
+import org.checkerframework.javacutil.TreeUtils;
 import org.checkerframework.javacutil.TypeKindUtils;
 
 import java.util.Map;
@@ -135,13 +136,30 @@ public class PropagationTreeAnnotator extends TreeAnnotator {
                 } finally {
                     useAssignmentContext = true;
                 }
-                for (int i = 0; i < m.getParameterTypes().size(); i++) {
+
+                int parametersCount = m.getParameterTypes().size();
+                boolean isVarargs = m.getElement().isVarArgs();
+
+                // If the method accepts varargs, we handle the vararg parameter after this
+                // for-loop.
+                for (int i = 0; i < parametersCount; i++) {
                     @SuppressWarnings("interning") // Tree must be exactly the same.
                     boolean foundArgument = methodInvocationTree.getArguments().get(i) == tree;
                     if (foundArgument) {
                         contextType = m.getParameterTypes().get(i);
                         break;
                     }
+                }
+
+                if (isVarargs && contextType == null) {
+                    // The previous for-loop did not find any arguments matching the
+                    // new array tree, thus the tree has to be an argument for varargs.
+                    //
+                    // The tree could be an artificial tree when the code doesn't provide
+                    // any explicit arguments for the varargs (i.e., an empty array).
+                    // So we don't try getting the argument from methodInvocationTree
+                    // to avoid out-of-bound exception.
+                    contextType = m.getVarargType();
                 }
             }
         }
@@ -192,12 +210,15 @@ public class PropagationTreeAnnotator extends TreeAnnotator {
             // propagated annotations won't be applied.  So don't compute them.
             return null;
         }
-        AnnotatedTypeMirror rhs = atypeFactory.getAnnotatedType(tree.getExpression());
-        AnnotatedTypeMirror lhs = atypeFactory.getAnnotatedType(tree.getVariable());
+
+        Pair<AnnotatedTypeMirror, AnnotatedTypeMirror> argTypes =
+                atypeFactory.compoundAssignmentTreeArgTypes(tree);
         Set<? extends AnnotationMirror> lubs =
                 qualHierarchy.leastUpperBounds(
-                        rhs.getEffectiveAnnotations(), lhs.getEffectiveAnnotations());
+                        argTypes.first.getEffectiveAnnotations(),
+                        argTypes.second.getEffectiveAnnotations());
         type.addMissingAnnotations(lubs);
+
         return null;
     }
 
@@ -217,6 +238,13 @@ public class PropagationTreeAnnotator extends TreeAnnotator {
                 qualHierarchy.leastUpperBounds(
                         argTypes.first.getEffectiveAnnotations(),
                         argTypes.second.getEffectiveAnnotations());
+
+        if (TreeUtils.isBinaryComparison(tree)) {
+            // When we have binary comparison, the result type (boolean) can be different
+            // from the operands' types. So we need to apply the bounds of boolean to the
+            // lubs.
+            lubs = atypeFactory.getAnnotationOrTypeDeclarationBound(type.getUnderlyingType(), lubs);
+        }
         type.addMissingAnnotations(lubs);
 
         return null;
@@ -317,16 +345,8 @@ public class PropagationTreeAnnotator extends TreeAnnotator {
      * @param annos annotations to add to type
      */
     private void addAnnoOrBound(AnnotatedTypeMirror type, Set<? extends AnnotationMirror> annos) {
-        AnnotationMirrorSet boundAnnos =
-                atypeFactory.getQualifierUpperBounds().getBoundQualifiers(type.getUnderlyingType());
-        AnnotationMirrorSet annosToAdd = new AnnotationMirrorSet();
-        for (AnnotationMirror boundAnno : boundAnnos) {
-            AnnotationMirror anno = qualHierarchy.findAnnotationInSameHierarchy(annos, boundAnno);
-            if (anno != null && !qualHierarchy.isSubtype(anno, boundAnno)) {
-                annosToAdd.add(boundAnno);
-            }
-        }
+        AnnotationMirrorSet annosToAdd =
+                atypeFactory.getAnnotationOrTypeDeclarationBound(type.getUnderlyingType(), annos);
         type.addMissingAnnotations(annosToAdd);
-        type.addMissingAnnotations(annos);
     }
 }

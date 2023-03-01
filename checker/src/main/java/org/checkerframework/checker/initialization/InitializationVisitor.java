@@ -15,7 +15,6 @@ import org.checkerframework.checker.compilermsgs.qual.CompilerMessageKey;
 import org.checkerframework.checker.nullness.NullnessChecker;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.common.basetype.BaseTypeVisitor;
-import org.checkerframework.common.wholeprograminference.WholeProgramInference;
 import org.checkerframework.dataflow.expression.ClassName;
 import org.checkerframework.dataflow.expression.FieldAccess;
 import org.checkerframework.dataflow.expression.JavaExpression;
@@ -27,7 +26,8 @@ import org.checkerframework.framework.flow.CFAbstractValue;
 import org.checkerframework.framework.type.AnnotatedTypeMirror;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedDeclaredType;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedExecutableType;
-import org.checkerframework.javacutil.AnnotationFormatter;
+import org.checkerframework.framework.util.AnnotationFormatter;
+import org.checkerframework.framework.util.DefaultAnnotationFormatter;
 import org.checkerframework.javacutil.AnnotationMirrorSet;
 import org.checkerframework.javacutil.AnnotationUtils;
 import org.checkerframework.javacutil.DefaultAnnotationFormatter;
@@ -46,6 +46,10 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
+
+/* NO-AFU
+   import org.checkerframework.common.wholeprograminference.WholeProgramInference;
+*/
 
 /**
  * The visitor for the freedom-before-commitment type-system. The freedom-before-commitment
@@ -150,7 +154,7 @@ public class InitializationVisitor<
                         continue; // unknown initialization is allowed
                     }
                     if (atypeFactory.areSameByClass(a, c)) {
-                        checker.reportError(tree, "initialization.field.type", tree);
+                        checker.reportError(tree, COMMITMENT_INVALID_FIELD_TYPE, tree);
                         break;
                     }
                 }
@@ -255,7 +259,7 @@ public class InitializationVisitor<
         if (!isSubtype) {
             checker.reportError(
                     tree,
-                    "initialization.cast",
+                    COMMITMENT_INVALID_CAST,
                     annoFormatter.formatAnnotationMirror(exprAnno),
                     annoFormatter.formatAnnotationMirror(castAnno));
             return p; // suppress cast.unsafe warning
@@ -324,7 +328,7 @@ public class InitializationVisitor<
                     atypeFactory.getInvalidConstructorReturnTypeAnnotations()) {
                 for (AnnotationMirror a : returnTypeAnnotations) {
                     if (atypeFactory.areSameByClass(a, c)) {
-                        checker.reportError(tree, "initialization.constructor.return.type", tree);
+                        checker.reportError(tree, COMMITMENT_INVALID_CONSTRUCTOR_RETURN_TYPE, tree);
                         break;
                     }
                 }
@@ -452,20 +456,22 @@ public class InitializationVisitor<
             }
         }
 
+        /* NO-AFU
         // Support -Ainfer command-line argument.
         WholeProgramInference wpi = atypeFactory.getWholeProgramInference();
         if (wpi != null) {
-            // For each uninitialized field, treat it as if the default value is assigned to it.
-            List<VariableTree> uninitFields = new ArrayList<>(violatingFields);
-            uninitFields.addAll(nonviolatingFields);
-            for (VariableTree fieldTree : uninitFields) {
-                Element elt = TreeUtils.elementFromDeclaration(fieldTree);
-                wpi.updateFieldFromType(
-                        fieldTree,
-                        elt,
-                        fieldTree.getName().toString(),
-                        atypeFactory.getDefaultValueAnnotatedType(elt.asType()));
-            }
+          // For each uninitialized field, treat it as if the default value is assigned to it.
+          List<VariableTree> uninitFields = new ArrayList<>(violatingFields);
+          uninitFields.addAll(nonviolatingFields);
+          for (VariableTree fieldTree : uninitFields) {
+            Element elt = TreeUtils.elementFromDeclaration(fieldTree);
+            wpi.updateFieldFromType(
+                fieldTree,
+                elt,
+                fieldTree.getName().toString(),
+                atypeFactory.getDefaultValueAnnotatedType(elt.asType()));
+          }
         }
+        */
     }
 }

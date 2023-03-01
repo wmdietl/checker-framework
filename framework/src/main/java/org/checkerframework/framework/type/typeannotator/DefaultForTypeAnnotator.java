@@ -11,6 +11,7 @@ import org.checkerframework.framework.type.treeannotator.LiteralTreeAnnotator;
 import org.checkerframework.javacutil.AnnotationBuilder;
 import org.checkerframework.javacutil.AnnotationMirrorSet;
 import org.checkerframework.javacutil.BugInCF;
+import org.checkerframework.javacutil.TypeAnnotationUtils;
 import org.checkerframework.javacutil.TypeSystemError;
 import org.checkerframework.javacutil.TypesUtils;
 
@@ -30,6 +31,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * Adds annotations to a type based on the use of a type. This class applies annotations specified
@@ -161,14 +163,17 @@ public class DefaultForTypeAnnotator extends TypeAnnotator {
         // before looking at kind or class, as this information is more specific.
 
         String qname;
+        // We have to use the type name without annotations for the lookup.
+        TypeMirror unannotatedType = TypeAnnotationUtils.unannotatedType(type.getUnderlyingType());
         if (type.getKind() == TypeKind.DECLARED) {
-            qname = TypesUtils.getQualifiedName((DeclaredType) type.getUnderlyingType());
+            qname = TypesUtils.getQualifiedName((DeclaredType) unannotatedType);
         } else if (type.getKind().isPrimitive()) {
-            qname = type.getUnderlyingType().toString();
+            qname = unannotatedType.toString();
         } else {
             qname = null;
         }
 
+        // Perform the lookup.
         if (qname != null) {
             AnnotationMirrorSet fromQname = types.get(qname);
             if (fromQname != null) {
@@ -275,7 +280,8 @@ public class DefaultForTypeAnnotator extends TypeAnnotator {
                         thisName.names.add(Pattern.compile(nameRegex));
                     } catch (PatternSyntaxException e) {
                         throw new TypeSystemError(
-                                "In annotation %s, names() value \"%s\" is not a regular expression",
+                                "In annotation %s, names() value \"%s\" is not a regular"
+                                        + " expression",
                                 theQual, nameRegex);
                     }
                 }
@@ -284,7 +290,8 @@ public class DefaultForTypeAnnotator extends TypeAnnotator {
                         thisName.namesExceptions.add(Pattern.compile(namesExceptionsRegex));
                     } catch (PatternSyntaxException e) {
                         throw new TypeSystemError(
-                                "In annotation %s, namesExceptions() value \"%s\" is not a regular expression",
+                                "In annotation %s, namesExceptions() value \"%s\" is not a regular"
+                                        + " expression",
                                 theQual, namesExceptionsRegex);
                     }
                 }

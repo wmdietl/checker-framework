@@ -8,12 +8,12 @@ public class ReflectionConstructorTest {
     @TestReflectSibling1 int sibling1;
     @TestReflectSibling2 int sibling2;
 
-    // :: error: (super.invocation) :: warning: (inconsistent.constructor.type)
+    // :: error: (super.invocation.invalid) :: warning: (inconsistent.constructor.type)
     public @TestReflectSibling1 ReflectionConstructorTest(@TestReflectSibling1 int a) {}
 
     // :: warning: (inconsistent.constructor.type)
     public @TestReflectSibling2 ReflectionConstructorTest(
-            // :: error: (super.invocation)
+            // :: error: (super.invocation.invalid)
             @TestReflectSibling2 int a, @TestReflectSibling2 int b) {}
 
     public void pass1() {
@@ -51,7 +51,7 @@ public class ReflectionConstructorTest {
         try {
             Class<?> c = ReflectionConstructorTest.class;
             Constructor<?> init = c.getConstructor(new Class<?>[] {Integer.class});
-            // :: error: (argument) :: error: (assignment)
+            // :: error: (argument.type.incompatible) :: error: (assignment.type.incompatible)
             @TestReflectSibling1 Object o = init.newInstance(new Object[] {sibling2});
         } catch (Exception ignore) {
         }
@@ -63,7 +63,7 @@ public class ReflectionConstructorTest {
             Constructor<?> init = c.getConstructor(new Class<?>[] {Integer.class, Integer.class});
             @TestReflectSibling2 int a = sibling2;
             @TestReflectSibling1 int b = sibling1;
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             @TestReflectSibling2 Object inst = init.newInstance(a, b);
         } catch (Exception ignore) {
         }

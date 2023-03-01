@@ -1,9 +1,5 @@
 package org.checkerframework.checker.testchecker.ainfer;
 
-import com.sun.source.tree.ClassTree;
-import com.sun.source.tree.MethodTree;
-import com.sun.source.tree.VariableTree;
-
 import org.checkerframework.checker.testchecker.ainfer.qual.AinferBottom;
 import org.checkerframework.checker.testchecker.ainfer.qual.AinferDefaultType;
 import org.checkerframework.checker.testchecker.ainfer.qual.AinferImplicitAnno;
@@ -15,7 +11,6 @@ import org.checkerframework.checker.testchecker.ainfer.qual.AinferTop;
 import org.checkerframework.checker.testchecker.ainfer.qual.AinferTreatAsSibling1;
 import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
-import org.checkerframework.common.wholeprograminference.WholeProgramInference;
 import org.checkerframework.framework.qual.LiteralKind;
 import org.checkerframework.framework.type.AnnotatedTypeFactory;
 import org.checkerframework.framework.type.AnnotatedTypeMirror;
@@ -42,8 +37,6 @@ import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 
 /**
@@ -131,42 +124,43 @@ public class AinferTestAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
             super(atypeFactory);
         }
 
+        /* NO-AFU
         @Override
         public Void visitClass(ClassTree classTree, AnnotatedTypeMirror type) {
-            WholeProgramInference wpi = atypeFactory.getWholeProgramInference();
-            TypeElement classElt = TreeUtils.elementFromDeclaration(classTree);
-            if (wpi != null && classElt.getSimpleName().contentEquals("IShouldBeSibling1")) {
-                wpi.addClassDeclarationAnnotation(classElt, SIBLING1);
-            }
-            return super.visitClass(classTree, type);
+          WholeProgramInference wpi = atypeFactory.getWholeProgramInference();
+          TypeElement classElt = TreeUtils.elementFromDeclaration(classTree);
+          if (wpi != null && classElt.getSimpleName().contentEquals("IShouldBeSibling1")) {
+            wpi.addClassDeclarationAnnotation(classElt, SIBLING1);
+          }
+          return super.visitClass(classTree, type);
         }
 
         @Override
         public Void visitVariable(VariableTree variableTree, AnnotatedTypeMirror type) {
-            WholeProgramInference wpi = atypeFactory.getWholeProgramInference();
-            VariableElement varElt = TreeUtils.elementFromDeclaration(variableTree);
-            if (wpi != null && varElt.getSimpleName().contentEquals("iShouldBeTreatedAsSibling1")) {
-                wpi.addFieldDeclarationAnnotation(varElt, TREAT_AS_SIBLING1);
-            }
-            return super.visitVariable(variableTree, type);
+          WholeProgramInference wpi = atypeFactory.getWholeProgramInference();
+          VariableElement varElt = TreeUtils.elementFromDeclaration(variableTree);
+          if (wpi != null && varElt.getSimpleName().contentEquals("iShouldBeTreatedAsSibling1")) {
+            wpi.addFieldDeclarationAnnotation(varElt, TREAT_AS_SIBLING1);
+          }
+          return super.visitVariable(variableTree, type);
         }
 
         @Override
         public Void visitMethod(MethodTree methodTree, AnnotatedTypeMirror type) {
-            WholeProgramInference wpi = atypeFactory.getWholeProgramInference();
-            if (wpi != null) {
-                ExecutableElement execElt = TreeUtils.elementFromDeclaration(methodTree);
-                for (int i = 0; i < execElt.getParameters().size(); ++i) {
-                    VariableElement param = execElt.getParameters().get(i);
-                    if (param.getSimpleName().contentEquals("iShouldBeTreatedAsSibling1")
-                            || param.getSimpleName().contentEquals("out")) {
-                        wpi.addDeclarationAnnotationToFormalParameter(
-                                execElt, i, TREAT_AS_SIBLING1);
-                    }
-                }
+          WholeProgramInference wpi = atypeFactory.getWholeProgramInference();
+          if (wpi != null) {
+            ExecutableElement execElt = TreeUtils.elementFromDeclaration(methodTree);
+            for (int i = 0; i < execElt.getParameters().size(); ++i) {
+              VariableElement param = execElt.getParameters().get(i);
+              if (param.getSimpleName().contentEquals("iShouldBeTreatedAsSibling1")
+                  || param.getSimpleName().contentEquals("out")) {
+                wpi.addDeclarationAnnotationToFormalParameter(execElt, i, TREAT_AS_SIBLING1);
+              }
             }
-            return super.visitMethod(methodTree, type);
+          }
+          return super.visitMethod(methodTree, type);
         }
+        end NO-AFU */
     }
 
     @Override

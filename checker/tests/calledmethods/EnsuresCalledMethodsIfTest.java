@@ -9,7 +9,8 @@ class EnsuresCalledMethodsIfTest {
 
     @EnsuresCalledMethods(value = "#1", methods = "close")
     // If `sock` is null, `sock.close()` will not be called, and the method will exit normally, as
-    // the NullPointerException is caught.  But, the Called Methods Checker
+    // the
+    // NullPointerException is caught.  But, the Called Methods Checker
     // assumes the program is free of NullPointerExceptions, delegating verification of that
     // property to the Nullness Checker.  So, the postcondition is verified.
     public static void closeSock(EnsuresCalledMethodsIfTest sock) throws Exception {

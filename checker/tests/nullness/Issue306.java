@@ -25,7 +25,7 @@ public class Issue306 {
 
         // The following error has to be raised: from the signature it is not guaranteed that the
         // parameter is returned.
-        // :: error: (monotonic)
+        // :: error: (monotonic.type.incompatible)
         x = check(x);
     }
 
@@ -37,7 +37,7 @@ public class Issue306 {
         // :: error: (monotonic)
         x = p;
         // It would be nice not to raise the following error.
-        // :: error: (monotonic)
+        // :: error: (monotonic.type.incompatible)
         x = x;
     }
 }

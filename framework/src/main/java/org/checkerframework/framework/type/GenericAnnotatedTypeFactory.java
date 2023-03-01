@@ -16,15 +16,10 @@ import com.sun.source.tree.UnaryTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
 
-import org.checkerframework.afu.scenelib.el.AField;
-import org.checkerframework.afu.scenelib.el.AMethod;
 import org.checkerframework.checker.formatter.qual.FormatMethod;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.common.basetype.BaseTypeChecker;
-import org.checkerframework.common.wholeprograminference.WholeProgramInferenceImplementation;
-import org.checkerframework.common.wholeprograminference.WholeProgramInferenceJavaParserStorage;
-import org.checkerframework.common.wholeprograminference.WholeProgramInferenceScenesStorage;
 import org.checkerframework.dataflow.analysis.Analysis;
 import org.checkerframework.dataflow.analysis.Analysis.BeforeOrAfter;
 import org.checkerframework.dataflow.analysis.AnalysisResult;
@@ -106,7 +101,6 @@ import org.plumelib.util.SystemPlume;
 import java.lang.annotation.Annotation;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -218,6 +212,12 @@ public abstract class GenericAnnotatedTypeFactory<
      * @see GenericAnnotatedTypeFactory#getAnnotatedTypeLhsNoTypeVarDefault
      */
     private boolean shouldDefaultTypeVarLocals;
+
+    /**
+     * The inferred types applier utility to use. Initialized in postInit() and should not be
+     * re-assigned after initialization.
+     */
+    private DefaultInferredTypesApplier inferredTypesApplier;
 
     /**
      * Elements representing variables for which the type of the initializer is being determined in
@@ -334,13 +334,13 @@ public abstract class GenericAnnotatedTypeFactory<
         this.flowResult = null;
         this.regularExitStores = new IdentityHashMap<>();
         this.exceptionalExitStores = new IdentityHashMap<>();
-        this.methodInvocationStores = new IdentityHashMap<>();
         this.returnStatementStores = new IdentityHashMap<>();
 
         this.initializationStore = null;
         this.initializationStaticStore = null;
 
         this.cfgVisualizer = createCFGVisualizer();
+        this.handleCFGViz = checker.hasOption("flowdotdir") || checker.hasOption("cfgviz");
 
         if (shouldCache) {
             int cacheSize = getCacheSize();
@@ -405,6 +405,8 @@ public abstract class GenericAnnotatedTypeFactory<
         this.emptyStore = analysis.createEmptyStore(transfer.usesSequentialSemantics());
 
         this.parseAnnotationFiles();
+
+        this.inferredTypesApplier = new DefaultInferredTypesApplier(getQualifierHierarchy(), this);
     }
 
     /**
@@ -421,7 +423,10 @@ public abstract class GenericAnnotatedTypeFactory<
     }
 
     /**
-     * Creates a type factory. Its compilation unit is not yet set.
+     * Creates a type factory. Its compilation unit is not yet set. This constructor might get
+     * reflectively called by BaseTypeVisitor.createTypeFactory and uses flowByDefault to determine
+     * whether flow refinement should be enabled. Subclasses should instead use the two-parameter
+     * constructor and explicitly set whether to use flow refinement.
      *
      * @param checker the checker to which this type factory belongs
      */
@@ -442,7 +447,6 @@ public abstract class GenericAnnotatedTypeFactory<
         this.flowResult = null;
         this.regularExitStores.clear();
         this.exceptionalExitStores.clear();
-        this.methodInvocationStores.clear();
         this.returnStatementStores.clear();
         this.initializationStore = null;
         this.initializationStaticStore = null;
@@ -483,8 +487,6 @@ public abstract class GenericAnnotatedTypeFactory<
             if (factory.subcheckerSharedCFG != null) {
                 factory.subcheckerSharedCFG.clear();
             }
-            // The same applies to this map.
-            factory.artificialTreeToEnclosingElementMap.clear();
         }
     }
 
@@ -617,7 +619,7 @@ public abstract class GenericAnnotatedTypeFactory<
             FlowAnalysis result =
                     BaseTypeChecker.invokeConstructorFor(
                             BaseTypeChecker.getRelatedClassName(checkerClass, "Analysis"),
-                            new Class<?>[] {BaseTypeChecker.class, this.getClass(), List.class},
+                            new Class<?>[] {BaseTypeChecker.class, this.getClass()},
                             new Object[] {checker, this});
             if (result != null) {
                 return result;
@@ -1081,12 +1083,6 @@ public abstract class GenericAnnotatedTypeFactory<
     protected final IdentityHashMap<
                     MethodTree, List<Pair<ReturnNode, TransferResult<Value, Store>>>>
             returnStatementStores;
-
-    /**
-     * A mapping from methods to their a list with all return statements and the corresponding
-     * store.
-     */
-    protected IdentityHashMap<MethodInvocationTree, Store> methodInvocationStores;
 
     /**
      * Returns the regular exit store for a method or another code block (such as static
@@ -1623,14 +1619,17 @@ public abstract class GenericAnnotatedTypeFactory<
         handleCFGViz(cfg);
     }
 
+    /** Whether handling CFG visualization is necessary. */
+    private final boolean handleCFGViz;
+
     /**
      * Handle the visualization of the CFG, if necessary.
      *
      * @param cfg the CFG
      */
     protected void handleCFGViz(ControlFlowGraph cfg) {
-        if (checker.hasOption("flowdotdir") || checker.hasOption("cfgviz")) {
-            getCFGVisualizer().visualize(cfg, cfg.getEntryBlock(), analysis);
+        if (handleCFGViz) {
+            getCFGVisualizer().visualizeWithAction(cfg, cfg.getEntryBlock(), analysis);
         }
     }
 
@@ -1792,6 +1791,21 @@ public abstract class GenericAnnotatedTypeFactory<
     }
 
     /**
+     * Removes all primary annotations on a copy of the type and calculates the default annotations
+     * that apply to the copied type, without type refinements.
+     *
+     * @param tree tree where the type is used
+     * @param type type to determine the defaulted version for
+     * @return the annotated type mirror with default annotations
+     */
+    public AnnotatedTypeMirror getDefaultAnnotations(Tree tree, AnnotatedTypeMirror type) {
+        AnnotatedTypeMirror copy = type.deepCopy();
+        copy.removeAnnotations(type.getAnnotations());
+        addComputedTypeAnnotations(tree, copy, false);
+        return copy;
+    }
+
+    /**
      * Like {@link #addComputedTypeAnnotations(Tree, AnnotatedTypeMirror)}. Overriding
      * implementations typically simply pass the boolean to calls to super.
      *
@@ -1920,9 +1934,8 @@ public abstract class GenericAnnotatedTypeFactory<
      * @param inferred the inferred annotations to apply
      */
     protected void applyInferredAnnotations(AnnotatedTypeMirror type, Value inferred) {
-        DefaultInferredTypesApplier applier =
-                new DefaultInferredTypesApplier(getQualifierHierarchy(), this);
-        applier.applyInferredType(type, inferred.getAnnotations(), inferred.getUnderlyingType());
+        inferredTypesApplier.applyInferredType(
+                type, inferred.getAnnotations(), inferred.getUnderlyingType());
     }
 
     /**
@@ -2180,7 +2193,8 @@ public abstract class GenericAnnotatedTypeFactory<
             String cfgviz = checker.getOption("cfgviz");
             if (cfgviz == null) {
                 throw new UserError(
-                        "-Acfgviz specified without arguments, should be -Acfgviz=VizClassName[,opts,...]");
+                        "-Acfgviz specified without arguments, should be"
+                                + " -Acfgviz=VizClassName[,opts,...]");
             }
             String[] opts = cfgviz.split(",");
             String vizClassName = opts[0];
@@ -2411,7 +2425,7 @@ public abstract class GenericAnnotatedTypeFactory<
         return defaultValueATM;
     }
 
-    /**
+    /* NO-AFU
      * Return the contract annotations (that is, pre- and post-conditions) for the given AMethod.
      * Does not modify the AMethod. This method must only be called when using
      * WholeProgramInferenceScenes.
@@ -2419,6 +2433,7 @@ public abstract class GenericAnnotatedTypeFactory<
      * @param m AFU representation of a method
      * @return contract annotations for the method
      */
+    /* NO-AFU
     public List<AnnotationMirror> getContractAnnotations(AMethod m) {
         List<AnnotationMirror> preconds = getPreconditionAnnotations(m);
         List<AnnotationMirror> postconds = getPostconditionAnnotations(m, preconds);
@@ -2426,14 +2441,16 @@ public abstract class GenericAnnotatedTypeFactory<
         result.addAll(postconds);
         return result;
     }
+    */
 
-    /**
+    /* NO-AFU
      * Return the precondition annotations for the given AMethod. Does not modify the AMethod. This
      * method must only be called when using WholeProgramInferenceScenes.
      *
      * @param m AFU representation of a method
      * @return precondition annotations for the method
      */
+    /* NO-AFU
     public List<AnnotationMirror> getPreconditionAnnotations(AMethod m) {
         List<AnnotationMirror> result = new ArrayList<>(m.getPreconditions().size());
         for (Map.Entry<String, AField> entry : m.getPreconditions().entrySet()) {
@@ -2457,8 +2474,9 @@ public abstract class GenericAnnotatedTypeFactory<
         Collections.sort(result, Ordering.usingToString());
         return result;
     }
+    */
 
-    /**
+    /* NO-AFU
      * Return the postcondition annotations for the given AMethod. Does not modify the AMethod. This
      * method must only be called when using WholeProgramInferenceScenes.
      *
@@ -2467,6 +2485,7 @@ public abstract class GenericAnnotatedTypeFactory<
      *     postconditions
      * @return postcondition annotations for the method
      */
+    /* NO-AFU
     public List<AnnotationMirror> getPostconditionAnnotations(
             AMethod m, List<AnnotationMirror> preconds) {
         List<AnnotationMirror> result = new ArrayList<>(m.getPostconditions().size());
@@ -2478,7 +2497,8 @@ public abstract class GenericAnnotatedTypeFactory<
             TypeMirror typeMirror = entry.getValue().getTypeMirror();
             if (typeMirror == null) {
                 throw new BugInCF(
-                        "null TypeMirror in AField inferred by WPI postcondition inference. AField: "
+                        "null TypeMirror in AField inferred by WPI postcondition inference. AField:"
+                                + " "
                                 + entry.getValue().toString());
             }
 
@@ -2493,14 +2513,16 @@ public abstract class GenericAnnotatedTypeFactory<
         Collections.sort(result, Ordering.usingToString());
         return result;
     }
+    */
 
-    /**
+    /* NO-AFU
      * Return the contract annotations (that is, pre- and post-conditions) for the given
      * CallableDeclarationAnnos. Does not modify the CallableDeclarationAnnos.
      *
      * @param methodAnnos annotation data for a method
      * @return contract annotations for the method
      */
+    /* NO-AFU
     public List<AnnotationMirror> getContractAnnotations(
             WholeProgramInferenceJavaParserStorage.CallableDeclarationAnnos methodAnnos) {
         List<AnnotationMirror> preconds = getPreconditionAnnotations(methodAnnos);
@@ -2509,14 +2531,16 @@ public abstract class GenericAnnotatedTypeFactory<
         result.addAll(postconds);
         return result;
     }
+    */
 
-    /**
+    /* NO-AFU
      * Return the precondition annotations for the given CallableDeclarationAnnos. Does not modify
      * the CallableDeclarationAnnos.
      *
      * @param methodAnnos annotation data for a method
      * @return precondition annotations for the method
      */
+    /* NO-AFU
     public List<AnnotationMirror> getPreconditionAnnotations(
             WholeProgramInferenceJavaParserStorage.CallableDeclarationAnnos methodAnnos) {
         List<AnnotationMirror> result = new ArrayList<>();
@@ -2529,8 +2553,9 @@ public abstract class GenericAnnotatedTypeFactory<
         Collections.sort(result, Ordering.usingToString());
         return result;
     }
+    */
 
-    /**
+    /* NO-AFU
      * Return the postcondition annotations for the given CallableDeclarationAnnos. Does not modify
      * the CallableDeclarationAnnos.
      *
@@ -2539,6 +2564,7 @@ public abstract class GenericAnnotatedTypeFactory<
      *     postconditions
      * @return postcondition annotations for the method
      */
+    /* NO-AFU
     public List<AnnotationMirror> getPostconditionAnnotations(
             WholeProgramInferenceJavaParserStorage.CallableDeclarationAnnos methodAnnos,
             List<AnnotationMirror> preconds) {
@@ -2555,8 +2581,9 @@ public abstract class GenericAnnotatedTypeFactory<
         Collections.sort(result, Ordering.usingToString());
         return result;
     }
+    */
 
-    /**
+    /* NO-AFU
      * Returns a list of inferred {@code @RequiresQualifier} annotations for the given expression.
      * By default this list does not include any qualifier that has elements/arguments, which
      * {@code @RequiresQualifier} does not support. Subclasses may remove this restriction by
@@ -2572,13 +2599,15 @@ public abstract class GenericAnnotatedTypeFactory<
      * @param declaredType the declared type of the expression
      * @return precondition annotations for the element (possibly an empty list)
      */
+    /* NO-AFU
     public final List<AnnotationMirror> getPreconditionAnnotations(
             String expression, AnnotatedTypeMirror inferredType, AnnotatedTypeMirror declaredType) {
         return getPreOrPostconditionAnnotations(
                 expression, inferredType, declaredType, BeforeOrAfter.BEFORE, null);
     }
+    */
 
-    /**
+    /* NO-AFU
      * Returns a list of inferred {@code @EnsuresQualifier} annotations for the given expression. By
      * default this list does not include any qualifier that has elements/arguments, which
      * {@code @EnsuresQualifier} does not support; and, preconditions are not used to suppress
@@ -2597,6 +2626,7 @@ public abstract class GenericAnnotatedTypeFactory<
      *     postconditions
      * @return postcondition annotations for the element (possibly an empty list)
      */
+    /* NO-AFU
     public final List<AnnotationMirror> getPostconditionAnnotations(
             String expression,
             AnnotatedTypeMirror inferredType,
@@ -2605,8 +2635,9 @@ public abstract class GenericAnnotatedTypeFactory<
         return getPreOrPostconditionAnnotations(
                 expression, inferredType, declaredType, BeforeOrAfter.AFTER, preconds);
     }
+    */
 
-    /**
+    /* NO-AFU
      * Creates pre- and postcondition annotations. Helper method for {@link
      * #getPreconditionAnnotations} and {@link #getPostconditionAnnotations}.
      *
@@ -2628,6 +2659,7 @@ public abstract class GenericAnnotatedTypeFactory<
      *     postconditions; non-null exactly when {@code preOrPost} is {@code AFTER}
      * @return precondition or postcondition annotations for the element (possibly an empty list)
      */
+    /* NO-AFU
     protected List<AnnotationMirror> getPreOrPostconditionAnnotations(
             String expression,
             AnnotatedTypeMirror inferredType,
@@ -2660,6 +2692,7 @@ public abstract class GenericAnnotatedTypeFactory<
         }
         return result;
     }
+    */
 
     /**
      * Matches parameter expressions as they appear in {@link EnsuresQualifier} and {@link

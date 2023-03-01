@@ -3,7 +3,7 @@ import java.io.InputStream;
 
 /**
  * Tests that the detector works properly in the presence of multiple identical return statements in
- * a method.
+ * a method
  */
 class MultipleIdenticalReturns {
     static class Repro {

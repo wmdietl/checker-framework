@@ -212,7 +212,7 @@ public class Predicates {
         static void testAssignability2(@TestAccumulationPredicate("a && b") MyClass dAble) {
             // These calls would work if subtyping between predicates was by implication. They issue
             // errors, because it is not.
-            // :: error: (method.invocation)
+            // :: error: method.invocation.invalid
             dAble.c();
             dAble.d();
             // :: error: (method.invocation)

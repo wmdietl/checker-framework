@@ -227,8 +227,7 @@ public abstract class AbstractQualifierPolymorphism implements QualifierPolymorp
         if (polyQuals.isEmpty() || !hasPolymorphicQualifiers(type)) {
             return;
         }
-        List<AnnotatedTypeMirror> parameters =
-                AnnotatedTypes.adaptParameters(atypeFactory, type, tree.getArguments());
+        List<AnnotatedTypeMirror> parameters = type.getParameterTypes();
         List<AnnotatedTypeMirror> arguments =
                 CollectionsPlume.mapList(atypeFactory::getAnnotatedType, tree.getArguments());
 
@@ -239,7 +238,7 @@ public abstract class AbstractQualifierPolymorphism implements QualifierPolymorp
         //        collector.visit(factory.getReceiverType(tree), type.getReceiverType()));
 
         AnnotatedTypeMirror newClassType = type.getReturnType().deepCopy();
-        newClassType.clearPrimaryAnnotations();
+        newClassType.clearAnnotations();
         newClassType.replaceAnnotations(atypeFactory.getExplicitNewClassAnnos(tree));
 
         instantiationMapping =

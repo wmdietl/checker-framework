@@ -262,7 +262,8 @@ public enum ConversionCategory {
         as.retainAll(bs); // intersection
         for (ConversionCategory v : conversionCategoriesForIntersect) {
             @SuppressWarnings(
-                    "nullness:argument" // `types` field is null only for UNUSED and GENERAL
+                    "nullness:argument.type.incompatible" // `types` field is null only for UNUSED
+            // and GENERAL
             )
             Set<Class<?>> vs = arrayToSet(v.types);
             if (vs.equals(as)) {
@@ -314,7 +315,8 @@ public enum ConversionCategory {
         as.addAll(bs); // union
         for (ConversionCategory v : conversionCategoriesForUnion) {
             @SuppressWarnings(
-                    "nullness:argument" // `types` field is null only for UNUSED and GENERAL
+                    "nullness:argument.type.incompatible" // `types` field is null only for UNUSED
+            // and GENERAL
             )
             Set<Class<?>> vs = arrayToSet(v.types);
             if (vs.equals(as)) {

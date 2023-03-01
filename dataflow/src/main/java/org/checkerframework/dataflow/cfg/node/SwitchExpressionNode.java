@@ -5,6 +5,7 @@ import com.sun.source.tree.Tree;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.SideEffectFree;
 import org.checkerframework.javacutil.BugInCF;
+import org.checkerframework.javacutil.SystemUtil;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -37,9 +38,12 @@ public class SwitchExpressionNode extends Node {
             TypeMirror type, Tree switchExpressionTree, LocalVariableNode switchExpressionVar) {
         super(type);
 
-        if (!switchExpressionTree.getKind().name().equals("SWITCH_EXPRESSION")) {
+        // TODO: use JCP to add version-specific behavior
+        if (SystemUtil.jreVersion < 14
+                || !switchExpressionTree.getKind().name().equals("SWITCH_EXPRESSION")) {
             throw new BugInCF(
-                    "switchExpressionTree is not a SwitchExpressionTree found tree with kind %s instead.",
+                    "switchExpressionTree is not a SwitchExpressionTree found tree with kind %s"
+                            + " instead.",
                     switchExpressionTree.getKind());
         }
 

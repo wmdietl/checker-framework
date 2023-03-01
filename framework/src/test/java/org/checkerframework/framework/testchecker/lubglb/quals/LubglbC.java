@@ -1,4 +1,4 @@
-package org.checkerframework.framework.testchecker.lubglb.quals;
+package viewpointtest.quals;
 
 import org.checkerframework.framework.qual.SubtypeOf;
 
@@ -11,5 +11,5 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
-@SubtypeOf({LubglbA.class})
-public @interface LubglbC {}
+@SubtypeOf({Top.class})
+public @interface B {}

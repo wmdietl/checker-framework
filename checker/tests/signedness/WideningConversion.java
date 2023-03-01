@@ -98,9 +98,9 @@ public class WideningConversion {
     void to_string() {
         // :: error: (unsigned.concat)
         String s1 = "" + us1;
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         String s2 = String.valueOf(us2);
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         String s3 = Short.toString(us1);
     }
 }

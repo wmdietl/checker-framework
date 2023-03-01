@@ -103,11 +103,11 @@ public class AnnotationMirrorToAnnotationExprConversion {
         AnnotationValueConverterVisitor converter = new AnnotationValueConverterVisitor();
         for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
                 values.entrySet()) {
-            ExecutableElement valueName = entry.getKey();
             AnnotationValue value = entry.getValue();
             convertedValues.add(
                     new MemberValuePair(
-                            valueName.getSimpleName().toString(), value.accept(converter, null)));
+                            entry.getKey().getSimpleName().toString(),
+                            value.accept(converter, null)));
         }
 
         return convertedValues;

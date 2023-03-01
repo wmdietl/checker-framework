@@ -1,12 +1,13 @@
 package org.checkerframework.framework.type.typeannotator;
 
+import com.sun.tools.javac.code.Type.WildcardType;
+
 import org.checkerframework.checker.interning.qual.FindDistinct;
 import org.checkerframework.framework.type.AnnotatedTypeFactory;
 import org.checkerframework.framework.type.AnnotatedTypeMirror;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedDeclaredType;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedTypeVariable;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedWildcardType;
-import org.checkerframework.framework.util.AnnotatedTypes;
 import org.checkerframework.javacutil.BugInCF;
 import org.checkerframework.javacutil.TypesUtils;
 import org.plumelib.util.StringsPlume;
@@ -39,6 +40,7 @@ public class PropagationTypeAnnotator extends TypeAnnotator {
      * TypeAnnotatorUtil.eraseBoundsThenAnnotate. This flag prevents infinite recursion.
      */
     private boolean pause = false;
+
     /** The parents. */
     private final ArrayDeque<AnnotatedDeclaredType> parents = new ArrayDeque<>();
 
@@ -126,9 +128,10 @@ public class PropagationTypeAnnotator extends TypeAnnotator {
         }
         visitedNodes.put(wildcard, null);
 
-        Element typeParamElement = TypesUtils.wildcardToTypeParam(wildcard.getUnderlyingType());
+        final WildcardType wildcard = (WildcardType) wildcardAtm.getUnderlyingType();
+        Element typeParamElement = TypesUtils.wildcardToTypeParam(wildcard);
         if (typeParamElement == null && !parents.isEmpty()) {
-            typeParamElement = getTypeParameterElement(wildcard, parents.peekFirst());
+            typeParamElement = getTypeParameterElement(wildcardAtm, parents.peekFirst());
         }
 
         if (typeParamElement != null) {
@@ -140,31 +143,22 @@ public class PropagationTypeAnnotator extends TypeAnnotator {
             final Set<? extends AnnotationMirror> tops =
                     typeFactory.getQualifierHierarchy().getTopAnnotations();
 
-            /*
-             * We check both bounds instead of checking isUnbound(). By doing so, we stick to the public
-             * javax.lang.model API. That said, our real motivation is that recent JDKs implement
-             * isUnbound() to return true for `? extends Object`. We want to distinguish that from `?`:
-             * https://jspecify.dev/spec#unbounded-wildcard
-             */
-            /* TODO
-                  if (wildcard.getExtendsBound() == null && wildcard.getSuperBound() == null) {
+            // Do not test `wildcard.isUnbound()` because as of Java 18, it returns true for "?
+            // extends Object".
+            switch (wildcard.kind) {
+                case UNBOUND:
                     propagateExtendsBound(wildcardAtm, typeParam, tops);
                     propagateSuperBound(wildcardAtm, typeParam, tops);
-            */
-            if (AnnotatedTypes.hasNoExplicitBound(wildcard)) {
-                propagateExtendsBound(wildcard, typeParam, tops);
-                propagateSuperBound(wildcard, typeParam, tops);
-            } else if (AnnotatedTypes.hasExplicitExtendsBound(wildcard)) {
-                propagateSuperBound(wildcard, typeParam, tops);
-            } else if (AnnotatedTypes.hasExplicitSuperBound(wildcard)) {
-                propagateExtendsBound(wildcard, typeParam, tops);
-            } else {
-                // If this is thrown, then it means that there's a bug in one of the
-                // AnnotatedTypes.hasNoExplicit*Bound methods.  Probably something changed in the
-                // javac
-                // implementation.
-                throw new BugInCF(
-                        "Wildcard is neither unbound nor does it have an explicit bound.");
+                    break;
+                case EXTENDS:
+                    propagateSuperBound(wildcardAtm, typeParam, tops);
+                    break;
+                case SUPER:
+                    propagateExtendsBound(wildcardAtm, typeParam, tops);
+                    break;
+                default:
+                    throw new BugInCF(
+                            "unexpected wildcard kind " + wildcard.kind + " for " + wildcard);
             }
         }
         scan(wildcard.getExtendsBound(), null);

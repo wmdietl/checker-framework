@@ -30,10 +30,10 @@ public class LowerBoundDefaulting {
     public void implicitsWildcard(MyArrayList<?> myArrayList) {
 
         // should fail because @LbImplicit is below @LbTop
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @LbTop MyArrayList<@LbTop ? extends @LbTop CharSequence> iwLowerBoundIncompatible = myArrayList;
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @LbTop MyArrayList<@LbExplicit ? extends @LbTop CharSequence> iwLowerBoundCompatible = myArrayList;
 
         @LbTop MyArrayList<@LbImplicit ? extends @LbTop CharSequence> iwLowerBoundStillCompatible =
@@ -46,7 +46,7 @@ public class LowerBoundDefaulting {
         // :: error: (assignment)
         @LbTop MyArrayList<@LbTop ? extends @LbTop String> iebLowerBoundIncompatible = iebList;
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @LbTop MyArrayList<@LbExplicit ? extends @LbTop String> iebLowerBoundStillIncompatible = iebList;
 
         @LbTop MyArrayList<@LbImplicit ? extends @LbTop String> iebLowerBoundCompatible = iebList;
@@ -57,7 +57,7 @@ public class LowerBoundDefaulting {
     // capture is MyArrayList<cap#1 @LbTop ? super @LbTop String>
     // The super bound is the LUB of @LbTop and @LbExplicit.
     public void explicitLowerBoundedWildcard(MyArrayList<? super String> elbList) {
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @LbTop MyArrayList<@LbBottom ? super @LbBottom String> iebLowerBoundIncompatible = elbList;
 
         @LbTop MyArrayList<@LbTop ? super @LbExplicit String> iebLowerBoundStillIncompatible = elbList;

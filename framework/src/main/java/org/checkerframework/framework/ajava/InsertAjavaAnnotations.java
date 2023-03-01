@@ -568,7 +568,8 @@ public class InsertAjavaAnnotations {
     public static void main(String[] args) {
         if (args.length != 2) {
             System.out.println(
-                    "Usage: java InsertAjavaAnnotations <ajava-file-or-directory> <java-file-or-directory");
+                    "Usage: java InsertAjavaAnnotations <ajava-file-or-directory>"
+                            + " <java-file-or-directory");
             System.exit(1);
         }
 

@@ -12,7 +12,7 @@ To report bugs, please see Section~\ref{reporting-bugs}.
 If you want to help out, you can give feedback (including on the
 documentation), choose a bug and fix it, or select a
 project from the ideas list at
-\url{https://checkerframework.org/manual/gsoc-ideas.html}.
+\url{https://htmlpreview.github.io/?https://github.com/eisop/checker-framework/master/docs/developer/gsoc-ideas.html}.
 \end{sloppypar}
 
 
@@ -377,7 +377,7 @@ Chapter~\ref{annotating-libraries}).  The
 annotations might appear in stub files (which appear
 in an \code{.astub} file together with the checker's source code)
 or in the form of annotated libraries (which appear
-in \url{https://github.com/typetools/}).
+in \url{https://github.com/eisop/}).
 
 \item
 If the compiler reports that it cannot find a method from the JDK or
@@ -455,7 +455,8 @@ error: annotation type not applicable to this kind of declaration
 indicates that you are using a definition of \<@NonNull> that is a
 declaration annotation, which cannot be used in that syntactic location.
 For example, many legacy annotations such as those listed in
-Figure~\ref{fig-nullness-refactoring} are declaration annotations.  You can
+Figures~\ref{fig-nullness-refactoring-nonnull} and \ref{fig-nullness-refactoring-nullable}
+are declaration annotations.  You can
 fix the problem by instead using a definition of \<@NonNull> that is a type
 annotation, such as the Checker Framework's annotations; often this only
 requires changing an \<import> statement.
@@ -531,7 +532,7 @@ public String(char value[], @IndexFor("#1") int offset, @IndexOrHigh("#1") int c
   Checker Framework behaves differently with and without that command-line
   argument, then there is a bug related to its internal caches.  Please
   report that bug at
-  \url{https://github.com/typetools/checker-framework/issues}.
+  \url{https://github.com/eisop/checker-framework/issues}.
 
 \end{itemize}
 
@@ -559,7 +560,7 @@ values as an annotation argument, you need to put curly braces around them:
 
 If you have a problem with any checker, or with the Checker Framework,
 please file a bug at
-\url{https://github.com/typetools/checker-framework/issues}.
+\url{https://github.com/eisop/checker-framework/issues}.
 (First, check whether there is an existing bug report for that issue.)
 If the problem is with an incorrect or missing annotation on a library,
 including the JDK, see Section~\ref{reporting-bugs-annotated-libraries}.
@@ -659,7 +660,7 @@ If a checker reports a warning because a library contains \emph{incorrect} annot
 then please open a pull request that adds the annotations.  If the
 library's maintainers have added annotations, make a pull request to them.
 If the Checker Framework maintainers have added annotations,
-you can find the annotated source in \url{https://github.com/typetools/}.
+you can find the annotated source in \url{https://github.com/eisop/}.
 
 If a checker reports a warning because a library is \emph{not
 annotated}, please do not open a GitHub issue.
@@ -724,11 +725,11 @@ in this manual.)
 sudo apt-get -qqy update
 sudo apt-get -qqy install \
  openjdk-17-jdk \
- ant cpp git gradle jq jtreg6 libcurl3-gnutls \
+ ant cpp git gradle jq libcurl3-gnutls \
  make maven mercurial python3-pip python3-requests unzip wget \
- autoconf devscripts dia hevea imagemagick junit jtreg6 latexmk \
+ autoconf devscripts dia hevea imagemagick junit latexmk \
  librsvg2-bin libasound2-dev libcups2-dev libfontconfig1-dev \
- libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev \
+ libx17-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev \
  pdf2svg rsync shellcheck \
  texlive-font-utils texlive-fonts-recommended \
  texlive-latex-base texlive-latex-extra texlive-latex-recommended
@@ -740,7 +741,7 @@ pip3 install black flake8 html5validator
 In a startup file, write:
 % Can someone give a simpler command?
 % Command taken from:
-%   https://github.com/typetools/checker-framework/blob/master/checker/bin-devel/build.sh#L19
+%   https://github.com/eisop/checker-framework/blob/master/checker/bin-devel/build.sh#L19
 %BEGIN LATEX
 \begin{smaller}
 %END LATEX
@@ -804,7 +805,7 @@ export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/
 Obtain the latest source code from the version control repository:
 
 \begin{Verbatim}
-git clone https://github.com/typetools/checker-framework.git checker-framework
+git clone https://github.com/eisop/checker-framework.git checker-framework
 export CHECKERFRAMEWORK=`pwd`/checker-framework
 \end{Verbatim}
 % $ to unconfuse Emacs LaTeX mode
@@ -883,6 +884,11 @@ Use the version number that is output when you run \code{./gradlew version}.
 
   \end{itemize}
 
+\item To quickly rebuild the Checker Framework for local development,
+run \code{./gradlew assembleForJavac}. This command will assemble the jar
+files without generating any Javadoc or sources.jar files, thus it is
+faster than \code{./gradlew assemble}.
+
 \end{enumerate}
 
 
@@ -901,14 +907,14 @@ Run \code{make} in the \code{docs/manual} directory to build both the PDF and HT
 \subsectionAndLabel{Code style, IDE configuration, pull requests, etc.}{building-developer-manual}
 
 Please see the
-\href{https://checkerframework.org/manual/developer-manual.html}{Checker Framework Developer Manual}.
+\href{https://htmlpreview.github.io/?https://github.com/eisop/checker-framework/master/docs/developer/developer-manual.html}{Checker Framework Developer Manual}.
 
 
 \subsectionAndLabel{Enable continuous integration builds}{building-ci}
 
 We strongly recommend that you enable continuous integration (CI) builds on
 your fork of the projects, so that you learn quickly about errors.  See the
-\href{https://checkerframework.org/manual/developer-manual.html\#ci}{CI
+\href{https://htmlpreview.github.io/?https://github.com/eisop/checker-framework/master/docs/developer/developer-manual.html\#ci}{CI
   instructions} in the Checker Framework Developer Manual.
 
 
@@ -931,8 +937,8 @@ CI configuration files.
 \subsectionAndLabel{Related repositories}{building-related-repositories}
 
 Building the Checker Framework depends on other repositories, such as
-\href{https://github.com/typetools/annotation-tools/}{Annotation Tools} and
-\href{https://github.com/typetools/stubparser/}{Stub Parser}.
+\href{https://github.com/eisop/annotation-tools/}{Annotation Tools} and
+\href{https://github.com/eisop/stubparser/}{Stub Parser}.
 You need to have compatible versions of each.
 
 After you \<git pull> in one of the repositories, you should do so in the
@@ -952,12 +958,12 @@ checker/bin-devel/build.sh
 We welcome contributions and pull requests.  Section~\ref{build-source}
 tells you how to set up your development environment to compile the Checker
 Framework, and the
-\href{https://checkerframework.org/manual/developer-manual.html}{Checker
+\href{https://htmlpreview.github.io/?https://github.com/eisop/checker-framework/master/docs/developer/developer-manual.html}{Checker
   Framework Developer Manual} gives more information.
 
 One good way to contribute is to give feedback about your use of the tool.
 There is a list
-  of potential projects for new contributors at \url{https://checkerframework.org/manual/gsoc-ideas.html}.
+  of potential projects for new contributors at \url{https://htmlpreview.github.io/?https://github.com/eisop/checker-framework/master/docs/developer/gsoc-ideas.html}.
 Or, you can fix a bug that
 you have encountered during your use of the Checker Framework.
 
@@ -965,12 +971,12 @@ you have encountered during your use of the Checker Framework.
 \subsectionAndLabel{Contributing fixes (creating a pull request)}{pull-request}
 
 Please see the
-\href{https://checkerframework.org/manual/developer-manual.html#pull-requests}{pull
+\href{https://htmlpreview.github.io/?https://github.com/eisop/checker-framework/master/docs/developer/developer-manual.html#pull-requests}{pull
   requests} section of the Checker Framework Developer Manual.
 Thanks in advance for your contributions!
 
 The easiest bugs to fix for a newcomer are
-\href{https://github.com/typetools/checker-framework/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22}{labeled
+\href{https://github.com/eisop/checker-framework/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22}{labeled
   as ``good first issue''}.
 
 Please do not spam the issue tracker with requests to assign an issue to
@@ -1028,7 +1034,7 @@ program, such as the annotations and run-time utility classes.
 
 \noindent
 For details, see file
-\href{https://raw.githubusercontent.com/typetools/checker-framework/master/LICENSE.txt}{\<LICENSE.txt>}.
+\href{https://raw.githubusercontent.com/eisop/checker-framework/master/LICENSE.txt}{\<LICENSE.txt>}.
 
 
 \sectionAndLabel{Publications}{publications}

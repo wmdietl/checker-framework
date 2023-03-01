@@ -134,7 +134,8 @@ public class I18nFormatterAnnotatedTypeFactory extends BaseAnnotatedTypeFactory 
                         // TODO: is there a nicer way to report messages, that are not connected to
                         // an AST node?  One cannot use `report`, because it needs a node.
                         System.err.println(
-                                "Exception in PropertyKeyChecker.keysOfPropertyFile while processing "
+                                "Exception in PropertyKeyChecker.keysOfPropertyFile while"
+                                        + " processing "
                                         + name
                                         + ": "
                                         + e);

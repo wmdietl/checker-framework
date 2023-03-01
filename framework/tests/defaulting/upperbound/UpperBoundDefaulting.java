@@ -34,7 +34,7 @@ public class UpperBoundDefaulting {
                 myArrayList;
 
         @UbTop MyArrayList<@UbBottom ? extends @UbImplicit CharSequence> iwLowerBoundStillCompatible =
-                // :: error: (assignment)
+                // :: error: (assignment.type.incompatible)
                 myArrayList;
     }
 
@@ -44,7 +44,7 @@ public class UpperBoundDefaulting {
 
         MyArrayList<@UbBottom ? extends @UbExplicit Object> eubExplicitToBottom = iebList;
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         MyArrayList<@UbBottom ? extends @UbImplicit Object> eubImplicitToBottom = iebList;
     }
 
@@ -52,7 +52,7 @@ public class UpperBoundDefaulting {
         @UbTop MyArrayList<@UbTop ? super @UbBottom String> iebLowerBoundIncompatible = elbList;
 
         // Upper bound: GLB(@UbExplicit, @UbImplicit), Lower bound: @UbBottom.
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @UbTop MyArrayList<@UbImplicit ? super @UbBottom String> iebLowerBoundStillIncompatible = elbList;
 
         @UbTop MyArrayList<@UbExplicit ? super @UbBottom String> iebLowerBoundCompatible = elbList;

@@ -367,7 +367,7 @@ public class GuiEffectVisitor extends BaseTypeVisitor<GuiEffectTypeFactory> {
         assert callerEffect != null;
 
         if (!Effect.lessThanOrEqualTo(targetEffect, callerEffect)) {
-            checker.reportError(tree, "call.ui", targetEffect, callerEffect);
+            checker.reportError(tree, "call.invalid.ui", targetEffect, callerEffect);
             if (debugSpew) {
                 System.err.println("Issuing error for tree: " + tree);
             }
@@ -406,7 +406,6 @@ public class GuiEffectVisitor extends BaseTypeVisitor<GuiEffectTypeFactory> {
         }
 
         // Check for conflicting (multiple) annotations
-        assert (methElt != null);
         // TypeMirror scratch = methElt.getReturnType();
         AnnotationMirror targetUIP = atypeFactory.getDeclAnnotation(methElt, UIEffect.class);
         AnnotationMirror targetSafeP = atypeFactory.getDeclAnnotation(methElt, SafeEffect.class);
@@ -418,7 +417,7 @@ public class GuiEffectVisitor extends BaseTypeVisitor<GuiEffectTypeFactory> {
             checker.reportError(tree, "annotations.conflicts");
         }
         if (targetPolyP != null && !atypeFactory.isPolymorphicType(targetClassElt)) {
-            checker.reportError(tree, "polymorphism");
+            checker.reportError(tree, "polymorphism.invalid");
         }
         if (targetUIP != null && atypeFactory.isUIType(targetClassElt)) {
             checker.reportWarning(tree, "effects.redundant.uitype");
@@ -521,9 +520,7 @@ public class GuiEffectVisitor extends BaseTypeVisitor<GuiEffectTypeFactory> {
                 ExecutableElement method = invokedMethod.getElement();
                 CharSequence methodName = ElementUtils.getSimpleNameOrDescription(method);
                 List<? extends VariableElement> methodParams = method.getParameters();
-                List<AnnotatedTypeMirror> paramTypes =
-                        AnnotatedTypes.adaptParameters(
-                                atypeFactory, invokedMethod, invocationTree.getArguments());
+                List<AnnotatedTypeMirror> paramTypes = invokedMethod.getParameterTypes();
                 for (int i = 0; i < args.size(); ++i) {
                     if (args.get(i).getKind() == Tree.Kind.NEW_CLASS
                             || args.get(i).getKind() == Tree.Kind.LAMBDA_EXPRESSION) {
@@ -561,7 +558,7 @@ public class GuiEffectVisitor extends BaseTypeVisitor<GuiEffectTypeFactory> {
                                 ret,
                                 atypeFactory.getAnnotatedType(returnTree.getExpression()),
                                 returnTree.getExpression(),
-                                "return");
+                                "return.type.incompatible");
                     }
                 }
                 break;

@@ -77,9 +77,9 @@ public class Supertypes {
         for (String s : b1) {}
         for (String s : b2) {}
 
-        // :: error: (enhancedfor)
+        // :: error: (enhancedfor.type.incompatible)
         for (@Odd String s : a1) {}
-        // :: error: (enhancedfor)
+        // :: error: (enhancedfor.type.incompatible)
         for (@Odd String s : a2) {}
         for (@Odd String s : b1) {}
         for (@Odd String s : b2) {}

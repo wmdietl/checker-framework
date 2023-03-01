@@ -42,7 +42,7 @@ public class FenumVisitor extends BaseTypeVisitor<FenumAnnotatedTypeFactory> {
             AnnotationMirrorSet rhs = rhsAtm.getEffectiveAnnotations();
             QualifierHierarchy qualHierarchy = atypeFactory.getQualifierHierarchy();
             if (!(qualHierarchy.isSubtype(lhs, rhs) || qualHierarchy.isSubtype(rhs, lhs))) {
-                checker.reportError(tree, "binary", lhsAtm, rhsAtm);
+                checker.reportError(tree, "binary.type.incompatible", lhsAtm, rhsAtm);
             }
         }
         return super.visitBinary(tree, p);

@@ -15,13 +15,13 @@ public class Constructors {
 
         Constructors m = new Constructors(null);
 
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         new MyConstructors(s);
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         new MyConstructors(s) {};
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         m.new MyConstructors(s);
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         m.new MyConstructors(s) {};
     }
 }

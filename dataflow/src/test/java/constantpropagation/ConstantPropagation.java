@@ -7,10 +7,6 @@ import org.checkerframework.dataflow.constantpropagation.Constant;
 import org.checkerframework.dataflow.constantpropagation.ConstantPropagationStore;
 import org.checkerframework.dataflow.constantpropagation.ConstantPropagationTransfer;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Map;
-
 public class ConstantPropagation {
 
     /**
@@ -22,21 +18,12 @@ public class ConstantPropagation {
 
         String inputFile = "Test.java";
         String method = "test";
-        String clazz = "Test";
+        String clas = "Test";
         String outputFile = "Out.txt";
 
         ConstantPropagationTransfer transfer = new ConstantPropagationTransfer();
         ForwardAnalysis<Constant, ConstantPropagationStore, ConstantPropagationTransfer>
                 forwardAnalysis = new ForwardAnalysisImpl<>(transfer);
-        CFGVisualizeLauncher cfgVisualizeLauncher = new CFGVisualizeLauncher();
-        Map<String, Object> res =
-                cfgVisualizeLauncher.generateStringOfCFG(
-                        inputFile, method, clazz, true, forwardAnalysis);
-        try (FileWriter out = new FileWriter(outputFile)) {
-            out.write(res.get("stringGraph").toString());
-            out.write("\n");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        CFGVisualizeLauncher.writeStringOfCFG(inputFile, method, clas, outputFile, forwardAnalysis);
     }
 }

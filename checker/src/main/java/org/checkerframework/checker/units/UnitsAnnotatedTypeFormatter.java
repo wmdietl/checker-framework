@@ -3,9 +3,9 @@ package org.checkerframework.checker.units;
 import org.checkerframework.checker.units.qual.Prefix;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.framework.type.DefaultAnnotatedTypeFormatter;
-import org.checkerframework.javacutil.AnnotationFormatter;
+import org.checkerframework.framework.util.AnnotationFormatter;
+import org.checkerframework.framework.util.DefaultAnnotationFormatter;
 import org.checkerframework.javacutil.AnnotationMirrorSet;
-import org.checkerframework.javacutil.DefaultAnnotationFormatter;
 
 import java.util.Collection;
 import java.util.Collections;

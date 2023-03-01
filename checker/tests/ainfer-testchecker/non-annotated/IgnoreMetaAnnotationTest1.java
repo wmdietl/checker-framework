@@ -10,7 +10,7 @@ public class IgnoreMetaAnnotationTest1 {
     }
 
     void test() {
-        // :: warning: (argument)
+        // :: warning: (argument.type.incompatible)
         expectsAinferSibling1(field2);
     }
 

@@ -92,11 +92,12 @@ public class AliasingTransfer extends CFTransfer {
     @Override
     protected void processPostconditions(
             Node n, CFStore store, ExecutableElement executableElement, ExpressionTree tree) {
-        // TODO: Process ObjectCreationNode here after finish the pull request:
-        // https://github.com/eisop/checker-framework/pull/314
+        // TODO: Process ObjectCreationNode here after fixing issue:
+        // https://github.com/eisop/checker-framework/issues/400
         if (!(n instanceof MethodInvocationNode)) {
             return;
         }
+        super.processPostconditions(n, store, executableElement, tree);
         if (TreeUtils.isEnumSuperCall((MethodInvocationTree) n.getTree())) {
             // Skipping the init() method for enums.
             return;

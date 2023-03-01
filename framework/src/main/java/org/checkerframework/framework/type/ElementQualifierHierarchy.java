@@ -220,7 +220,8 @@ public abstract class ElementQualifierHierarchy implements QualifierHierarchy {
         AnnotationMirror poly = kindToElementlessQualifier.get(polyKind);
         if (poly == null) {
             throw new TypeSystemError(
-                    "Poly %s has an element. Override ElementQualifierHierarchy#getPolymorphicAnnotation.",
+                    "Poly %s has an element. Override"
+                            + " ElementQualifierHierarchy#getPolymorphicAnnotation.",
                     polyKind);
         }
         return poly;
