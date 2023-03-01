@@ -5,9 +5,9 @@ Index: src/net/eyde/personalblog/struts/action/ReadAction.java
 @@ -43,7 +43,7 @@
          String forward = "readposts";
  
-     // Get request parameters
--    String reqCategory = cleanNull(request.getParameter("cat"));
-+    String reqCategory = validate(cleanNull(request.getParameter("cat")));
+         // Get request parameters
+-        String reqCategory = cleanNull(request.getParameter("cat"));
++        String reqCategory = validate(cleanNull(request.getParameter("cat")));
  
-     // Get instance of PersonalBlog Service
-     PersonalBlogService pblog = PersonalBlogService.getInstance();
+         // Get instance of PersonalBlog Service
+         PersonalBlogService pblog = PersonalBlogService.getInstance();

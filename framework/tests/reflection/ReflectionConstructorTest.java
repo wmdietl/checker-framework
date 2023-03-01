@@ -41,7 +41,7 @@ public class ReflectionConstructorTest {
         try {
             Class<?> c = ReflectionConstructorTest.class;
             Constructor<?> init = c.getConstructor(new Class<?>[] {Integer.class});
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             Object o = init.newInstance(sibling2);
         } catch (Exception ignore) {
         }

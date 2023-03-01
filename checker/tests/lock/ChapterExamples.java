@@ -85,13 +85,13 @@ public class ChapterExamples {
         T m;
 
         void test() {
-            // :: error: (method.invocation)
+            // :: error: (method.invocation.invalid)
             m.method();
 
             @GuardedByUnknown MyClass local = new @GuardedByUnknown MyClass();
             // :: error: (lock.not.held)
             local.field = new Object();
-            // :: error: (method.invocation)
+            // :: error: (method.invocation.invalid)
             local.method();
 
             // :: error: (lock.not.held)
@@ -266,7 +266,7 @@ public class ChapterExamples {
     @GuardedBy("lock") MyClass x = new MyClass();
 
     @GuardedBy("lock") MyClass y = x; // OK, because dereferences of y will require "lock" to be held.
-    // :: error: (assignment)
+    // :: error: (assignment.type.incompatible)
     @GuardedBy({}) MyClass z = x; // ILLEGAL because dereferences of z do not require "lock" to be held.
 
     @LockingFree
@@ -296,7 +296,7 @@ public class ChapterExamples {
     @GuardedBy({"a", "b"}) MyClass y5 = new MyClass();
 
     void myMethod2() {
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         y5 = x5; // ILLEGAL
     }
 
@@ -312,9 +312,9 @@ public class ChapterExamples {
     void someMethod() {
         o3 = o2; // OK, since o2 and o3 are guarded by exactly the same lock set.
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         o1 = o2; // Assignment type incompatible errors are issued for both assignments, since
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         o2 = o1; // {"lock"} and {} are not identical sets.
     }
 
@@ -410,7 +410,7 @@ public class ChapterExamples {
         helper1(e); // OK to pass to another routine without holding the lock.
         // :: error: (lock.not.held)
         e.field = new Object(); // ILLEGAL: the lock is not held
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         helper2(e);
         // :: error: (lock.not.held)
         helper3(e);
@@ -435,7 +435,7 @@ public class ChapterExamples {
         // :: error: (immutable.type.guardedby)
         @GuardedBy("lock") Integer c;
         synchronized (lock) {
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             c = a;
         }
 
@@ -474,8 +474,8 @@ public class ChapterExamples {
       @GuardedBy("lock") Integer b = 1;
       @GuardedBy({}) int d;
       synchronized(lock) {
-        // TODO re-enable this error (assignment)
-        d = b; // TODO: This should not result in assignment because 'b' is actually syntactic sugar for b.intValue().
+        // TODO re-enable this error (assignment.type.incompatible)
+        d = b; // TODO: This should not result in assignment.type.incompatible because 'b' is actually syntactic sugar for b.intValue().
         d = b.intValue(); // The de-sugared version does not issue an error.
       }
 
@@ -522,9 +522,9 @@ public class ChapterExamples {
         lock2.lock();
         filename = filename.append(extension);
         filename = filename.append(null);
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         filename = extension.append(extension);
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         filename = extension.append(filename);
     }
 

@@ -32,14 +32,14 @@ public class SimpleFluent {
 
     static void doStuffWrong(@TestAccumulation({"a"}) SimpleFluent s) {
         s.a()
-                // :: error: (method.invocation)
+                // :: error: method.invocation.invalid
                 .build();
     }
 
     static void noReturnsReceiverAnno(@TestAccumulation({"a", "b"}) SimpleFluent s) {
         s.a().b()
                 .c()
-                // :: error: (method.invocation)
+                // :: error: method.invocation.invalid
                 .build();
     }
 
@@ -50,7 +50,7 @@ public class SimpleFluent {
 
     static void mixFluentAndNonFluentWrong(SimpleFluent s) {
         s.a(); // .b()
-        // :: error: (method.invocation)
+        // :: error: method.invocation.invalid
         s.build();
     }
 
@@ -58,7 +58,7 @@ public class SimpleFluent {
         SimpleFluent s = t.a();
         int i = 10;
         while (i > 0) {
-            // :: error: (method.invocation)
+            // :: error: method.invocation.invalid
             s.b().build();
             i--;
             s = new SimpleFluent();
@@ -71,13 +71,13 @@ public class SimpleFluent {
 
     static void m2(SimpleFluent s) {
         s.c().a().b();
-        // :: error: (method.invocation)
+        // :: error: method.invocation.invalid
         s.c().build();
     }
 
     static void m3(SimpleFluent s) {
         s.c().a().b().build();
-        // :: error: (method.invocation)
+        // :: error: method.invocation.invalid
         s.c().a().build();
     }
 
@@ -91,25 +91,25 @@ public class SimpleFluent {
     }
 
     static void m6(SimpleFluent s) {
-        // :: error: (method.invocation)
+        // :: error: method.invocation.invalid
         s.a().c().b().build();
     }
 
     static void m7(SimpleFluent s) {
-        // :: error: (method.invocation)
+        // :: error: method.invocation.invalid
         s.a().b().build().c().b().build();
     }
 
     static void m8(SimpleFluent s) {
-        // :: error: (method.invocation)
+        // :: error: method.invocation.invalid
         s.a().build().c().a().b().build();
-        // :: error: (method.invocation)
+        // :: error: method.invocation.invalid
         s.build();
     }
 
     static void m9() {
         new SimpleFluent().a().b().build();
-        // :: error: (method.invocation)
+        // :: error: method.invocation.invalid
         new SimpleFluent().a().build();
     }
 }

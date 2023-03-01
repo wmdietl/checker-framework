@@ -15,14 +15,14 @@ public class UpperBoundDefaulting {
 
     public <UAL extends String> void explicitUpperBoundTypeVar() {
         MyArrayList<@UbBottom ? extends @UbBottom Object> eubBottomToBottom =
-                // :: error: (assignment)
+                // :: error: (assignment.type.incompatible)
                 new MyArrayList<UAL>();
 
         MyArrayList<@UbBottom ? extends @UbExplicit Object> eubExplicitToBottom =
                 new MyArrayList<UAL>();
 
         MyArrayList<@UbBottom ? extends @UbImplicit Object> eubImplicitToBottom =
-                // :: error: (assignment)
+                // :: error: (assignment.type.incompatible)
                 new MyArrayList<UAL>();
     }
 

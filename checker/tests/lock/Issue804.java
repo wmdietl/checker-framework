@@ -16,7 +16,7 @@ public class Issue804 extends ReentrantLock {
     @MayReleaseLocks
     void method() {
         bar();
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         bar();
     }
 }

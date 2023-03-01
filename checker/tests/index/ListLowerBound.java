@@ -8,9 +8,9 @@ import java.util.ListIterator;
 public class ListLowerBound {
 
     private void m(List<Object> l) {
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         l.get(-1);
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         ListIterator<Object> li = l.listIterator(-1);
 
         @NonNegative int ni = li.nextIndex();

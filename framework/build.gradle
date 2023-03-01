@@ -156,7 +156,6 @@ task copyAndMinimizeAnnotatedJdkFiles(dependsOn: cloneTypetoolsJdk, group: 'Buil
         }
     }
 }
-sourcesJar.dependsOn(copyAndMinimizeAnnotatedJdkFiles)
 
 sourcesJar.dependsOn(copyAndMinimizeAnnotatedJdkFiles)
 

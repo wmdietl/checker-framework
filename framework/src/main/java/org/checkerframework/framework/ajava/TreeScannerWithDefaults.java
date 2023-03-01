@@ -96,23 +96,6 @@ public abstract class TreeScannerWithDefaults extends TreeScanner<Void, Void> {
     }
 
     @Override
-    public Void scan(Tree tree, Void unused) {
-        if (tree != null) {
-            if (tree.getKind().name().equals("SWITCH_EXPRESSION")) {
-                visitSwitchExpression17(tree, unused);
-                return null;
-            } else if (tree.getKind().name().equals("YIELD")) {
-                visitYield17(tree, unused);
-                return null;
-            } else if (tree.getKind().name().equals("BINDING_PATTERN")) {
-                visitBindingPattern17(tree, unused);
-                return null;
-            }
-        }
-        return super.scan(tree, unused);
-    }
-
-    @Override
     public Void visitAnnotatedType(AnnotatedTypeTree tree, Void p) {
         defaultAction(tree);
         return super.visitAnnotatedType(tree, p);

@@ -9,7 +9,7 @@ public class ListSupportML {
     void newListMinLen() {
         List<Integer> list = new ArrayList<>();
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @MinLen(1) List<Integer> list2 = list;
 
         @MinLen(0) List<Integer> list3 = list;
@@ -19,7 +19,7 @@ public class ListSupportML {
         List<Integer> list = lst;
         list.remove(0);
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @MinLen(10) List<Integer> list2 = list;
 
         @MinLen(9) List<Integer> list3 = list;
@@ -31,7 +31,7 @@ public class ListSupportML {
 
         list2.remove(0);
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @MinLen(10) List<Integer> list3 = list;
 
         @MinLen(9) List<Integer> list4 = list;
@@ -48,7 +48,7 @@ public class ListSupportML {
         List<Integer> list = lst;
         list.clear();
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @MinLen(1) List<Integer> list2 = list;
 
         @MinLen(0) List<Integer> list3 = list;
@@ -62,7 +62,7 @@ public class ListSupportML {
 
         list2.remove(0);
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @MinLen(10) List<Integer> list3 = list;
 
         int @MinLen(10) [] arr2 = arr;

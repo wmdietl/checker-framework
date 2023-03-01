@@ -11,7 +11,7 @@ public class UnitsExtensionDemo {
 
     void bad() {
         // Error! Unqualified value assigned to a @Hz value.
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         frq = 5;
 
         // suppress all warnings issued by the units checker for the d1 assignment statement
@@ -64,7 +64,7 @@ public class UnitsExtensionDemo {
         @Frequency int okTernaryAssign = seconds > 10 ? hertz : kilohertz;
 
         // on the other hand, this statement expects the right hand side to be a Hz, so it will fail
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @Hz int badTernaryAssign = seconds > 10 ? hertz : kilohertz;
     }
 }

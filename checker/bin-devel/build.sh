@@ -60,7 +60,7 @@ echo "... done: (cd ../stubparser/ && ./.build-without-test.sh)"
 # Find a way to not run that test, to avoid this dependency and
 # instead only use ./test-jspecify.sh.
 ## Build JSpecify, only for the purpose of using its tests.
-"$PLUME_SCRIPTS/git-clone-related" jspecify jspecify -q
+"$PLUME_SCRIPTS/git-clone-related" jspecify jspecify
 if type -p java; then
   _java=java
 elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then

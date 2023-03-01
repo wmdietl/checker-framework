@@ -9,8 +9,8 @@ import org.checkerframework.javacutil.TreeUtils;
 import javax.lang.model.element.AnnotationMirror;
 
 /**
- * The visitor for an accumulation checker. Issues predicate errors if the user writes an invalid
- * predicate.
+ * The visitor for an accumulation checker. Issues predicate.invalid errors if the user writes an
+ * invalid predicate.
  */
 public class AccumulationVisitor extends BaseTypeVisitor<AccumulationAnnotatedTypeFactory> {
 

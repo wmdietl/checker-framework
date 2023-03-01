@@ -716,7 +716,7 @@ public abstract class AnnotatedTypeMirror {
      * it is generally better to use {@link #removeAnnotation(AnnotationMirror)} and similar
      * methods.
      */
-    public void clearPrimaryAnnotations() {
+    public void clearAnnotations() {
         annotations.clear();
     }
 
@@ -1212,7 +1212,6 @@ public abstract class AnnotatedTypeMirror {
                     }
                     setParameterTypes(Collections.unmodifiableList(newParamTypes));
                 }
-                setParameterTypes(newParamTypes);
             }
             // No need to copy or wrap; it is an unmodifiable list.
             return paramTypes;
@@ -1393,7 +1392,6 @@ public abstract class AnnotatedTypeMirror {
                     }
                     setThrownTypes(Collections.unmodifiableList(newThrownTypes));
                 }
-                setThrownTypes(newThrownTypes);
             }
             // No need to copy or wrap; it is an unmodifiable list.
             return thrownTypes;
@@ -1431,7 +1429,6 @@ public abstract class AnnotatedTypeMirror {
                     }
                     setTypeVariables(Collections.unmodifiableList(newTypeVarTypes));
                 }
-                setTypeVariables(newTypeVarTypes);
             }
             // No need to copy or wrap; it is an unmodifiable list.
             return typeVarTypes;

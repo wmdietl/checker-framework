@@ -119,14 +119,14 @@ public class PropagationTypeAnnotator extends TypeAnnotator {
      * Rather than defaulting the missing bounds of a wildcard, find the bound annotations on the
      * type parameter it replaced. Place those annotations on the wildcard.
      *
-     * @param wildcard type to annotate
+     * @param wildcardAtm type to annotate
      */
     @Override
-    public Void visitWildcard(AnnotatedWildcardType wildcard, Void aVoid) {
-        if (visitedNodes.containsKey(wildcard) || pause) {
+    public Void visitWildcard(AnnotatedWildcardType wildcardAtm, Void aVoid) {
+        if (visitedNodes.containsKey(wildcardAtm) || pause) {
             return null;
         }
-        visitedNodes.put(wildcard, null);
+        visitedNodes.put(wildcardAtm, null);
 
         final WildcardType wildcard = (WildcardType) wildcardAtm.getUnderlyingType();
         Element typeParamElement = TypesUtils.wildcardToTypeParam(wildcard);
@@ -161,8 +161,8 @@ public class PropagationTypeAnnotator extends TypeAnnotator {
                             "unexpected wildcard kind " + wildcard.kind + " for " + wildcard);
             }
         }
-        scan(wildcard.getExtendsBound(), null);
-        scan(wildcard.getSuperBound(), null);
+        scan(wildcardAtm.getExtendsBound(), null);
+        scan(wildcardAtm.getSuperBound(), null);
         return null;
     }
 

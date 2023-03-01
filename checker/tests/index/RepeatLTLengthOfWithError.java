@@ -62,7 +62,7 @@ public class RepeatLTLengthOfWithError {
     @EnsuresLTLengthOf(value = "v1", targetValue = "value1", offset = "3")
     @EnsuresLTLengthOf(value = "v2", targetValue = "value2", offset = "2")
     @EnsuresLTLengthOf(value = "v3", targetValue = "value3", offset = "1")
-    // :: error: (contracts.postcondition)
+    // :: error:  (contracts.postcondition.not.satisfied)
     public void withpostconditionsfunc1() {
         v1 = value1.length() - 3; // condition not satisfied here
         v2 = value2.length() - 3;
@@ -76,7 +76,7 @@ public class RepeatLTLengthOfWithError {
         v1 = value1.length() - 3; // condition not satisfied here
         v2 = value2.length() - 3;
         v3 = value3.length() - 3;
-        // :: error: (contracts.conditional.postcondition)
+        // :: error:  (contracts.conditional.postcondition.not.satisfied)
         return true;
     }
 
@@ -85,7 +85,7 @@ public class RepeatLTLengthOfWithError {
         @EnsuresLTLengthOf(value = "v2", targetValue = "value2", offset = "2")
     })
     @EnsuresLTLengthOf(value = "v3", targetValue = "value3", offset = "1")
-    // :: error: (contracts.postcondition)
+    // :: error:  (contracts.postcondition.not.satisfied)
     public void withpostconditionfunc1() {
         v1 = value1.length() - 3; // condition not satisfied here
         v2 = value2.length() - 3;
@@ -105,7 +105,7 @@ public class RepeatLTLengthOfWithError {
         v1 = value1.length() - 3; // condition not satisfied here
         v2 = value2.length() - 3;
         v3 = value3.length() - 3;
-        // :: error: (contracts.conditional.postcondition)
+        // :: error:  (contracts.conditional.postcondition.not.satisfied)
         return true;
     }
 }

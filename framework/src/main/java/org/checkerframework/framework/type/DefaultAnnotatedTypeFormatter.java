@@ -14,8 +14,8 @@ import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedTypeVari
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedUnionType;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedWildcardType;
 import org.checkerframework.framework.type.visitor.AnnotatedTypeVisitor;
-import org.checkerframework.javacutil.AnnotationFormatter;
-import org.checkerframework.javacutil.DefaultAnnotationFormatter;
+import org.checkerframework.framework.util.AnnotationFormatter;
+import org.checkerframework.framework.util.DefaultAnnotationFormatter;
 import org.checkerframework.javacutil.TypeAnnotationUtils;
 import org.checkerframework.javacutil.TypesUtils;
 
@@ -348,6 +348,27 @@ public class DefaultAnnotatedTypeFormatter implements AnnotatedTypeFormatter {
                 sb.append(underlyingType, 0, underlyingType.indexOf(" of "));
             } else {
                 sb.append(type.underlyingType);
+            }
+
+            if (!visiting.contains(type)) {
+                if (type.isDeclaration() && currentPrintInvisibleSetting) {
+                    sb.append("/*DECL*/ ");
+                }
+
+                try {
+                    visiting.add(type);
+                    if (currentPrintVerboseGenerics) {
+                        sb.append("[");
+                    }
+                    printBound("extends", type.getUpperBoundField(), visiting, sb);
+                    printBound("super", type.getLowerBoundField(), visiting, sb);
+                    if (currentPrintVerboseGenerics) {
+                        sb.append("]");
+                    }
+
+                } finally {
+                    visiting.remove(type);
+                }
             }
             return sb.toString();
         }

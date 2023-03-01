@@ -621,7 +621,7 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                     return a1;
                 } else {
                     @SuppressWarnings({
-                        "nullness:assignment" // Every qualifier kind is a
+                        "nullness:assignment.type.incompatible" // Every qualifier kind is a
                         // key in directSuperQualifierMap.
                     })
                     @NonNull AnnotationMirror lub =
@@ -635,10 +635,6 @@ public class UnitsAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
         }
 
         @Override
-        @SuppressWarnings(
-                "nullness:return" // This class UnitsQualifierHierarchy is annotated for nullness,
-        // but the outer class UnitsAnnotatedTypeFactory is not, so the type of fields is @Nullable.
-        )
         protected AnnotationMirror greatestLowerBoundWithElements(
                 AnnotationMirror a1,
                 QualifierKind qualifierKind1,

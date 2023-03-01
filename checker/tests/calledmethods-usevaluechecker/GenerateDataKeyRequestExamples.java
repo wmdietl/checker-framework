@@ -37,7 +37,7 @@ public class GenerateDataKeyRequestExamples {
         GenerateDataKeyRequest request = new GenerateDataKeyRequest();
         request.setKeySpec(DataKeySpec.AES_256);
         request.setNumberOfBytes(32);
-        // :: error: (argument)
+        // :: error: argument.type.incompatible
         client.generateDataKey(request);
     }
 
@@ -45,7 +45,7 @@ public class GenerateDataKeyRequestExamples {
         GenerateDataKeyRequest request = new GenerateDataKeyRequest();
         request.withKeySpec(DataKeySpec.AES_256);
         request.setNumberOfBytes(32);
-        // :: error: (argument)
+        // :: error: argument.type.incompatible
         client.generateDataKey(request);
     }
 
@@ -53,7 +53,7 @@ public class GenerateDataKeyRequestExamples {
         GenerateDataKeyRequest request = new GenerateDataKeyRequest();
         request.setKeySpec(DataKeySpec.AES_256);
         request.withNumberOfBytes(32);
-        // :: error: (argument)
+        // :: error: argument.type.incompatible
         client.generateDataKey(request);
     }
 
@@ -61,14 +61,14 @@ public class GenerateDataKeyRequestExamples {
         GenerateDataKeyRequest request = new GenerateDataKeyRequest();
         request.withKeySpec(DataKeySpec.AES_256);
         request.withNumberOfBytes(32);
-        // :: error: (argument)
+        // :: error: argument.type.incompatible
         client.generateDataKey(request);
     }
 
     // This example is "neither"
     void incorrect5(AWSKMS client) {
         GenerateDataKeyRequest request = new GenerateDataKeyRequest();
-        // :: error: (argument)
+        // :: error: argument.type.incompatible
         client.generateDataKey(request);
     }
 

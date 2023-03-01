@@ -1036,7 +1036,7 @@ Replaced several error message keys:
  * `contracts.conditional.postcondition.expression.parameter.name`
  * `method.declaration.expression.parameter.name`
 by new message keys:
- * `expression.parameter.name`
+ * `expression.parameter.name.invalid`
  * `expression.parameter.name.shadows.field`
 
 **Implementation details:**
@@ -1635,8 +1635,8 @@ Add @DefaultQualifierOnUse and @NoDefaultQualifierOnUse type declaration annotat
 
 New/changed error message keys:
  * initialization.static.fields.uninitialized for uninitialized static fields
- * unary.increment and unary.decrement
-   replace some occurrences of compound.assignment
+ * unary.increment.type.incompatible and unary.decrement.type.incompatible
+   replace some occurrences of compound.assignment.type.incompatible
 
 **Implementation details:**
  * Renamed QualifierPolymorphism#annotate methods to resolve
@@ -2457,7 +2457,7 @@ Bug fixes for generics, especially type parameters:
    * Unannotated, unbounded wildcards are now qualified with the
      annotations of the type parameter to which they are an argument.
      See the new manual section 23.3.4 for more details.
-   * Warning "bound" is issued if the lower bound of
+   * Warning "bound.type.incompatible" is issued if the lower bound of
      a type parameter or wildcard is a supertype of its upper bound,
      e.g.  <@Nullable T extends @NonNull Object>
    * Method type argument inference has been improved. Fewer warnings

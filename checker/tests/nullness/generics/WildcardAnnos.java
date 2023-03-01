@@ -3,7 +3,7 @@ import org.checkerframework.checker.nullness.qual.*;
 import java.util.List;
 
 public class WildcardAnnos {
-    // :: error: (bound)
+    // :: error: (bound.type.incompatible)
     @Nullable List<@Nullable ? extends @NonNull Object> l1 = null;
     @Nullable List<@NonNull ? extends @Nullable Object> l2 = null;
 
@@ -28,7 +28,7 @@ public class WildcardAnnos {
 
     void asParam(List<? extends @Nullable Object> p) {}
 
-    // :: error: (conflicting.annos)
+    // :: error: (type.invalid.conflicting.annos)
     @Nullable List<@Nullable @NonNull ? extends @Nullable Object> l6 = null;
     // :: error: (type.invalid.conflicting.annos)
     @Nullable List<@Nullable @NonNull ? super @NonNull String> l7 = null;

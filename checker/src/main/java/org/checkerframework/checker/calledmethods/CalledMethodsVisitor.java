@@ -25,8 +25,8 @@ import javax.lang.model.element.ExecutableElement;
 import javax.tools.Diagnostic;
 
 /**
- * This visitor implements the custom error message finalizer.invocation. It also supports counting
- * the number of framework build calls.
+ * This visitor implements the custom error message finalizer.invocation.invalid. It also supports
+ * counting the number of framework build calls.
  */
 public class CalledMethodsVisitor extends AccumulationVisitor {
 
@@ -86,7 +86,7 @@ public class CalledMethodsVisitor extends AccumulationVisitor {
         return super.visitMethodInvocation(tree, p);
     }
 
-    /** Turns some method.invocation errors into finalizer.invocation errors. */
+    /** Turns some method.invocation.invalid errors into finalizer.invocation.invalid errors. */
     @Override
     protected void reportMethodInvocabilityError(
             MethodInvocationTree tree, AnnotatedTypeMirror found, AnnotatedTypeMirror expected) {

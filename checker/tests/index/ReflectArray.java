@@ -5,7 +5,7 @@ import java.lang.reflect.Array;
 public class ReflectArray {
 
     void testNewInstance(int i) {
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         Array.newInstance(Object.class, i);
         if (i >= 0) {
             Array.newInstance(Object.class, i);
@@ -20,7 +20,7 @@ public class ReflectArray {
 
     void testMinLen(Object @MinLen(1) [] a) {
         Array.get(a, 0);
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         Array.get(a, 1);
     }
 }

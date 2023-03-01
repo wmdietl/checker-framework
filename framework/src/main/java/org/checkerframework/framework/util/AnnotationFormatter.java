@@ -1,4 +1,4 @@
-package org.checkerframework.javacutil;
+package org.checkerframework.framework.util;
 
 import org.checkerframework.dataflow.qual.SideEffectFree;
 

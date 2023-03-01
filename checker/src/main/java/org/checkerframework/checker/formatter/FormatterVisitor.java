@@ -74,7 +74,8 @@ public class FormatterVisitor extends BaseTypeVisitor<FormatterAnnotatedTypeFact
                     // Nothing to do, because call is legal.
                 } else {
                     // I.1
-                    ftu.failure(errMissingFormat, "format.string", errMissingFormat.value());
+                    ftu.failure(
+                            errMissingFormat, "format.string.invalid", errMissingFormat.value());
                 }
             } else {
                 // The string has a @Format annotation.
@@ -126,7 +127,7 @@ public class FormatterVisitor extends BaseTypeVisitor<FormatterAnnotatedTypeFact
                                                     ElementUtils.getSimpleNameOrDescription(method);
                                             ftu.failure(
                                                     arg,
-                                                    "argument",
+                                                    "argument.type.incompatible",
                                                     "in varargs position",
                                                     methodName,
                                                     argType,

@@ -3,8 +3,6 @@ package org.checkerframework.framework.type;
 // The imports from com.sun are all @jdk.Exported and therefore somewhat safe to use.
 // Try to avoid using non-@jdk.Exported classes.
 
-import static javax.lang.model.type.TypeKind.TYPEVAR;
-
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.BinaryTree;
@@ -65,7 +63,9 @@ import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedWildcard
 import org.checkerframework.framework.type.visitor.AnnotatedTypeCombiner;
 import org.checkerframework.framework.type.visitor.SimpleAnnotatedTypeScanner;
 import org.checkerframework.framework.util.AnnotatedTypes;
+import org.checkerframework.framework.util.AnnotationFormatter;
 import org.checkerframework.framework.util.CheckerMain;
+import org.checkerframework.framework.util.DefaultAnnotationFormatter;
 import org.checkerframework.framework.util.FieldInvariants;
 import org.checkerframework.framework.util.TreePathCacher;
 import org.checkerframework.framework.util.TypeInformationPresenter;
@@ -78,7 +78,6 @@ import org.checkerframework.javacutil.AnnotationProvider;
 import org.checkerframework.javacutil.AnnotationUtils;
 import org.checkerframework.javacutil.BugInCF;
 import org.checkerframework.javacutil.CollectionUtils;
-import org.checkerframework.javacutil.DefaultAnnotationFormatter;
 import org.checkerframework.javacutil.ElementUtils;
 import org.checkerframework.javacutil.Pair;
 import org.checkerframework.javacutil.TreePathUtil;
@@ -357,29 +356,6 @@ public class AnnotatedTypeFactory implements AnnotationProvider {
 
     /** Map keys are canonical names of aliased annotations. */
     private final Map<@FullyQualifiedName String, Alias> aliases = new HashMap<>();
-    /**
-     * Scans all parts of the {@link AnnotatedTypeMirror} so that all of its fields are initialized.
-     */
-    private final SimpleAnnotatedTypeScanner<Void, Void> atmInitializer =
-            new SimpleAnnotatedTypeScanner<>((type1, q) -> null);
-
-    /**
-     * True if all methods should be assumed to be @SideEffectFree, for the purposes of
-     * org.checkerframework.dataflow analysis.
-     */
-    private final boolean assumeSideEffectFree;
-
-    /** True if -AmergeStubsWithSource was provided on the command line. */
-    private final boolean mergeStubsWithSource;
-
-    /**
-     * Initializes all fields of {@code type}.
-     *
-     * @param type annotated type mirror
-     */
-    /*package-private*/ void initializeAtm(AnnotatedTypeMirror type) {
-        atmInitializer.visit(type);
-    }
 
     /**
      * A map from the canonical name of an annotation to the set of canonical names of annotations
@@ -1844,7 +1820,7 @@ public class AnnotatedTypeFactory implements AnnotationProvider {
         AnnotationMirrorSet annotations = type.getEffectiveAnnotations();
         for (AnnotatedTypeMirror supertype : supertypes) {
             if (!annotations.equals(supertype.getEffectiveAnnotations())) {
-                supertype.clearPrimaryAnnotations();
+                supertype.clearAnnotations();
                 // TODO: is this correct for type variables and wildcards?
                 supertype.addAnnotations(annotations);
             }
@@ -2375,7 +2351,7 @@ public class AnnotatedTypeFactory implements AnnotationProvider {
             if (ignoreUninferredTypeArguments) {
                 // Remove the annotations so that default annotations are used instead.
                 // (See call to addDefaultAnnotations below.)
-                t.clearPrimaryAnnotations();
+                t.clearAnnotations();
             } else {
                 t.replaceAnnotations(wildcard.getExtendsBound().getAnnotations());
             }

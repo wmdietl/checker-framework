@@ -137,7 +137,7 @@ public class GuiEffectVisitor extends BaseTypeVisitor<GuiEffectTypeFactory> {
                 }
                 checker.reportError(
                         overriderTree,
-                        "override.receiver",
+                        "override.receiver.invalid",
                         overrider.getReceiverType(),
                         overridden.getReceiverType(),
                         overriderType,
@@ -502,7 +502,7 @@ public class GuiEffectVisitor extends BaseTypeVisitor<GuiEffectTypeFactory> {
                         atypeFactory.getAnnotatedType(assignmentTree.getVariable()),
                         atypeFactory.getAnnotatedType(assignmentTree.getExpression()),
                         assignmentTree.getExpression(),
-                        "assignment");
+                        "assignment.type.incompatible");
                 break;
             case VARIABLE:
                 VariableTree variableTree = (VariableTree) tree;
@@ -510,7 +510,7 @@ public class GuiEffectVisitor extends BaseTypeVisitor<GuiEffectTypeFactory> {
                         atypeFactory.getAnnotatedType(variableTree),
                         atypeFactory.getAnnotatedType(variableTree.getInitializer()),
                         variableTree.getInitializer(),
-                        "assignment");
+                        "assignment.type.incompatible");
                 break;
             case METHOD_INVOCATION:
                 MethodInvocationTree invocationTree = (MethodInvocationTree) tree;
@@ -528,7 +528,7 @@ public class GuiEffectVisitor extends BaseTypeVisitor<GuiEffectTypeFactory> {
                                 paramTypes.get(i),
                                 atypeFactory.getAnnotatedType(args.get(i)),
                                 args.get(i),
-                                "argument",
+                                "argument.type.incompatible",
                                 methodParams.get(i),
                                 methodName);
                     }

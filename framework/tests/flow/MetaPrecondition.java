@@ -55,18 +55,18 @@ public class MetaPrecondition {
     void param3() {}
 
     void t1(@Odd String p1, String p2) {
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresF1();
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresParam(p2);
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresParams(p1, p2);
     }
 
     void t2(@Odd String p1, String p2) {
         f1 = p1;
         requiresF1();
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresF1();
     }
 
@@ -76,7 +76,7 @@ public class MetaPrecondition {
         requiresF1AndPure();
         requiresF1AndPure();
         requiresF1();
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresF1();
     }
 }

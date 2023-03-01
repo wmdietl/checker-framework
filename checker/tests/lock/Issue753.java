@@ -8,7 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 @SuppressWarnings({
     "purity",
-    "contracts.precondition",
+    "contracts.precondition.not.satisfied",
     "lock.expression.possibly.not.final"
 }) // Only test parsing
 public class Issue753 extends ReentrantLock {

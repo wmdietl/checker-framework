@@ -57,7 +57,7 @@ public class RepeatEnsuresKeyForWithError {
             value = {"#1", "#2"},
             map = "map")
     @EnsuresKeyFor(value = "#3", map = "map")
-    // :: error: (contracts.postcondition)
+    // :: error:  (contracts.postcondition.not.satisfied)
     public void withpostconditionsfunc1(String a, String b, String c) {
         map.put(a, 1);
         map.put(c, 3);
@@ -71,7 +71,7 @@ public class RepeatEnsuresKeyForWithError {
     public boolean withcondpostconditionsfunc2(String a, String b, String c) {
         map.put(a, 1);
         map.put(c, 3);
-        // :: error: (contracts.conditional.postcondition)
+        // :: error:  (contracts.conditional.postcondition.not.satisfied)
         return true;
     }
 
@@ -80,7 +80,7 @@ public class RepeatEnsuresKeyForWithError {
         @EnsuresKeyFor(value = "#2", map = "map"),
     })
     @EnsuresKeyFor(value = "#3", map = "map")
-    // :: error: (contracts.postcondition)
+    // :: error:  (contracts.postcondition.not.satisfied)
     public void withpostconditionfunc1(String a, String b, String c) {
         map.put(a, 1);
         map.put(c, 3);
@@ -94,7 +94,7 @@ public class RepeatEnsuresKeyForWithError {
     public boolean withcondpostconditionfunc2(String a, String b, String c) {
         map.put(a, 1);
         map.put(c, 3);
-        // :: error: (contracts.conditional.postcondition)
+        // :: error:  (contracts.conditional.postcondition.not.satisfied)
         return true;
     }
 }

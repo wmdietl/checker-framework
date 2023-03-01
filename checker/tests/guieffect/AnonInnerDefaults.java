@@ -54,7 +54,7 @@ public class AnonInnerDefaults {
     }
 
     public PolyIface getSafePolyIface(final UIElement e) {
-        // :: error: (return)
+        // :: error: (return.type.incompatible)
         return new PolyIface() { // Anonymous inner class inference for @UI
             @Override
             public void doStuff() {
@@ -89,7 +89,7 @@ public class AnonInnerDefaults {
                 new SafeIface() {
                     @Override
                     public void doStuff() {
-                        // :: error: (call.ui)
+                        // :: error: (call.invalid.ui)
                         e.dangerous();
                     }
                 };
@@ -123,7 +123,7 @@ public class AnonInnerDefaults {
                     }
                 };
         PolyIface p3 =
-                // :: error: (assignment)
+                // :: error: (assignment.type.incompatible)
                 new PolyIface() { // Anonymous inner class inference for @UI
                     @Override
                     public void doStuff() {
@@ -162,7 +162,7 @@ public class AnonInnerDefaults {
 
                     @Override
                     public void doSafeStuff() {
-                        // :: error: (call.ui)
+                        // :: error: (call.invalid.ui)
                         e.dangerous(); // No inference here, just as an invalid call
                     }
                 };
@@ -177,12 +177,12 @@ public class AnonInnerDefaults {
                     @Override
                     @SafeEffect
                     public void doSafeStuff() {
-                        // :: error: (call.ui)
+                        // :: error: (call.invalid.ui)
                         e.dangerous(); // No inference here, just as an invalid call
                     }
                 };
         callSafePolyIface(
-                // :: error: (argument)
+                // :: error: (argument.type.incompatible)
                 new PolyIface() { // Anonymous inner class inference for @UI
                     @Override
                     public void doStuff() {
@@ -215,7 +215,7 @@ public class AnonInnerDefaults {
                             }
                         });
         PolyIface maybeUIInstance =
-                // :: error: (assignment)
+                // :: error: (assignment.type.incompatible)
                 (maybe()
                         ? new PolyIface() { // Anonymous inner class inference for @UI
                             @Override

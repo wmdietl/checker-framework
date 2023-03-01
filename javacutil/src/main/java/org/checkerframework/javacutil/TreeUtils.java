@@ -348,7 +348,7 @@ public final class TreeUtils {
      * @param tree an expression tree
      * @return the outermost non-parenthesized tree enclosed by the given tree
      */
-    @SuppressWarnings("interning:return") // polymorphism implementation
+    @SuppressWarnings("interning:return.type.incompatible") // polymorphism implementation
     public static @PolyInterned ExpressionTree withoutParens(
             final @PolyInterned ExpressionTree tree) {
         ExpressionTree t = tree;
@@ -1133,34 +1133,12 @@ public final class TreeUtils {
     }
 
     /**
-     * The kinds that represent declarations that might have {@code @SuppressWarnings} written on
-     * them: classes, methods, and variables.
-     */
-    private static final Set<Tree.Kind> declarationTreeKinds;
-
-    static {
-        declarationTreeKinds = EnumSet.noneOf(Tree.Kind.class);
-        declarationTreeKinds.addAll(classTreeKinds);
-        declarationTreeKinds.add(Tree.Kind.METHOD);
-        declarationTreeKinds.add(Tree.Kind.VARIABLE);
-    }
-
-    /**
      * Return the set of kinds that represent classes.
      *
      * @return the set of kinds that represent classes
      */
     public static Set<Tree.Kind> classTreeKinds() {
         return classTreeKinds;
-    }
-
-    /**
-     * Return the set of kinds that represent declarations: classes, methods, and variables.
-     *
-     * @return the set of kinds that represent declarations
-     */
-    public static Set<Tree.Kind> declarationTreeKinds() {
-        return declarationTreeKinds;
     }
 
     /**
@@ -1224,16 +1202,6 @@ public final class TreeUtils {
      */
     public static Set<Tree.Kind> typeTreeKinds() {
         return typeTreeKinds;
-    }
-
-    /**
-     * Returns true if the given tree is a declaration.
-     *
-     * @param tree the tree to test
-     * @return true if the given tree is a declaration
-     */
-    public static boolean isDeclarationTree(Tree tree) {
-        return declarationTreeKinds.contains(tree.getKind());
     }
 
     /**

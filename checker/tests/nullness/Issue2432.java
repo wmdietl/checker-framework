@@ -10,9 +10,9 @@ import java.util.List;
 public class Issue2432 {
 
     void jdkAnnotation(List<@PolyNull Object> nl, @Nullable Object no, @PolyNull Object po) {
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         nl.add(null);
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         nl.add(no);
         // OK
         nl.add(po);
@@ -24,9 +24,9 @@ public class Issue2432 {
             @NonNull Object nno,
             @Nullable Object no,
             @PolyNull Object po) {
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         Object object = tc.echo(no);
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         nno = tc.echo(po);
         // No error. Return value remains @PolyNull.
         // Note po's @PolyNull is unsubstitutable (from parameter but not from declaration)
@@ -35,14 +35,14 @@ public class Issue2432 {
 
     // the following two methods tests pesudo assignment of arguments with poly annotation
     void polyAssignment(TypeArgClass<@NonNull Object> nnc, @PolyNull Object po) {
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         nnc.echo(po);
     }
 
     void polyAssignment2(TypeArgClass<@Nullable Object> nc, @PolyNull Object po) {
         // No error
         nc.echo(po);
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         po = nc.echo(po);
     }
 
@@ -75,7 +75,7 @@ public class Issue2432 {
 
     // lub combination: (@NonNull, @Nullable) = @Nullable
     void lubWithTypeArgNoReceiver4(TypeArgClass<@NonNull Object> nnc, @Nullable Object no) {
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         foo2PolyTypeArg(nnc, no, new Object());
     }
 
@@ -83,7 +83,7 @@ public class Issue2432 {
     // T dummy in tripleAdd is to ensure poly annotations from declaration is handled separately
     void lubWithReceiver(
             TypeArgClass<@PolyNull Object> pc, @Nullable Object no, @NonNull Object nno) {
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         pc.tripleAdd(no, nno, no);
         // No error
         pc.tripleAdd(no, nno, nno);
@@ -96,7 +96,7 @@ public class Issue2432 {
         pc.echo(nno, no);
 
         // the invocation is valid, while the assignment is not
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @NonNull Object nonnull = pc.echo(nno, no);
     }
 

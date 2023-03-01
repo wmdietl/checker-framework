@@ -82,7 +82,8 @@ public class Range {
     private static final long BYTE_WIDTH = BYTE_EVERYTHING.width();
 
     /** The empty range. This is the only Range object that contains nothing */
-    @SuppressWarnings("interning:assignment") // no other constructor call makes this
+    @SuppressWarnings(
+            "interning:assignment.type.incompatible") // no other constructor call makes this
     public static final @InternedDistinct Range NOTHING = new Range(Long.MAX_VALUE, Long.MIN_VALUE);
 
     /** An alias to the range containing all possible 64-bit values. */

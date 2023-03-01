@@ -3,10 +3,10 @@ import org.checkerframework.checker.nullness.qual.KeyFor;
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings("assignment") // These warnings are not relevant
+@SuppressWarnings("assignment.type.incompatible") // These warnings are not relevant
 public abstract class Issue2587 {
     public enum EnumType {
-        // :: error: (expression.unparsable)
+        // :: error: (expression.unparsable.type.invalid)
         @KeyFor("myMap") MY_KEY,
 
         @KeyFor("enumMap") ENUM_KEY;
@@ -19,11 +19,11 @@ public abstract class Issue2587 {
     }
 
     public static class Inner {
-        // :: error: (expression.unparsable)
+        // :: error: (expression.unparsable.type.invalid)
         @KeyFor("myMap") String MY_KEY = "";
 
         public static class Inner2 {
-            // :: error: (expression.unparsable)
+            // :: error: (expression.unparsable.type.invalid)
             @KeyFor("myMap") String MY_KEY2 = "";
 
             @KeyFor("innerMap") String MY_KEY3 = "";

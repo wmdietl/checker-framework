@@ -52,7 +52,7 @@ public class Binaries {
 
         /* IntRange * UnknownVal */
         @IntRange(from = 0)
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         int d = range1 + top;
     }
 
@@ -180,7 +180,7 @@ public class Binaries {
         if (flag) {
             a = false;
         }
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @BoolVal({true}) boolean b = a & true;
 
         int c = 4;
@@ -204,7 +204,7 @@ public class Binaries {
             a = false;
         }
         // TODO: we could detect this case
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @BoolVal({true}) boolean b = a | true;
 
         int c = 4;
@@ -226,7 +226,7 @@ public class Binaries {
         if (true) {
             a = false;
         }
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @BoolVal({true}) boolean b = a ^ true;
 
         int c = 4;
@@ -263,7 +263,7 @@ public class Binaries {
 
         Character bang = '!';
         // Reference equalitiy is used
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @BoolVal(false) boolean i = (BANG == bang);
     }
 
@@ -320,7 +320,7 @@ public class Binaries {
     public void compareWithNull() {
         String s = "1";
         // TODO
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @BoolVal(true) boolean b = (s != null);
     }
 
@@ -366,14 +366,14 @@ public class Binaries {
         boolean unknown = flag ? true : false;
         @BoolVal(true) boolean a9 = true || unknown;
         @BoolVal(true) boolean a11 = unknown || true;
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @BoolVal(false) boolean a12 = unknown || false;
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @BoolVal(true) boolean a13 = false || unknown;
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @BoolVal(true) boolean a14 = true && unknown;
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @BoolVal(true) boolean a15 = unknown && true;
         @BoolVal(false) boolean a16 = unknown && false;
         @BoolVal(false) boolean a17 = false && unknown;

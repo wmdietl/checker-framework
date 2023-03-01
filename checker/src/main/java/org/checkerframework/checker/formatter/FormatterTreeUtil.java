@@ -201,7 +201,8 @@ public class FormatterTreeUtil {
             // byte code.
             atypeFactory
                     .getChecker()
-                    .reportError(invocationTree, "format.method", methodElement.getSimpleName());
+                    .reportError(
+                            invocationTree, "format.method.invalid", methodElement.getSimpleName());
             return null;
         }
         ExpressionTree formatStringTree = invocationTree.getArguments().get(formatStringIndex);

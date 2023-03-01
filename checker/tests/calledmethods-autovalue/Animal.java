@@ -47,7 +47,7 @@ abstract class Animal {
     public static void buildSomethingWrong() {
         Builder b = builder();
         b.setName("Frank");
-        // :: error: (finalizer.invocation)
+        // :: error: finalizer.invocation.invalid
         b.build();
     }
 
@@ -67,7 +67,7 @@ abstract class Animal {
     }
 
     public static void buildSomethingWrongFluent() {
-        // :: error: (finalizer.invocation)
+        // :: error: finalizer.invocation.invalid
         builder().setName("Frank").build();
     }
 

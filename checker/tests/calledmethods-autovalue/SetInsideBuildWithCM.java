@@ -35,7 +35,7 @@ abstract class SetInsideBuildWithCM {
 
     public static void buildSomethingWrong() {
         Builder b = builder();
-        // :: error: (finalizer.invocation)
+        // :: error: finalizer.invocation.invalid
         b.build();
     }
 }

@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
  *   {@literal @}s int sec1 = 7 * UnitsTools.s;
  *   {@literal @}s int sec2 = triplePolyUnit(sec1);
  *
- *    // :: error: (assignment)
+ *    // :: error: (assignment.type.incompatible)
  *   {@literal @}s int sec3 = triplePolyUnit(m1);
  *  }
  * </code></pre>

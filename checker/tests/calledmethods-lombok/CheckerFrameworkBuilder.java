@@ -37,7 +37,7 @@ public class CheckerFrameworkBuilder {
 
     public static void testOldRRBad() {
         CheckerFrameworkBuilder b =
-                // :: error: (finalizer.invocation)
+                // :: error: finalizer.invocation.invalid
                 CheckerFrameworkBuilder.builder().z(6).build(); // also needs to call y
     }
 

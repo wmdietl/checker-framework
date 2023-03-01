@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -230,35 +231,6 @@ public class AnnotationFileElementTypes {
         }
     }
 
-    /**
-     * Parse one .astub file.
-     *
-     * @param checkerClass the location of the resource in the checker.jar file
-     * @param stubFileName the basename of the .astub file
-     */
-    private void parseOneStubFile(Class<?> checkerClass, String stubFileName) {
-        BaseTypeChecker checker = factory.getChecker();
-        ProcessingEnvironment processingEnv = factory.getProcessingEnv();
-        try (InputStream jdkVersionStubIn = checkerClass.getResourceAsStream(stubFileName)) {
-            if (jdkVersionStubIn != null) {
-                AnnotationFileParser.parseStubFile(
-                        checkerClass.getResource(stubFileName).toString(),
-                        jdkVersionStubIn,
-                        factory,
-                        processingEnv,
-                        annotationFileAnnos,
-                        AnnotationFileType.BUILTIN_STUB);
-            }
-        } catch (IOException e) {
-            checker.message(
-                    Kind.NOTE,
-                    "Could not read annotation resource from "
-                            + checkerClass
-                            + ": "
-                            + stubFileName);
-        }
-    }
-
     /** Parses the ajava files passed through the -Aajava command-line option. */
     public void parseAjavaFiles() {
         assert parsingCount == 0;
@@ -295,8 +267,6 @@ public class AnnotationFileElementTypes {
                     ajavaPath, in, root, factory, processingEnv, annotationFileAnnos, this);
         } catch (IOException e) {
             checker.message(Kind.NOTE, "Could not read ajava file: " + ajavaPath);
-        } finally {
-            parsing = false;
         }
 
         --parsingCount;
@@ -444,7 +414,6 @@ public class AnnotationFileElementTypes {
      * @return an AnnotatedTypeMirror for {@code e} containing only annotations explicitly written
      *     in the annotation file and in the element. {@code null} is returned if {@code element}
      *     does not appear in an annotation file.
-     * @deprecated use {@link #getDeclAnnotations}
      */
     public AnnotationMirrorSet getDeclAnnotations(Element elt) {
         parseEnclosingJdkClass(elt);
@@ -720,7 +689,8 @@ public class AnnotationFileElementTypes {
             }
             enclosingClass = t;
         }
-        @SuppressWarnings("signature:assignment" // https://tinyurl.com/cfissue/658:
+        @SuppressWarnings(
+                "signature:assignment.type.incompatible" // https://tinyurl.com/cfissue/658:
         // Name.toString should be @PolySignature
         )
         @CanonicalNameOrEmpty String result = enclosingClass.getQualifiedName().toString();

@@ -7,10 +7,10 @@ import java.util.ArrayList;
 
 @SuppressWarnings("anno.on.irrelevant")
 @LocalizableKey class Issue2186 {
-    // :: error: (super.invocation) :: warning: (inconsistent.constructor.type)
+    // :: error: (super.invocation.invalid) :: warning: (inconsistent.constructor.type)
     Issue2186() {}
 
-    // :: error: (super.invocation) :: warning: (inconsistent.constructor.type)
+    // :: error: (super.invocation.invalid) :: warning: (inconsistent.constructor.type)
     @LocalizableKeyBottom Issue2186(int x) {}
 
     void test() {

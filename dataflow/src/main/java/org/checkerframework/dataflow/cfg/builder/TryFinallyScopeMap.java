@@ -41,7 +41,8 @@ import javax.lang.model.element.Name;
     }
 
     @Override
-    @SuppressWarnings("keyfor:contracts.conditional.postcondition") // get adds everything
+    @SuppressWarnings(
+            "keyfor:contracts.conditional.postcondition.not.satisfied") // get adds everything
     public boolean containsKey(@Nullable Object key) {
         return true;
     }

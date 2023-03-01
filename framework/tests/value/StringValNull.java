@@ -28,7 +28,7 @@ public class StringValNull {
 
     static @StringVal("arg=itsValue") String toString1(
             @Nullable @StringVal("itsValue") String arg) {
-        // :: error: (return)
+        // :: error: (return.type.incompatible)
         return "arg=" + arg;
     }
 
@@ -42,7 +42,7 @@ public class StringValNull {
     } */
 
     static @StringVal("arg=22") String toString4(@Nullable @IntVal(22) Integer arg) {
-        // :: error: (return)
+        // :: error: (return.type.incompatible)
         return "arg=" + arg;
     }
 
@@ -59,9 +59,9 @@ public class StringValNull {
     @StringVal("hello") String s2 = null;
 
     void method2(StringValNull obj) {
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @StringVal("hello") String l1 = "" + obj.s;
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @StringVal("hello") String l2 = "" + obj.s2;
     }
 }

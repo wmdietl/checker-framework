@@ -946,7 +946,7 @@ subprojects {
 
         // Add jtregTests to framework and checker modules
         if (project.name.is('framework') || project.name.is('checker')) {
-            tasks.create(name: 'jtregTests', group: 'Verification') {
+            tasks.create(name: 'jtregTests', dependsOn: ':downloadJtreg', group: 'Verification') {
                 description 'Run the jtreg tests.'
                 dependsOn('compileJava')
                 dependsOn('compileTestJava')

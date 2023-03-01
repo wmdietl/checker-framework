@@ -4,7 +4,7 @@
 import org.checkerframework.checker.lock.qual.GuardedBy;
 
 public class ViewpointAdaptation {
-    // :: error: (expression.unparsable)
+    // :: error: (expression.unparsable.type.invalid)
     private final @GuardedBy("a") ViewpointAdaptation f = new ViewpointAdaptation();
 
     private @GuardedBy("this.lock") ViewpointAdaptation g = new ViewpointAdaptation();
@@ -23,7 +23,7 @@ public class ViewpointAdaptation {
     public void method2() {
         ViewpointAdaptation t = new ViewpointAdaptation();
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         t.g = g; // "t.lock" != "this.lock"
 
         synchronized (t.lock) {

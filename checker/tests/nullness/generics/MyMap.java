@@ -6,7 +6,7 @@ import java.util.Map;
 // https://github.com/typetools/checker-framework/issues/173
 public abstract class MyMap<K, V> implements Map<K, V> {
     @Override
-    // :: error: (contracts.postcondition)
+    // :: error: (contracts.postcondition.not.satisfied)
     public @Nullable V put(K key, V value) {
         return null;
     }

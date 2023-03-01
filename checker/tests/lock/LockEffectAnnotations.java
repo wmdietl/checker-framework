@@ -149,6 +149,6 @@ public class LockEffectAnnotations {
     // :: error: (guardsatisfied.location.disallowed)
     @GuardSatisfied class MyClass5 {}
 
-    // :: error: (super.invocation) :: warning: (inconsistent.constructor.type)
+    // :: error: (super.invocation.invalid) :: warning: (inconsistent.constructor.type)
     @GuardedByBottom class MyClass6 {}
 }

@@ -112,7 +112,8 @@ public class NoElementQualifierHierarchy implements QualifierHierarchy {
         AnnotationMirrorSet tops = new AnnotationMirrorSet();
         for (QualifierKind top : qualifierKindHierarchy.getTops()) {
             @SuppressWarnings(
-                    "nullness:assignment" // All QualifierKinds are keys in kindToAnnotationMirror
+                    "nullness:assignment.type.incompatible" // All QualifierKinds are keys in
+            // kindToAnnotationMirror
             )
             @NonNull AnnotationMirror topAnno = kindToAnnotationMirror.get(top);
             tops.add(topAnno);
@@ -131,7 +132,8 @@ public class NoElementQualifierHierarchy implements QualifierHierarchy {
         AnnotationMirrorSet bottoms = new AnnotationMirrorSet();
         for (QualifierKind bottom : qualifierKindHierarchy.getBottoms()) {
             @SuppressWarnings(
-                    "nullness:assignment" // All QualifierKinds are keys in kindToAnnotationMirror
+                    "nullness:assignment.type.incompatible" // All QualifierKinds are keys in
+            // kindToAnnotationMirror
             )
             @NonNull AnnotationMirror bottomAnno = kindToAnnotationMirror.get(bottom);
             bottoms.add(bottomAnno);
@@ -179,7 +181,8 @@ public class NoElementQualifierHierarchy implements QualifierHierarchy {
     }
 
     @Override
-    @SuppressWarnings("nullness:return" // every QualifierKind is a key in its corresponding
+    @SuppressWarnings(
+            "nullness:return.type.incompatible" // every QualifierKind is a key in its corresponding
     // kindToAnnotationMirror
     )
     public AnnotationMirror getTopAnnotation(AnnotationMirror start) {
@@ -193,7 +196,8 @@ public class NoElementQualifierHierarchy implements QualifierHierarchy {
     }
 
     @Override
-    @SuppressWarnings("nullness:return" // every QualifierKind is a key in its corresponding
+    @SuppressWarnings(
+            "nullness:return.type.incompatible" // every QualifierKind is a key in its corresponding
     // kindToAnnotationMirror
     )
     public AnnotationMirror getBottomAnnotation(AnnotationMirror start) {

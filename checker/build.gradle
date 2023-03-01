@@ -337,7 +337,7 @@ task jtregJdk11Tests(dependsOn: ':downloadJtreg', group: 'Verification') {
             return;
         }
         exec {
-            executable 'jtreg'
+            executable "${jtregHome}/bin/jtreg"
             args = [
                 "-dir:${projectDir}/jtregJdk11",
                 "-workDir:${jtregOutput}/${name}/work",
@@ -632,8 +632,6 @@ task ainferTestCheckerGenerateJaifs(type: Test) {
         if (javas.isEmpty()) {
             throw new GradleException("no .java files found in ${javasDir}")
         }
-
-        def checkerQualJarFile = file(project(':checker-qual').tasks.getByName('jar').archiveFile)
         exec {
             executable "${afu}/scripts/insert-annotations-to-source"
             // Script argument -cp must precede Java program argument -i.
@@ -853,7 +851,6 @@ task ainferNullnessGenerateJaifs(type: Test) {
         if (javas.isEmpty()) {
             throw new GradleException("no .java files found in ${javasDir}")
         }
-        def checkerQualJarFile = file(project(':checker-qual').tasks.getByName('jar').archiveFile)
         exec {
             executable "${afu}/scripts/insert-annotations-to-source"
             // Script argument -cp must precede Java program argument -i.

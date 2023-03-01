@@ -35,7 +35,7 @@ import java.lang.annotation.Target;
  *
  * <pre>{@code
  * public void useShiftIndex(@NonNegative int x) {
- *    // :: error: (argument)
+ *    // :: error: (argument.type.incompatible)
  *    Arrays.fill(array, end, end + x, null);
  *    shiftIndex(x);
  *    Arrays.fill(array, end, end + x, null);

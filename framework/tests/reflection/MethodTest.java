@@ -270,7 +270,7 @@ public class MethodTest {
         try {
             Class<?> c = Class.forName("MethodTest$SuperClass");
             Method m = c.getMethod(str, new Class[] {Integer.class});
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             m.invoke(this, sibling1);
         } catch (Exception ignore) {
         }
@@ -281,7 +281,7 @@ public class MethodTest {
         try {
             Class<?> c = Class.forName("MethodTest$SubClass");
             Method m = c.getMethod(str, new Class[] {Integer.class});
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             m.invoke(this, new Object[] {sibling2});
         } catch (Exception ignore) {
         }
@@ -292,7 +292,7 @@ public class MethodTest {
         try {
             Class<?> c = Class.forName("MethodTest$SubClass");
             Method m = c.getMethod(str, new Class[] {Integer.class, Integer.class});
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             m.invoke(this, new Object[] {sibling1, sibling2});
         } catch (Exception ignore) {
         }
@@ -306,7 +306,7 @@ public class MethodTest {
         try {
             Class<?> c = Class.forName("MethodTest$SubClass");
             Method m = c.getMethod(str, new Class[] {Integer.class});
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             m.invoke(this, new Object[] {sibling1});
         } catch (Exception ignore) {
         }
@@ -331,7 +331,7 @@ public class MethodTest {
         try {
             Class<?> c = SuperClass.class;
             Method m = c.getMethod("setC", new Class[] {Integer.class});
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             Object o = m.invoke(new SuperClass(), new Object[] {sibling2});
         } catch (Exception ignore) {
         }
@@ -349,7 +349,7 @@ public class MethodTest {
             // This error is a bug.
             // See DefaultReflectionResolver.resolveMethodCall(...)
             // for details.
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             m.invoke(this, args);
         } catch (Exception ignore) {
         }
@@ -368,7 +368,7 @@ public class MethodTest {
             // This error is a bug.
             // See DefaultReflectionResolver.resolveMethodCall(...)
             // for details.
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             m.invoke(this, args);
         } catch (Exception ignore) {
         }

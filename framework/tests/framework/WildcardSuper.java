@@ -4,7 +4,7 @@ import java.util.List;
 
 public class WildcardSuper {
     void test(List<? super @Odd String> list) {
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @Odd Object odd = list.get(0);
     }
 }

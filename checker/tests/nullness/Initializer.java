@@ -8,14 +8,14 @@ public class Initializer {
     public String a;
     public String b = "abc";
 
-    // :: error: (assignment)
+    // :: error: (assignment.type.incompatible)
     public String c = null;
 
     public String d = ("");
 
     // :: error: (initialization.fields.uninitialized)
     public Initializer() {
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         a = null;
         a = "";
         c = "";

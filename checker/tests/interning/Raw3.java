@@ -31,7 +31,7 @@ public class Raw3 {
     // no raw types
     List<String> foo3() {
         List<@Interned String> sl = new ArrayList<>();
-        // :: error: (return)
+        // :: error: (return.type.incompatible)
         return (List<@Interned String>) sl;
     }
 
@@ -45,7 +45,7 @@ public class Raw3 {
     // no raw types
     List<@Interned String> foo5() {
         List<String> sl = new ArrayList<>();
-        // :: error: (return)
+        // :: error: (return.type.incompatible)
         return (List<String>) sl;
     }
 

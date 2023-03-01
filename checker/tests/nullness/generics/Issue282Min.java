@@ -9,7 +9,7 @@ import java.util.Set;
 
 public class Issue282Min {
     static <M> Set<M> copyOf(Comparator<? super M> comparator, Collection<? extends M> elements) {
-        // :: error: (return)
+        // :: error: (return.type.incompatible)
         return null;
     }
 }

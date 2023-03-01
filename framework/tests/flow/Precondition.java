@@ -27,7 +27,7 @@ public class Precondition {
 
     @RequiresQualifier(expression = "f1", qualifier = ValueTypeAnno.class)
     void requiresF1Value() {
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @Odd String l1 = f1;
         @ValueTypeAnno String l2 = f1;
     }
@@ -65,22 +65,22 @@ public class Precondition {
     void param3() {}
 
     void t1(@Odd String p1, String p2) {
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresF1();
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresF1Value();
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresParam(p2);
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresParams(p1, p2);
     }
 
     void t2(@Odd String p1, String p2) {
         f1 = p1;
         requiresF1();
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresF1();
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresF1Value();
     }
 
@@ -90,7 +90,7 @@ public class Precondition {
         requiresF1AndPure();
         requiresF1AndPure();
         requiresF1();
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresF1();
     }
 
@@ -152,7 +152,7 @@ public class Precondition {
         // :: error: (contracts.precondition.not.satisfied)
         multi();
         f1 = p3;
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         multi();
         f1 = p3;
         f2 = p1;

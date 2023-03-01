@@ -10,7 +10,7 @@ public class Class2 {
     @RequiresOdd("Class1.field")
     // :: error: (flowexpr.parse.error)
     public void requiresOddParseError() {
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @Odd Object odd = Class1.field;
     }
 
@@ -33,7 +33,7 @@ public class Class2 {
     }
 
     void illegalUse() {
-        // :: error: (contracts.precondition)
+        // :: error: (contracts.precondition.not.satisfied)
         requiresOdd();
     }
 

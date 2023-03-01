@@ -43,7 +43,7 @@ public class BasicLockTest {
         myUnannotatedMethod(o1).field = someValue;
         // The second way is less durable because the default for fields is currently @GuardedBy({})
         // but could be changed to @GuardedByUnknown.
-        // :: error: (assignment) :: error: (argument)
+        // :: error: (assignment.type.incompatible) :: error: (argument.type.incompatible)
         p1 = myUnannotatedMethod(o1);
 
         // Now test that an unannotated method behaves as if it's annotated with @MayReleaseLocks
@@ -63,7 +63,7 @@ public class BasicLockTest {
     @MayReleaseLocks
     void testLocalVariables1() {
         MyClass o2 = new MyClass(), p2;
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         p2 = myUnannotatedMethod(o2);
         MyClass o3 = new MyClass();
         myAnnotatedMethod(o3);
@@ -96,7 +96,7 @@ public class BasicLockTest {
         lock.lock();
         // Should behave as @MayReleaseLocks, and *should* reset @LockHeld assumption about local
         // variable lock.
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         unannotatedReleaseLock(lock);
         // :: error: (lock.not.held)
         q.field = someValue;

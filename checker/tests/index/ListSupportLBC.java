@@ -15,7 +15,7 @@ public class ListSupportLBC {
         int j = 0;
 
         // try and use a negative to get, should fail
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         Integer m = list.get(i);
 
         // try and use a nonnegative, should work
@@ -29,7 +29,7 @@ public class ListSupportLBC {
         int j = 0;
 
         // try and use a negative to get, should fail
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         Integer m = list.get(i);
 
         // try and use a nonnegative, should work
@@ -42,7 +42,7 @@ public class ListSupportLBC {
         int j = 0;
 
         // try and use a negative to get, should fail
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         Integer m = list.set(i, 34);
 
         // try and use a nonnegative, should work
@@ -53,12 +53,12 @@ public class ListSupportLBC {
         List<Integer> list = new ArrayList<>();
         @GTENegativeOne int a = list.indexOf(1);
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @NonNegative int n = a;
 
         @GTENegativeOne int b = list.lastIndexOf(1);
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @NonNegative int m = b;
     }
 
@@ -66,7 +66,7 @@ public class ListSupportLBC {
         List<Integer> list = new ArrayList<>();
         @NonNegative int s = list.size();
 
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @Positive int r = s;
     }
 
@@ -75,13 +75,13 @@ public class ListSupportLBC {
         int i = -1;
         int j = 0;
 
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         List<Integer> k = list.subList(i, i);
 
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         List<Integer> a = list.subList(i, j);
 
-        // :: error: (argument)
+        // :: error: (argument.type.incompatible)
         List<Integer> b = list.subList(j, i);
 
         // should work since both are nonnegative

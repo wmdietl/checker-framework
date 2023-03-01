@@ -16,11 +16,11 @@ public class LowerBoundDefaulting {
 
         // should fail because @LbImplicit is below @LbTop
         @LbTop MyArrayList<@LbTop ? extends @LbTop String> itLowerBoundIncompatible =
-                // :: error: (assignment)
+                // :: error: (assignment.type.incompatible)
                 new MyArrayList<IMP1>();
 
         @LbTop MyArrayList<@LbExplicit ? extends @LbTop String> itLowerBoundStillIncompatible =
-                // :: error: (assignment)
+                // :: error: (assignment.type.incompatible)
                 new MyArrayList<IMP1>();
 
         @LbTop MyArrayList<@LbImplicit ? extends @LbTop String> itLowerBoundCompatible =
@@ -43,7 +43,7 @@ public class LowerBoundDefaulting {
     public void implicitExtendBoundedWildcard(MyArrayList<? extends String> iebList) {
 
         // should fail because @LbImplicit is below @LbTop
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         @LbTop MyArrayList<@LbTop ? extends @LbTop String> iebLowerBoundIncompatible = iebList;
 
         // :: error: (assignment.type.incompatible)

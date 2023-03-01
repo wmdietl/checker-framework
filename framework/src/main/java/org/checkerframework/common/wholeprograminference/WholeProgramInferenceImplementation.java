@@ -995,8 +995,8 @@ public class WholeProgramInferenceImplementation<T> implements WholeProgramInfer
                 // case DECLARED:
                 // Inferring annotations on type arguments is not supported, so no need to recur on
                 // generic types. If this was ever implemented, this method would need a
-                // VisitHistory
-                // object to prevent infinite recursion on types such as T extends List<T>.
+                // VisitHistory object to prevent infinite recursion on types such as T extends
+                // List<T>.
             default:
                 // ATM only has primary annotations
                 break;

@@ -32,9 +32,9 @@ public class Issue306 {
     @MonotonicNonNull Object y;
 
     void realError(@MonotonicNonNull Object p) {
-        // :: error: (monotonic)
+        // :: error: (monotonic.type.incompatible)
         x = y;
-        // :: error: (monotonic)
+        // :: error: (monotonic.type.incompatible)
         x = p;
         // It would be nice not to raise the following error.
         // :: error: (monotonic.type.incompatible)

@@ -46,10 +46,10 @@ public class AnonymousClassTest {
             Class<?> c = Class.forName("AnonymousClassTest$1");
             Method m = c.getMethod(str, new Class[] {int.class});
             // TODO: Can we resolve anonymous classes?
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             m.invoke(anonymous, val1);
             // TODO: Can we resolve anonymous classes?
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             m.invoke(anonymous, val2);
         } catch (Exception ignore) {
             ignore.printStackTrace();
@@ -63,9 +63,9 @@ public class AnonymousClassTest {
         try {
             Class<?> c = Class.forName("AnonymousClassTest$1");
             Method m = c.getMethod(str, new Class[] {int.class});
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             m.invoke(anonymous, val1);
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             m.invoke(anonymous, val2);
         } catch (Exception ignore) {
             ignore.printStackTrace();

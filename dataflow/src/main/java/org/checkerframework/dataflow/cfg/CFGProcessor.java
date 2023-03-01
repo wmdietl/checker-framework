@@ -169,7 +169,7 @@ public class CFGProcessor extends BasicTypeProcessor {
         @EnsuresNonNullIf(expression = "getCFG()", result = true)
         // TODO: add once #1307 is fixed
         // @EnsuresNonNullIf(expression = "getErrMsg()", result = false)
-        @SuppressWarnings("nullness:contracts.conditional.postcondition")
+        @SuppressWarnings("nullness:contracts.conditional.postcondition.not.satisfied")
         public boolean isSuccess() {
             return isSuccess;
         }

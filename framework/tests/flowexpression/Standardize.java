@@ -10,7 +10,7 @@ import java.util.Map;
 public class Standardize {
     Object field;
 
-    @SuppressWarnings("assignment")
+    @SuppressWarnings("assignment.type.incompatible")
     @FlowExp("field") Object fieldField = null;
 
     void variableDecls(@FlowExp("field") Standardize this, @FlowExp("field") Object paramField) {
@@ -26,13 +26,13 @@ public class Standardize {
         @FlowExp("field") Object o5 = localField;
         @FlowExp("this.field") Object o6 = localField;
 
-        try (@SuppressWarnings("assignment")
+        try (@SuppressWarnings("assignment.type.incompatible")
                 @FlowExp("field") FileInputStream in = new FileInputStream("")) {
             in.read();
             @FlowExp("field") Object o7 = in;
             @FlowExp("this.field") Object o8 = in;
         } catch (
-                @SuppressWarnings("exception.parameter")
+                @SuppressWarnings("exception.parameter.invalid")
                 @FlowExp("field") Exception ex) {
             @FlowExp("field") Object o9 = ex;
             @FlowExp("this.field") Object o10 = ex;
@@ -82,7 +82,7 @@ public class Standardize {
         Object field = new Object();
         // "field" is local variable, but list.get(1) type is @FlowExp("this.field")
         @FlowExp("field")
-        // :: error: (assignment)
+        // :: error: (assignment.type.incompatible)
         Object o1 = list.get(1);
         @FlowExp("this.field") Object o2 = list.get(1);
     }

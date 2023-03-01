@@ -9,7 +9,7 @@ import java.util.Map;
 public class GuardedByLocalVariable {
 
     public static void localVariableShadowing() {
-        // :: error: (expression.unparsable)
+        // :: error: (expression.unparsable.type.invalid)
         @GuardedBy("m0") Object kk;
         {
             @SuppressWarnings("assignment") // prevent flow-sensitive type refinement
@@ -30,7 +30,7 @@ public class GuardedByLocalVariable {
     }
 
     public static void invalidLocalVariable() {
-        // :: error: (expression.unparsable)
+        // :: error: (expression.unparsable.type.invalid)
         @GuardedBy("foobar") Object kk;
     }
 

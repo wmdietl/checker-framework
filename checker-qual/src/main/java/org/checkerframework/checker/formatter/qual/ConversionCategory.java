@@ -253,11 +253,13 @@ public enum ConversionCategory {
             return a;
         }
 
-        @SuppressWarnings("nullness:argument" // `types` field is null only for UNUSED and GENERAL
-        )
+        @SuppressWarnings(
+                "nullness:argument.type.incompatible") // `types` field is null only for UNUSED and
+        // GENERAL
         Set<Class<?>> as = arrayToSet(a.types);
-        @SuppressWarnings("nullness:argument" // `types` field is null only for UNUSED and GENERAL
-        )
+        @SuppressWarnings(
+                "nullness:argument.type.incompatible") // `types` field is null only for UNUSED and
+        // GENERAL
         Set<Class<?>> bs = arrayToSet(b.types);
         as.retainAll(bs); // intersection
         for (ConversionCategory v : conversionCategoriesForIntersect) {
@@ -306,11 +308,13 @@ public enum ConversionCategory {
             return INT;
         }
 
-        @SuppressWarnings("nullness:argument" // `types` field is null only for UNUSED and GENERAL
-        )
+        @SuppressWarnings(
+                "nullness:argument.type.incompatible") // `types` field is null only for UNUSED and
+        // GENERAL
         Set<Class<?>> as = arrayToSet(a.types);
-        @SuppressWarnings("nullness:argument" // `types` field is null only for UNUSED and GENERAL
-        )
+        @SuppressWarnings(
+                "nullness:argument.type.incompatible") // `types` field is null only for UNUSED and
+        // GENERAL
         Set<Class<?>> bs = arrayToSet(b.types);
         as.addAll(bs); // union
         for (ConversionCategory v : conversionCategoriesForUnion) {

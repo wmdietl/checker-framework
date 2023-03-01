@@ -51,12 +51,12 @@ public class I18nFormatterVisitor extends BaseTypeVisitor<I18nFormatterAnnotated
 
         switch (type.value()) {
             case I18NINVALID:
-                tu.failure(type, "i18nformat.string", fc.getInvalidError());
+                tu.failure(type, "i18nformat.string.invalid", fc.getInvalidError());
                 break;
             case I18NFORMATFOR:
                 if (!fc.isValidFormatForInvocation()) {
                     Result<FormatType> failureType = fc.getInvalidInvocationType();
-                    tu.failure(failureType, "i18nformat.formatfor");
+                    tu.failure(failureType, "i18nformat.invalid.formatfor");
                 }
                 break;
             case I18NFORMAT:
@@ -95,7 +95,7 @@ public class I18nFormatterVisitor extends BaseTypeVisitor<I18nFormatterAnnotated
                                                 ElementUtils.getSimpleNameOrDescription(method);
                                         tu.failure(
                                                 param,
-                                                "argument",
+                                                "argument.type.incompatible",
                                                 "", // parameter name is not useful
                                                 methodName,
                                                 paramType,

@@ -15,7 +15,7 @@ public class HasQualParamDefaults {
         public Buffer() {}
 
         public @Untainted Buffer(@Tainted String s) {
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             this.someString = s;
         }
 
@@ -39,9 +39,9 @@ public class HasQualParamDefaults {
         }
 
         public @PolyTainted String unTaintedOnly(@Untainted Buffer this, @PolyTainted String s) {
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             list.add(s);
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             someString = s;
             return s;
         }
@@ -49,14 +49,14 @@ public class HasQualParamDefaults {
         void initializeLocalTainted(@Tainted Buffer b) {
             Buffer local = b;
             @Tainted Buffer copy1 = local;
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             @Untainted Buffer copy2 = local;
         }
 
         void initializeLocalUntainted(@Untainted Buffer b) {
             Buffer local = b;
             @Untainted Buffer copy1 = local;
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             @Tainted Buffer copy2 = local;
         }
 
@@ -67,7 +67,7 @@ public class HasQualParamDefaults {
 
         void noInitializer(@Untainted Buffer b) {
             Buffer local;
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             local = b;
         }
     }
@@ -80,11 +80,11 @@ public class HasQualParamDefaults {
         }
 
         void failingUses(@Tainted String tainted, @Untainted Buffer buffer) {
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             buffer.list.add(tainted);
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             buffer.someString = tainted;
-            // :: error: (argument)
+            // :: error: (argument.type.incompatible)
             buffer.append(tainted);
         }
 
@@ -117,14 +117,14 @@ public class HasQualParamDefaults {
         void initializeLocalTainted(@Tainted Buffer b) {
             Buffer local = b;
             @Tainted Buffer copy1 = local;
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             @Untainted Buffer copy2 = local;
         }
 
         void initializeLocalUntainted(@Untainted Buffer b) {
             Buffer local = b;
             @Untainted Buffer copy1 = local;
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             @Tainted Buffer copy2 = local;
         }
 
@@ -135,7 +135,7 @@ public class HasQualParamDefaults {
 
         void noInitializer(@Untainted Buffer b) {
             Buffer local;
-            // :: error: (assignment)
+            // :: error: (assignment.type.incompatible)
             local = b;
         }
 
