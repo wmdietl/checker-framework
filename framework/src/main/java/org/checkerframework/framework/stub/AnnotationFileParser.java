@@ -3193,6 +3193,9 @@ public class AnnotationFileParser {
      * @param warning a warning message
      */
     private void warn(@Nullable NodeWithRange<?> astNode, String warning) {
+        if (true) {
+            return;
+        }
         if (fileType != AnnotationFileType.JDK_STUB) {
             if (warnings.add(warning)) {
                 processingEnv

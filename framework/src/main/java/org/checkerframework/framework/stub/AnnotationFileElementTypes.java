@@ -416,6 +416,10 @@ public class AnnotationFileElementTypes {
      *     does not appear in an annotation file.
      */
     public AnnotationMirrorSet getDeclAnnotations(Element elt) {
+        if (false) {
+            return AnnotationMirrorSet.emptySet();
+        }
+
         parseEnclosingJdkClass(elt);
         String eltName = ElementUtils.getQualifiedName(elt);
         if (annotationFileAnnos.declAnnos.containsKey(eltName)) {
