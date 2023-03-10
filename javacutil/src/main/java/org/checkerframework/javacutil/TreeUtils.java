@@ -157,11 +157,6 @@ public final class TreeUtils {
     /** The value of Flags.RECORD which does not exist in Java 9 or 11. */
     private static final long Flags_RECORD = 2305843009213693952L;
 
-    /**
-     * The {@code TreeMaker.Select(JCExpression, Symbol)} method. Return type changes for JDK21+.
-     */
-    private static final Method treeMakerSelect;
-
     /** Tree kinds that represent a binary comparison. */
     private static final Set<Tree.Kind> BINARY_COMPARISON_TREE_KINDS =
             EnumSet.of(
@@ -275,12 +270,6 @@ public final class TreeUtils {
             Error err = new AssertionError("Unexpected error in TreeUtils static initializer");
             err.initCause(e);
             throw err;
-        }
-        // TODO: clean up
-        try {
-            treeMakerSelect = TreeMaker.class.getMethod("Select", JCExpression.class, Symbol.class);
-        } catch (NoSuchMethodException e) {
-            throw new BugInCF("TreeMaker.Select reflection problem", e);
         }
     }
 
