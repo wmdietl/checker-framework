@@ -1929,35 +1929,6 @@ public class WholeProgramInferenceJavaParserStorage
 
             return this.type;
         }
-        /**
-         * Adds a declaration annotation to this field declaration and returns whether it was a new
-         * annotation.
-         *
-         * @param annotation declaration annotation to add
-         * @return true if {@code annotation} wasn't previously stored for this field declaration
-         */
-        public boolean addDeclarationAnnotation(AnnotationMirror annotation) {
-            if (declarationAnnotations == null) {
-                declarationAnnotations = new AnnotationMirrorSet();
-            }
-
-            return declarationAnnotations.add(annotation);
-        }
-
-        /**
-         * Returns the inferred declaration annotations on this field, or an empty set if there are
-         * no annotations.
-         *
-         * @return the declaration annotations for this field declaration
-         */
-        @SuppressWarnings("UnusedMethod")
-        public AnnotationMirrorSet getDeclarationAnnotations() {
-            if (declarationAnnotations == null) {
-                return AnnotationMirrorSet.emptySet();
-            }
-
-            return AnnotationMirrorSet.unmodifiableSet(declarationAnnotations);
-        }
 
         /**
          * Returns the inferred declaration annotations on this field, or an empty set if there are
