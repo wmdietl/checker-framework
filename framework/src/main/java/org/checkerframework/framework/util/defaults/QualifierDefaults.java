@@ -350,10 +350,6 @@ public class QualifierDefaults {
         }
     }
 
-    public enum AdditionalTypeUseLocation {
-        UNBOUNDED_WILDCARD_UPPER_BOUND,
-    }
-
     /**
      * Sets the default annotations for a certain Element.
      *
@@ -373,18 +369,6 @@ public class QualifierDefaults {
      */
     public void addElementDefault(
             Element elem, AnnotationMirror elementDefaultAnno, TypeUseLocation location) {
-        addElementDefault(elem, elementDefaultAnno, (Enum<?>) location);
-    }
-
-    /** Sets the default annotations for a certain Element. */
-    public void addElementDefault(
-            Element elem, AnnotationMirror elementDefaultAnno, AdditionalTypeUseLocation location) {
-        addElementDefault(elem, elementDefaultAnno, (Enum<?>) location);
-    }
-
-    /** Sets the default annotations for a certain Element. */
-    private void addElementDefault(
-            Element elem, AnnotationMirror elementDefaultAnno, Enum<?> location) {
         DefaultSet prevset = elementDefaults.get(elem);
         if (prevset != null) {
             checkDuplicates(prevset, elementDefaultAnno, location);
@@ -625,7 +609,6 @@ public class QualifierDefaults {
      * @param dq a @DefaultQualifier annotation
      * @return a DefaultSet corresponding to the @DefaultQualifier annotation
      */
-    @SuppressWarnings("unused")
     private DefaultSet fromDefaultQualifier(AnnotationMirror dq) {
         @SuppressWarnings("unchecked")
         Name cls = AnnotationUtils.getElementValueClassName(dq, defaultQualifierValueElement);
@@ -695,11 +678,7 @@ public class QualifierDefaults {
             }
         }
 
-        if (atypeFactory.shouldCache
-                && !atypeFactory.stubTypes.isParsing()
-                && !atypeFactory.ajavaTypes.isParsing()) {
-            elementAnnotatedFors.put(elt, elementAnnotatedForThisChecker);
-        }
+        elementAnnotatedFors.put(elt, elementAnnotatedForThisChecker);
 
         return elementAnnotatedForThisChecker;
     }
@@ -760,8 +739,6 @@ public class QualifierDefaults {
             return DefaultSet.EMPTY;
         }
     }
-
-    protected void populateNewDefaults(Element elt, boolean initialDefaultsAreEmpty) {}
 
     /**
      * Returns the defaults that apply directly to the given Element, without considering enclosing
@@ -893,10 +870,6 @@ public class QualifierDefaults {
         return new DefaultApplierElement(atypeFactory, annotationScope, type, applyToTypeVar);
     }
 
-    protected boolean shouldAnnotateOtherwiseNonDefaultableTypeVariable(AnnotationMirror qual) {
-        return false;
-    }
-
     /** A default applier element. */
     protected class DefaultApplierElement {
 
@@ -912,7 +885,7 @@ public class QualifierDefaults {
         /**
          * Location to which to apply the default. (Should only be set by the applyDefault method.)
          */
-        protected Enum<?> location;
+        protected TypeUseLocation location;
 
         /** The default element applier implementation. */
         protected final DefaultApplierElementImpl impl;
@@ -984,9 +957,7 @@ public class QualifierDefaults {
                              * constructor). (Were it to apply defaults, it could produce the type
                              * Foo<@NullnessUnspecified T>.)
                              */
-                            && (type.isDeclaration()
-                                    || type == impl.typeArgTiedToDeclaration
-                                    || !shouldAnnotateOtherwiseNonDefaultableTypeVariable(qual)))
+                            && (type.isDeclaration() || type == impl.typeArgTiedToDeclaration))
                     || type instanceof AnnotatedNoType);
         }
 
@@ -998,8 +969,7 @@ public class QualifierDefaults {
          * @param qual annotation to add
          */
         protected void addAnnotation(AnnotatedTypeMirror type, AnnotationMirror qual) {
-            // Add the default annotation, but only if no other
-            // annotation is present.
+            // Add the default annotation, but only if no other annotation is present.
             if (!type.isAnnotatedInHierarchy(qual) && type.getKind() != TypeKind.EXECUTABLE) {
                 type.addAnnotation(qual);
             }
@@ -1013,16 +983,9 @@ public class QualifierDefaults {
                 if (!shouldBeAnnotated(t, t == defaultableTypeVar, qual)) {
                     return super.scan(t, qual);
                 }
-
                 // Some defaults only apply to the top level type.
                 boolean isTopLevelType = t == type;
-                if (location == AdditionalTypeUseLocation.UNBOUNDED_WILDCARD_UPPER_BOUND) {
-                    if (boundType == BoundType.UNBOUNDED && isWildcardBound && isUpperBound) {
-                        addAnnotation(t, qual);
-                    }
-                    return super.scan(t, qual);
-                }
-                switch ((TypeUseLocation) location) {
+                switch (location) {
                     case FIELD:
                         if (scope != null
                                 && scope.getKind() == ElementKind.FIELD
@@ -1132,7 +1095,7 @@ public class QualifierDefaults {
                         }
                         break;
                     case EXPLICIT_LOWER_BOUND:
-                        if (isLowerBound && boundType.isOneOf(BoundType.LOWER)) {
+                        if (isLowerBound && boundType == BoundType.LOWER) {
                             addAnnotation(t, qual);
                         }
                         break;
@@ -1148,12 +1111,17 @@ public class QualifierDefaults {
                         }
                         break;
                     case EXPLICIT_UPPER_BOUND:
-                        if (isUpperBound && boundType.isOneOf(BoundType.UPPER)) {
+                        if (isUpperBound && boundType == BoundType.UPPER) {
                             addAnnotation(t, qual);
                         }
                         break;
                     case UPPER_BOUND:
-                        if (this.isUpperBound) {
+                        if (isUpperBound) {
+                            addAnnotation(t, qual);
+                        }
+                        break;
+                    case UNBOUNDED_WILDCARD_UPPER_BOUND:
+                        if (isWildcardBound && boundType == BoundType.UNBOUNDED && isUpperBound) {
                             addAnnotation(t, qual);
                         }
                         break;
@@ -1245,12 +1213,12 @@ public class QualifierDefaults {
                 try {
                     for (AnnotatedTypeMirror arg : type.getTypeArguments()) {
                         if (typeArgsAreTiedToDeclaration) {
-                            impl.typeArgTiedToDeclaration = arg;
+                            typeArgTiedToDeclaration = arg;
                         }
                         scan(arg, annotationMirror);
                     }
                 } finally {
-                    impl.typeArgTiedToDeclaration = null;
+                    typeArgTiedToDeclaration = null;
                 }
 
                 if (shouldStoreType) {
@@ -1435,12 +1403,10 @@ public class QualifierDefaults {
     }
 
     /**
-     * Returns the BoundType of annotatedWildcard. If it is unbounded, use the type parameter to
-     * which its an argument.
+     * Returns the BoundType of wildcardType.
      *
      * @param wildcardType the annotated wildcard type
-     * @return the BoundType of annotatedWildcard. If it is unbounded, use the type parameter to
-     *     which its an argument
+     * @return the BoundType of wildcardType
      */
     /*
      * We check the values of the bounds instead of checking isUnbound(). By doing so, we stick to
@@ -1462,15 +1428,9 @@ public class QualifierDefaults {
            }
            return boundType;
     */
-    public BoundType getWildcardBoundType(final AnnotatedWildcardType wildcardType) {
+    private BoundType getWildcardBoundType(final AnnotatedWildcardType wildcardType) {
         if (AnnotatedTypes.hasNoExplicitBound(wildcardType)) {
-            TypeParameterElement e =
-                    TypesUtils.wildcardToTypeParam(wildcardType.getUnderlyingType());
-            if (e != null) {
-                return getTypeVarBoundType(e);
-            } else {
-                return BoundType.UNBOUNDED;
-            }
+            return BoundType.UNBOUNDED;
         } else if (AnnotatedTypes.hasExplicitSuperBound(wildcardType)) {
             return BoundType.LOWER;
         } else {

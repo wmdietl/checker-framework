@@ -79,6 +79,9 @@ public enum TypeUseLocation {
     /** Apply default annotations to unannotated type variables: {@code <T>}. */
     IMPLICIT_UPPER_BOUND,
 
+    /** TODO. */
+    UNBOUNDED_WILDCARD_UPPER_BOUND,
+
     /** Apply if nothing more concrete is provided. TODO: clarify relation to ALL. */
     OTHERWISE,
 

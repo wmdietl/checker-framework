@@ -2,10 +2,8 @@ package org.checkerframework.framework.util.defaults;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.framework.qual.TypeUseLocation;
-import org.checkerframework.framework.util.defaults.QualifierDefaults.AdditionalTypeUseLocation;
 import org.checkerframework.javacutil.AnnotationUtils;
 
-import java.util.Comparator;
 import java.util.Objects;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -22,7 +20,7 @@ public class Default implements Comparable<Default> {
     /** The default annotation mirror. */
     public final AnnotationMirror anno;
     /** The type use location. */
-    public final Enum<?> location;
+    public final TypeUseLocation location;
     /** Whether the default should be inherited by subpackages. */
     public final boolean applyToSubpackages;
 
@@ -34,15 +32,9 @@ public class Default implements Comparable<Default> {
      * @param applyToSubpackages whether the default should be inherited by subpackages
      */
     public Default(
-            final AnnotationMirror anno, final Enum<?> location, final boolean applyToSubpackages) {
-        if (!(location instanceof TypeUseLocation)
-                && !(location instanceof AdditionalTypeUseLocation)) {
-            throw new IllegalArgumentException(
-                    "location argument "
-                            + location
-                            + " has unrecognized class "
-                            + location.getDeclaringClass().getName());
-        }
+            final AnnotationMirror anno,
+            final TypeUseLocation location,
+            final boolean applyToSubpackages) {
         this.anno = anno;
         this.location = location;
         this.applyToSubpackages = applyToSubpackages;
@@ -50,7 +42,7 @@ public class Default implements Comparable<Default> {
 
     @Override
     public int compareTo(Default other) {
-        int locationOrder = TYPE_USE_LOCATION_COMPARATOR.compare(location, other.location);
+        int locationOrder = location.compareTo(other.location);
         if (locationOrder == 0) {
             int annoOrder = AnnotationUtils.compareAnnotationMirrors(anno, other.anno);
             if (annoOrder == 0) {
@@ -94,15 +86,4 @@ public class Default implements Comparable<Default> {
                 + (applyToSubpackages ? " applies to subpackages" : "")
                 + " )";
     }
-
-    /**
-     * Compares TypeUseLocation and AdditionalTypeUseLocation instances. Puts
-     * AdditionalTypeUseLocation first (so that it doesn't lose out to
-     * TypeUseLocation.OTHERWISE/ALL). Then compares within a single enum type using its usual
-     * order.
-     */
-    @SuppressWarnings("unchecked")
-    private static final Comparator<Enum<?>> TYPE_USE_LOCATION_COMPARATOR =
-            Comparator.comparing((Enum<?> e) -> e instanceof TypeUseLocation)
-                    .thenComparing(e -> (Enum) e);
 }
