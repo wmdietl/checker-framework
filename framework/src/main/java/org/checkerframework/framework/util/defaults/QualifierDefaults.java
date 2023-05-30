@@ -977,7 +977,7 @@ public class QualifierDefaults {
 
             @Override
             public Void scan(@FindDistinct AnnotatedTypeMirror t, AnnotationMirror qual) {
-                if (!shouldBeAnnotated(t, t == defaultableTypeVar, qual)) {
+                if (!shouldBeAnnotated(t, t == defaultableTypeVar)) {
                     return super.scan(t, qual);
                 }
                 // Some defaults only apply to the top level type.
@@ -1031,7 +1031,7 @@ public class QualifierDefaults {
                                 && isTopLevelType) {
                             for (AnnotatedTypeMirror atm :
                                     ((AnnotatedExecutableType) t).getParameterTypes()) {
-                                if (shouldBeAnnotated(atm, false, qual)) {
+                                if (shouldBeAnnotated(atm, false)) {
                                     addAnnotation(atm, qual);
                                 }
                             }
@@ -1052,7 +1052,7 @@ public class QualifierDefaults {
                                 && isTopLevelType) {
                             final AnnotatedDeclaredType receiver =
                                     ((AnnotatedExecutableType) t).getReceiverType();
-                            if (shouldBeAnnotated(receiver, false, qual)) {
+                            if (shouldBeAnnotated(receiver, false)) {
                                 addAnnotation(receiver, qual);
                             }
                         }
@@ -1064,7 +1064,7 @@ public class QualifierDefaults {
                                 && isTopLevelType) {
                             final AnnotatedTypeMirror returnType =
                                     ((AnnotatedExecutableType) t).getReturnType();
-                            if (shouldBeAnnotated(returnType, false, qual)) {
+                            if (shouldBeAnnotated(returnType, false)) {
                                 addAnnotation(returnType, qual);
                             }
                         }
@@ -1078,7 +1078,7 @@ public class QualifierDefaults {
                             // constructor invocation).
                             final AnnotatedTypeMirror returnType =
                                     ((AnnotatedExecutableType) t).getReturnType();
-                            if (shouldBeAnnotated(returnType, false, qual)) {
+                            if (shouldBeAnnotated(returnType, false)) {
                                 addAnnotation(returnType, qual);
                             }
                         }
