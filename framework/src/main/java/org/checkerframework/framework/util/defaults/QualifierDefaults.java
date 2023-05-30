@@ -940,21 +940,23 @@ public class QualifierDefaults {
                     // || type.getKind() == TypeKind.EXECUTABLE
                     || type.getKind() == TypeKind.NONE
                     || type.getKind() == TypeKind.WILDCARD
-                    || (type.getKind() == TypeKind.TYPEVAR
-                            && !applyToTypeVar
-                            /*
-                             * The type.isDeclaration() check here might not matter. I included it because it
-                             * seems weird to annotate type-variable declarations, given that we don't normally
-                             * support that. But I'm not aware of any specific problems that the check here
-                             * solves, so maybe we should remove it.
-                             *
-                             * The other cases below *do* matter, at least in that they affect some types I see
-                             * during debugging. We want to ensure that CF doesn't apply defaults to T when
-                             * looking at the declaration of Foo<T> (and similarly for the return type of its
-                             * constructor). (Were it to apply defaults, it could produce the type
-                             * Foo<@NullnessUnspecified T>.)
-                             */
-                            && (type.isDeclaration() || type == impl.typeArgTiedToDeclaration))
+                    || (type.getKind() == TypeKind.TYPEVAR && !applyToTypeVar
+                    /*
+                     * The type.isDeclaration() check here might not matter. I included it because it
+                     * seems weird to annotate type-variable declarations, given that we don't normally
+                     * support that. But I'm not aware of any specific problems that the check here
+                     * solves, so maybe we should remove it.
+                     *
+                     * The other cases below *do* matter, at least in that they affect some types I see
+                     * during debugging. We want to ensure that CF doesn't apply defaults to T when
+                     * looking at the declaration of Foo<T> (and similarly for the return type of its
+                     * constructor). (Were it to apply defaults, it could produce the type
+                     * Foo<@NullnessUnspecified T>.)
+                     */
+                    // TODO: the shouldAnnotateOtherwiseNonDefaultableTypeVariable calls that were
+                    // here effectively turn this into true. Simplify all this.
+                    // && (true || type.isDeclaration() || type == impl.typeArgTiedToDeclaration)
+                    )
                     || type instanceof AnnotatedNoType);
         }
 
@@ -1139,10 +1141,10 @@ public class QualifierDefaults {
             @Override
             public void reset() {
                 super.reset();
-                impl.isLowerBound = false;
-                impl.isUpperBound = false;
-                impl.boundType = BoundType.UNBOUNDED;
-                impl.isWildcardBound = false;
+                isLowerBound = false;
+                isUpperBound = false;
+                boundType = BoundType.UNBOUNDED;
+                isWildcardBound = false;
             }
 
             // are we currently defaulting the lower bound of a type variable or wildcard
@@ -1156,73 +1158,77 @@ public class QualifierDefaults {
 
             private boolean isWildcardBound = false;
 
-            private AnnotatedTypeMirror constructorReturnType = null;
+            // private AnnotatedTypeMirror constructorReturnType = null;
 
-            private AnnotatedTypeMirror typeArgTiedToDeclaration = null;
+            // private AnnotatedTypeMirror typeArgTiedToDeclaration = null;
 
-            @Override
-            public Void visitExecutable(
-                    AnnotatedExecutableType type, AnnotationMirror annotationMirror) {
-                // Inlined from supermethod except for constructorReturnType logic.
-                boolean isConstructor =
-                        type.getUnderlyingType().getReturnType().getKind() == TypeKind.VOID
-                                && type.getReturnType().getKind() == TypeKind.DECLARED;
-                Void r;
-                impl.constructorReturnType = isConstructor ? type.getReturnType() : null;
-                try {
-                    r = scan(type.getReturnType(), annotationMirror);
-                } finally {
-                    impl.constructorReturnType = null;
-                }
-                if (type.getReceiverType() != null) {
-                    r = scanAndReduce(type.getReceiverType(), annotationMirror, r);
-                }
-                r = scanAndReduce(type.getParameterTypes(), annotationMirror, r);
-                r = scanAndReduce(type.getThrownTypes(), annotationMirror, r);
-                r = scanAndReduce(type.getTypeVariables(), annotationMirror, r);
-                return r;
-            }
+            /*
+                   @Override
+                   public Void visitExecutable(
+                           AnnotatedExecutableType type, AnnotationMirror annotationMirror) {
+                       // Inlined from supermethod except for constructorReturnType logic.
+                       boolean isConstructor =
+                               type.getUnderlyingType().getReturnType().getKind() == TypeKind.VOID
+                                       && type.getReturnType().getKind() == TypeKind.DECLARED;
+                       Void r;
+                       impl.constructorReturnType = isConstructor ? type.getReturnType() : null;
+                       try {
+                           r = scan(type.getReturnType(), annotationMirror);
+                       } finally {
+                           impl.constructorReturnType = null;
+                       }
+                       if (type.getReceiverType() != null) {
+                           r = scanAndReduce(type.getReceiverType(), annotationMirror, r);
+                       }
+                       r = scanAndReduce(type.getParameterTypes(), annotationMirror, r);
+                       r = scanAndReduce(type.getThrownTypes(), annotationMirror, r);
+                       r = scanAndReduce(type.getTypeVariables(), annotationMirror, r);
+                       return r;
+                   }
+            */
 
-            @Override
-            public Void visitDeclared(
-                    AnnotatedDeclaredType type, AnnotationMirror annotationMirror) {
-                // Inlined from supermethod except for constructorReturnTypeArg logic.
+            /*
+                   @Override
+                   public Void visitDeclared(
+                           AnnotatedDeclaredType type, AnnotationMirror annotationMirror) {
+                       // Inlined from supermethod except for typeArgTiedToDeclaration/constructorReturnTypeArg logic.
 
-                // Only declared types with type arguments might be recursive,
-                // so only store those.
-                boolean shouldStoreType = !type.getTypeArguments().isEmpty();
-                if (shouldStoreType && this.visitedNodes.containsKey(type)) {
-                    return this.visitedNodes.get(type);
-                }
-                if (shouldStoreType) {
-                    this.visitedNodes.put(type, this.defaultResult);
-                }
-                Void r = this.defaultResult;
-                if (type.getEnclosingType() != null) {
-                    r = scan(type.getEnclosingType(), annotationMirror);
-                    if (shouldStoreType) {
-                        this.visitedNodes.put(type, r);
-                    }
-                }
+                       // Only declared types with type arguments might be recursive,
+                       // so only store those.
+                       boolean shouldStoreType = !type.getTypeArguments().isEmpty();
+                       if (shouldStoreType && this.visitedNodes.containsKey(type)) {
+                           return this.visitedNodes.get(type);
+                       }
+                       if (shouldStoreType) {
+                           this.visitedNodes.put(type, this.defaultResult);
+                       }
+                       Void r = this.defaultResult;
+                       if (type.getEnclosingType() != null) {
+                           r = scan(type.getEnclosingType(), annotationMirror);
+                           if (shouldStoreType) {
+                               this.visitedNodes.put(type, r);
+                           }
+                       }
 
-                boolean typeArgsAreTiedToDeclaration =
-                        type.isDeclaration() || impl.constructorReturnType == type;
-                try {
-                    for (AnnotatedTypeMirror arg : type.getTypeArguments()) {
-                        if (typeArgsAreTiedToDeclaration) {
-                            typeArgTiedToDeclaration = arg;
-                        }
-                        scan(arg, annotationMirror);
-                    }
-                } finally {
-                    typeArgTiedToDeclaration = null;
-                }
+                       boolean typeArgsAreTiedToDeclaration =
+                              type.isDeclaration() || impl.constructorReturnType == type;
+                       try {
+                           for (AnnotatedTypeMirror arg : type.getTypeArguments()) {
+                               if (typeArgsAreTiedToDeclaration) {
+                                   typeArgTiedToDeclaration = arg;
+                               }
+                               scan(arg, annotationMirror);
+                           }
+                       } finally {
+                           typeArgTiedToDeclaration = null;
+                       }
 
-                if (shouldStoreType) {
-                    this.visitedNodes.put(type, r);
-                }
-                return r;
-            }
+                       if (shouldStoreType) {
+                           this.visitedNodes.put(type, r);
+                       }
+                       return r;
+                   }
+            */
 
             @Override
             public Void visitTypeVariable(AnnotatedTypeVariable type, AnnotationMirror qual) {
