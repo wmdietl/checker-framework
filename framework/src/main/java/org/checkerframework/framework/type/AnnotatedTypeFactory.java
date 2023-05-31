@@ -5666,13 +5666,15 @@ public class AnnotatedTypeFactory implements AnnotationProvider {
                         .peek(
                                 t -> {
                                     // TODO WMD: what annotation is this looking for?
-                                    AnnotationMirror a = t.getAnnotations().first();
-                                    if (a != null) {
-                                        top[0] = qualHierarchy.getTopAnnotation(a);
-                                        bottom[0] = qualHierarchy.getBottomAnnotation(a);
+                                    if (!t.getAnnotations().isEmpty()) {
+                                        AnnotationMirror a = t.getAnnotations().first();
+                                        if (a != null) {
+                                            top[0] = qualHierarchy.getTopAnnotation(a);
+                                            bottom[0] = qualHierarchy.getBottomAnnotation(a);
+                                        }
+                                        // System.err.println("noticing " + t + " with " +
+                                        // t.getAnnotations());
                                     }
-                                    // System.err.println("noticing " + t + " with " +
-                                    // t.getAnnotations());
                                 })
                         .collect(
                                 toImmutableMap(
