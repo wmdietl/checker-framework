@@ -59,6 +59,10 @@ public class Default implements Comparable<Default> {
         }
     }
 
+    public int compareToLocationOnly(Default other) {
+        return location.compareTo(other.location);
+    }
+
     @Override
     public boolean equals(@Nullable Object thatObj) {
         if (thatObj == this) {

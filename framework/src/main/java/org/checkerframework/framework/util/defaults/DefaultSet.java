@@ -6,14 +6,16 @@ import java.util.TreeSet;
 
 /**
  * An ordered set of Defaults (see {@link org.checkerframework.framework.util.defaults.Default}).
- * This class provides a little syntactic sugar and a better toString over TreeSet.
+ * This class provides a little syntactic sugar and a better toString over TreeSet. Defaults are
+ * compared by their locations only, ensuring that a DefaultSet contains at most one default per
+ * location.
  */
 @SuppressWarnings("serial")
 class DefaultSet extends TreeSet<Default> {
 
     /** Creates a DefaultSet. */
     public DefaultSet() {
-        super(Default::compareTo);
+        super(Default::compareToLocationOnly);
     }
 
     @Override
